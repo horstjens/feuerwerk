@@ -122,6 +122,28 @@ class Spark(Fragment):
         if self.age / 10 > 2:
             self.radius = self.age // 10
             self.create_image(self)
+
+
+class Flashlight(Fragment):
+    
+    def __init__(self, pos):
+        Fragment.__init__(self, v.Vec2d(pos.x, pos.y), v.Vec2d(0,0),
+                          color=(255,255,255))
+        self.delay = random.random() * 0.25
+        self.lifetime = random.random() * 0.01
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        pygame.draw.circle(self.image, self.color, (25,25), 15)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        
+    def update(self, seconds):
+        self.age += seconds
+        if self.age > self.delay:
+            Fragment.update(self, seconds)
+        
+
             
 class Smoke(Fragment):
     def create_image(self):
@@ -234,6 +256,13 @@ class Rocket(Fragment):
                         m.rotate(winkel)
                         m *= wieoft2
                 
+                elif explosion == 8:
+                    for x in range(5):
+                        s = v.Vec2d(random.randint(0,50), 0)
+                        s.rotate(random.randint(0,360))
+                        Flashlight( self.pos + s )
+                
+                
                 self.kill()
                 
       
@@ -322,39 +351,36 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    if event.key == pygame.K_b:
+                    elif event.key == pygame.K_b:
                         self.level +=1
                         self.loadbackground()
-                    if event.key == pygame.K_SPACE:
+                    elif event.key == pygame.K_SPACE:
                         pos = v.Vec2d(self.width//2, self.height//2)
                         m = v.Vec2d(50,0)
                         for _ in range(36):
                             VectorSprite(pos,m)
                             m.rotate(10)
-                    if event.key == pygame.K_0:
+                    elif event.key == pygame.K_0:
                         Rocket(random.choice(ground), pos, ex=0)
-                    if event.key == pygame.K_1:
+                    elif event.key == pygame.K_1:
                         Rocket(random.choice(ground), pos, ex=1)
-                        #Rocket(rightcorner, pos, ex=1)
-                    if event.key == pygame.K_2:
+                    elif event.key == pygame.K_2:
                         Rocket(random.choice(ground), pos, ex=2)
-                        #Rocket(rightcorner, pos, ex=2)
-                    if event.key == pygame.K_3:
+                    elif event.key == pygame.K_3:
                         Rocket(random.choice(ground), pos, ex=3)
-                        #Rocket(rightcorner, pos, ex=3)
-                    if event.key == pygame.K_4:
+                    elif event.key == pygame.K_4:
                         Rocket(random.choice(ground), pos, ex=4)
-                        #Rocket(rightcorner, pos, ex=4)
-                    if event.key == pygame.K_5:
+                    elif event.key == pygame.K_5:
                         Rocket(random.choice(ground), pos, ex=5)
-                        #Rocket(rightcorner, pos, ex=5)
-                    if event.key == pygame.K_6:
+                    elif event.key == pygame.K_6:
                         Rocket(random.choice(ground), pos, ex=6)
-                        #Rocket(rightcorner, pos, ex=6)
-                    if event.key == pygame.K_7:
+                    elif event.key == pygame.K_7:
                         Rocket(random.choice(ground), pos, ex=7)
-                        #Rocket(rightcorner, pos, ex=7)
-                    if event.key == pygame.K_c:
+                    
+                    elif event.key == pygame.K_8:
+                        Rocket(random.choice(ground), pos, ex=8)
+                    
+                    elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
                                         
             # --------- pressed key handler --------------            
