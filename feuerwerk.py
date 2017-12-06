@@ -104,7 +104,7 @@ class Fragment(VectorSprite):
             self.move = v.Vec2d(0,random.randint(5,250))
             self.move.rotate(random.randint(0,360))
         self.clone = clone
-        VectorSprite.__init__(self, pos, self.move)
+        VectorSprite.__init__(self, pos, self.move, color=self.color)
         if lifetime is not None:
             self.lifetime = lifetime
         else:
