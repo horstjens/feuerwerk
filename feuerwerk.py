@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-003_static_blit_pretty.py
-static blitting and drawing (pretty version)
-url: http://thepythongamebook.com/en:part2:pygame:step003
-author: horst.jens@spielend-programmieren.at
+feuerwerk, a python3/pygame version of missle defense
+
+github: https://github.com/horstjens/feuerwerk/
+author: horstjens@gmail.com
 licence: gpl, see http://www.gnu.org/licenses/gpl.html
-
-works with pyhton3.4 and python2.7
-
-Blitting a surface on a static position
-Drawing a filled circle into ballsurface.
-Blitting this surface once.
-introducing pygame draw methods
-The ball's rectangular surface is black because the background
-color of the ball's surface was never defined nor filled."""
+"""
 
 import random
 import pygame 
@@ -30,16 +22,19 @@ import vectorclass2d as v
 class VectorSprite(pygame.sprite.Sprite):
     pointlist = []
     
-    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0)):
+    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
+                 color=(255,0,0)):
         self._layer = 1
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.pos = v.Vec2d(pos.x, pos.y)
         self.move = v.Vec2d(move.x, move.y)
+        self.color = color
         self.create_image()
         self.rect = self.image.get_rect()
         self.rect.center = self.pos.x, self.pos.y
         self.lifetime = None
         self.age = 0
+        
     
     
     def update(self, seconds):
@@ -66,8 +61,31 @@ class VectorSprite(pygame.sprite.Sprite):
             if point.y > maxy:
                 maxy = point.y
         self.image = pygame.Surface((maxx, maxy))
-        pygame.draw.circle(self.image, (255,0,0), (2,2), 2)
+        pygame.draw.circle(self.image, self.color, (2,2), 2)
         self.image.convert_alpha()  
+  
+class Ufo(VectorSprite):
+  
+    def update(self, seconds):
+        if self.pos.x < 0:
+            self.pos.x = 0
+            self.move *= -1
+        elif self.pos.x > PygView.width:
+            self.pos.x = PygView.width
+            self.move *= -1
+        VectorSprite.update(self, seconds)
+  
+    def create_image(self):
+        self.image = pygame.Surface((100, 100))
+        pygame.draw.line(self.image, self.color, (15, 50), (85, 50),1)
+        pygame.draw.line(self.image, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image, self.color, (25, 75), (75, 75),3)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha() 
         
 class Fragment(VectorSprite):
     def __init__(self, pos=v.Vec2d(100,100), move=None, color=None, gravity=None, lifetime=None, clone=False, radius=2):
@@ -126,15 +144,22 @@ class Spark(Fragment):
 
 class Flashlight(Fragment):
     
-    def __init__(self, pos):
+    def __init__(self, pos, radius=15, delay=None, lifetime=None):
+        self.radius = radius
         Fragment.__init__(self, v.Vec2d(pos.x, pos.y), v.Vec2d(0,0),
-                          color=(255,255,255))
-        self.delay = random.random() * 0.25
-        self.lifetime = random.random() * 0.01
+                          color=(255,255,255), radius=self.radius)
+        if delay is None:
+            self.delay = random.random() * 0.25
+        else:
+            self.delay = delay
+        if lifetime is None:
+            self.lifetime = random.random() * 0.01 + self.delay
+        else:
+            self.lifetime = lifetime + self.delay
     
     def create_image(self):
-        self.image = pygame.Surface((50,50))
-        pygame.draw.circle(self.image, self.color, (25,25), 15)
+        self.image = pygame.Surface((2*self.radius,2*self.radius))
+        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius )
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         
@@ -142,6 +167,8 @@ class Flashlight(Fragment):
         self.age += seconds
         if self.age > self.delay:
             Fragment.update(self, seconds)
+        else:
+            self.lifetime -= seconds
         
 
             
@@ -262,7 +289,11 @@ class Rocket(Fragment):
                         s.rotate(random.randint(0,360))
                         Flashlight( self.pos + s )
                 
-                
+                elif explosion == 9:
+                    Flashlight( self.pos, 2, 0.1, 0.1 )
+                    Flashlight( self.pos, 5, 0.5, 0.1 )
+                    Flashlight( self.pos, 8, 0.8, 0.1 )
+                                   
                 self.kill()
                 
       
@@ -307,6 +338,7 @@ class PygView(object):
             sys.exit()
         self.level = 1
         self.loadbackground()
+        Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0))
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -354,7 +386,7 @@ class PygView(object):
                     elif event.key == pygame.K_b:
                         self.level +=1
                         self.loadbackground()
-                    elif event.key == pygame.K_SPACE:
+                    elif event.key == pygame.K_BACKSPACE:
                         pos = v.Vec2d(self.width//2, self.height//2)
                         m = v.Vec2d(50,0)
                         for _ in range(36):
@@ -379,7 +411,8 @@ class PygView(object):
                     
                     elif event.key == pygame.K_8:
                         Rocket(random.choice(ground), pos, ex=8)
-                    
+                    elif event.key == pygame.K_SPACE:
+                        Rocket(random.choice(ground), pos, ex=9) 
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
                                         
