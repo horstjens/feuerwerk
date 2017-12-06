@@ -67,12 +67,23 @@ class VectorSprite(pygame.sprite.Sprite):
 class Ufo(VectorSprite):
   
     def update(self, seconds):
+        # --- chance to change move vector ---
+        if random.random() < 0.001:
+            self.move=v.Vec2d(random.randint(-80,80),
+                              random.randint(-80,80))
+        # --- bounce on screen edge ---
         if self.pos.x < 0:
             self.pos.x = 0
-            self.move *= -1
+            self.move.x *= -1
         elif self.pos.x > PygView.width:
             self.pos.x = PygView.width
-            self.move *= -1
+            self.move.x *= -1
+        if self.pos.y < 0:
+            self.pos.y = 0
+            self.move.y *= -1
+        elif self.pos.y > PygView.height:
+            self.pos.y = PygView.height
+            self.pos.y *= -1
         VectorSprite.update(self, seconds)
   
     def create_image(self):
