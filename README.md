@@ -1,7 +1,7 @@
 # Firework
 fireworks made with python3 and pygame 
 
-##English
+## English
 
 firework make with vectors in two dimensions.
 
@@ -11,7 +11,7 @@ _Buttons_:
 
 1,2,3,4,5,6,7,8,SPACE,Right Mouse Button
 
-##Deutsch
+## Deutsch
 
 Feuerwerk mit python3 und pygame
 
