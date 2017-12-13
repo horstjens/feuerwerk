@@ -155,7 +155,7 @@ class Spark(Fragment):
 
 class Flashlight(Fragment):
     
-    def __init__(self, pos, radius=15, delay=None, lifetime=None):
+    def __init__(self, pos, radius=15, delay=None, lifetime=None, expand=False):
         self.radius = radius
         Fragment.__init__(self, v.Vec2d(pos.x, pos.y), v.Vec2d(0,0),
                           color=(255,255,255), radius=self.radius)
@@ -167,7 +167,8 @@ class Flashlight(Fragment):
             self.lifetime = random.random() * 0.01 + self.delay
         else:
             self.lifetime = lifetime + self.delay
-    
+        self.expand = expand
+        
     def create_image(self):
         self.image = pygame.Surface((2*self.radius,2*self.radius))
         pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius )
@@ -180,6 +181,11 @@ class Flashlight(Fragment):
             Fragment.update(self, seconds)
         else:
             self.lifetime -= seconds
+            
+    def kill(self):
+        if self.expand and self.radius < 100:
+            Flashlight(self.pos, self.radius+10, 0.0, 0.1, True)
+        Fragment.kill(self)
         
 
             
@@ -301,9 +307,7 @@ class Rocket(Fragment):
                         Flashlight( self.pos + s )
                 
                 elif explosion == 9:
-                    Flashlight( self.pos, 2, 0.1, 0.1 )
-                    Flashlight( self.pos, 5, 0.5, 0.1 )
-                    Flashlight( self.pos, 8, 0.8, 0.1 )
+                    Flashlight( self.pos, 2, 0.1, 0.1, True )
                                    
                 self.kill()
                 
@@ -422,8 +426,10 @@ class PygView(object):
                     
                     elif event.key == pygame.K_8:
                         Rocket(random.choice(ground), pos, ex=8)
-                    elif event.key == pygame.K_SPACE:
-                        Rocket(random.choice(ground), pos, ex=9) 
+                    elif event.key == pygame.K_9:
+                        Rocket(random.choice(ground), pos, ex=9)
+                    #elif event.key == pygame.K_SPACE:
+                    #    Rocket(random.choice(ground), pos, ex=9) 
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
                                         
