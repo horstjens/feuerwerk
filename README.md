@@ -5,8 +5,8 @@ fireworks made with python3 and pygame
 
 firework make with vectors in two dimensions.
 
-ten rocket types and one secret:
-
+ten rocket types and one EASTEREGG:
+#YOU WILL KNOW IT WHEN YOU SEE!!!!!!!!!!!!!!!!!!!!!!!!
 _Buttons_:
 
 1,2,3,4,5,6,7,8,SPACE,Right Mouse Button
@@ -17,9 +17,9 @@ Feuerwerk mit python3 und pygame
 
 Feuerwerk mit Vektoren in zwei Dimensionen.
 
-Zehn raketen typen und ein geheimniss:
+Zehn raketen typen und ein EASTER EGG:
 
 _Tasten_:
 
-1,2,3,4,5,6,7,8,SPACE,rechte maustastefireworks 
+1,2,3,4,5,6,7,8,SPACE,rechte maustaste
 
