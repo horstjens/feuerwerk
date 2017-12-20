@@ -23,7 +23,7 @@ class VectorSprite(pygame.sprite.Sprite):
     pointlist = []
     
     def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
-                 color=(255,0,0)):
+                 color=(255,0,0), gravity=None):
         self._layer = 1
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.pos = v.Vec2d(pos.x, pos.y)
@@ -33,6 +33,7 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = self.pos.x, self.pos.y
         self.lifetime = None
+        self.gravity = gravity
         self.age = 0
         
     
@@ -67,6 +68,12 @@ class VectorSprite(pygame.sprite.Sprite):
 class Ufo(VectorSprite):
   
     def update(self, seconds):
+        # --- animate ---
+        
+        # --- chance to throw bomb ---
+        if random.random() < 0.015:
+            Bomb(pos=self.pos, move=v.Vec2d(0, 0.01),
+                 gravity = v.Vec2d(0,0.7))
         # --- chance to change move vector ---
         if random.random() < 0.001:
             self.move=v.Vec2d(random.randint(-80,80),
@@ -83,7 +90,7 @@ class Ufo(VectorSprite):
             self.move.y *= -1
         elif self.pos.y > PygView.height:
             self.pos.y = PygView.height
-            self.pos.y *= -1
+            self.move.y *= -1
         VectorSprite.update(self, seconds)
   
     def create_image(self):
@@ -97,8 +104,25 @@ class Ufo(VectorSprite):
         pygame.draw.line(self.image, self.color, (25, 75), (75, 75),3)
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha() 
+
+class Bomb(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((20, 20))
+        pygame.draw.circle(self.image, (10,10,10), (10,10), 10)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha() 
+
+    def update(self, seconds):
+        """gravity sucks bomb downwards"""
+        VectorSprite.update(self, seconds)
+        if self.gravity is not None:
+            self.move += self.gravity 
+        if self.pos.y > PygView.height:
+            self.kill()
         
 class Fragment(VectorSprite):
+    
     def __init__(self, pos=v.Vec2d(100,100), move=None, color=None, gravity=None, lifetime=None, clone=False, radius=2):
         self.radius = radius
         if gravity is not None:
