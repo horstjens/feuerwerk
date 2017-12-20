@@ -33,9 +33,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = self.pos.x, self.pos.y
         self.lifetime = None
-        self.gravity = gravity
         self.age = 0
-        
+        self.gravity = gravity
     
     
     def update(self, seconds):
@@ -63,17 +62,31 @@ class VectorSprite(pygame.sprite.Sprite):
                 maxy = point.y
         self.image = pygame.Surface((maxx, maxy))
         pygame.draw.circle(self.image, self.color, (2,2), 2)
-        self.image.convert_alpha()  
+        self.image.convert_alpha()
+        
+class City(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((200, 200))
+        pygame.draw.rect(self.image, (0, 255, 0), (20, 100, 40, 100))
+        pygame.draw.rect(self.image, (0, 255, 255), (80, 40, 50, 160))
+        pygame.draw.rect(self.image, (0, 255, 0), (180, 20, 20, 180))
+        pygame.draw.rect(self.image, (0, 255, 0), (140, 140, 60, 60))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
   
 class Ufo(VectorSprite):
   
     def update(self, seconds):
-        # --- animate ---
-        
-        # --- chance to throw bomb ---
+        #---------animate--------
+        i = (self.age*3)% 5 #modulo = rest of divison by 3
+        self.image = self.images[int(i)]
+        #-------chance to drop bomb--------
         if random.random() < 0.015:
-            Bomb(pos=self.pos, move=v.Vec2d(0, 0.01),
-                 gravity = v.Vec2d(0,0.7))
+            m = v.Vec2d(0, -random.random() * 75)
+            m.rotate(random.randint(0,90))
+            m += self.move
+            Bomb(pos=self.pos, move= m, gravity=v.Vec2d(0,0.9))
         # --- chance to change move vector ---
         if random.random() < 0.001:
             self.move=v.Vec2d(random.randint(-80,80),
@@ -88,41 +101,223 @@ class Ufo(VectorSprite):
         if self.pos.y < 0:
             self.pos.y = 0
             self.move.y *= -1
-        elif self.pos.y > PygView.height:
-            self.pos.y = PygView.height
+        elif self.pos.y > PygView.height // 2:
+            self.pos.y = PygView.height // 2
             self.move.y *= -1
         VectorSprite.update(self, seconds)
+        
+    
   
     def create_image(self):
-        self.image = pygame.Surface((100, 100))
-        pygame.draw.line(self.image, self.color, (15, 50), (85, 50),1)
-        pygame.draw.line(self.image, self.color, (15, 50), (25, 25),3)
-        pygame.draw.line(self.image, self.color, (15, 50), (25, 75),3)
-        pygame.draw.line(self.image, self.color, (85, 50), (75, 25),3)
-        pygame.draw.line(self.image, self.color, (85, 50), (75, 75),3)
-        pygame.draw.line(self.image, self.color, (25, 25), (75, 25),3)
-        pygame.draw.line(self.image, self.color, (25, 75), (75, 75),3)
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha() 
-
+        # ------image0--------
+        self.image0 = pygame.Surface((100, 100))
+        #raumschiff
+        pygame.draw.line(self.image0, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image0, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image0, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image0, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image0, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image0, self.color, (25, 75), (75, 75),3)
+        #Bullaugen
+        pygame.draw.circle(self.image0, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image0, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image0, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image0, (255, 0, 255), (30, 50), (5),0)
+        pygame.draw.circle(self.image0, (0, 255, 255), (50, 50), (5),0)
+        pygame.draw.circle(self.image0, (255, 255, 0), (70, 50), (5),0)
+        #Landestützen
+        pygame.draw.line(self.image0, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image0, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image0, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image0, self.color, (55, 85), (65, 85),2)
+        #Antennen
+        pygame.draw.line(self.image0, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image0, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image0, self.color, (15, 10), (25, 3),2)
+        pygame.draw.line(self.image0, self.color, (75, 5), (85, 5),2)
+        #Kanone
+        pygame.draw.line(self.image0, self.color, (20, 40), (0, 30),5)
+        self.image0.set_colorkey((0,0,0))
+        self.image0.convert_alpha()
+        
+        # ------image1---------
+        self.image1 = pygame.Surface((100, 100))
+        #raumschiff
+        pygame.draw.line(self.image1, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image1, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image1, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image1, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image1, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image1, self.color, (25, 75), (75, 75),3)
+        #Bullaugen
+        pygame.draw.circle(self.image1, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image1, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image1, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image1, (255, 255, 0), (30, 50), (5),0)
+        pygame.draw.circle(self.image1, (255, 0, 255), (50, 50), (5),0)
+        pygame.draw.circle(self.image1, (0, 255, 255), (70, 50), (5),0)
+        #Landestützen
+        pygame.draw.line(self.image1, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image1, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image1, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image1, self.color, (55, 85), (65, 85),2)
+        #Antennen
+        pygame.draw.line(self.image1, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image1, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image1, self.color, (15, 10), (25, 3),2)
+        pygame.draw.line(self.image1, self.color, (75, 5), (85, 5),2)
+        #Kanone
+        pygame.draw.line(self.image1, self.color, (20, 40), (5, 25),5)
+        self.image1.set_colorkey((0,0,0))
+        self.image1.convert_alpha()
+        
+        # ------image2---------
+        self.image2 = pygame.Surface((100, 100))
+        #raumschiff
+        pygame.draw.line(self.image2, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image2, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image2, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image2, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image2, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image2, self.color, (25, 75), (75, 75),3)
+        #Bullaugen
+        pygame.draw.circle(self.image2, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image2, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image2, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image2, (0, 255, 255), (30, 50), (5),0)
+        pygame.draw.circle(self.image2, (255, 255, 0), (50, 50), (5),0)
+        pygame.draw.circle(self.image2, (255, 0, 255), (70, 50), (5),0)
+        #Landestützen
+        pygame.draw.line(self.image2, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image2, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image2, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image2, self.color, (55, 85), (65, 85),2)
+        #Antennen
+        pygame.draw.line(self.image2, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image2, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image2, self.color, (15, 10), (25, 3),2)
+        pygame.draw.line(self.image2, self.color, (75, 5), (85, 5),2)
+        #Kanone
+        pygame.draw.line(self.image2, self.color, (20, 40), (10, 20),5)
+        self.image2.set_colorkey((0,0,0))
+        self.image2.convert_alpha()
+        
+        #----------image3---------
+        self.image3 = pygame.Surface((100, 100))
+        #raumschiff
+        pygame.draw.line(self.image3, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image3, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image3, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image3, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image3, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image3, self.color, (25, 75), (75, 75),3)
+        #Bullaugen
+        pygame.draw.circle(self.image3, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image3, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image3, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image3, (255, 0, 255), (30, 50), (5),0)
+        pygame.draw.circle(self.image3, (0, 255, 255), (50, 50), (5),0)
+        pygame.draw.circle(self.image3, (255, 255, 0), (70, 50), (5),0)
+        #Landestützen
+        pygame.draw.line(self.image3, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image3, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image3, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image3, self.color, (55, 85), (65, 85),2)
+        #Antennen
+        pygame.draw.line(self.image3, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image3, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image3, self.color, (15, 10), (25, 3),2)
+        pygame.draw.line(self.image3, self.color, (75, 5), (85, 5),2)
+        #Kanone
+        pygame.draw.line(self.image3, self.color, (20, 40), (5, 25),5)
+        self.image3.set_colorkey((0,0,0))
+        self.image3.convert_alpha()
+        
+        #---------image4----------
+        self.image4 = pygame.Surface((100, 100))
+        #raumschiff
+        pygame.draw.line(self.image4, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image4, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image4, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image4, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image4, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image4, self.color, (25, 75), (75, 75),3)
+        #Bullaugen
+        pygame.draw.circle(self.image4, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image4, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image4, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image4, (255, 255, 0), (30, 50), (5),0)
+        pygame.draw.circle(self.image4, (255, 0, 255), (50, 50), (5),0)
+        pygame.draw.circle(self.image4, (0, 255, 255), (70, 50), (5),0)
+        #Landestützen
+        pygame.draw.line(self.image4, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image4, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image4, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image4, self.color, (55, 85), (65, 85),2)
+        #Antennen
+        pygame.draw.line(self.image4, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image4, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image4, self.color, (15, 10), (25, 3),2)
+        pygame.draw.line(self.image4, self.color, (75, 5), (85, 5),2)
+        #Kanone
+        pygame.draw.line(self.image4, self.color, (20, 40), (0, 30),5)
+        self.image4.set_colorkey((0,0,0))
+        self.image4.convert_alpha()
+        
+        #----------image5---------
+        self.image5 = pygame.Surface((100, 100))
+        #raumschiff
+        pygame.draw.line(self.image5, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image5, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image5, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image5, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image5, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image5, self.color, (25, 75), (75, 75),3)
+        #Bullaugen
+        pygame.draw.circle(self.image5, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image5, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image5, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image5, (0, 255, 255), (30, 50), (5),0)
+        pygame.draw.circle(self.image5, (255, 255, 0), (50, 50), (5),0)
+        pygame.draw.circle(self.image5, (255, 0, 255), (70, 50), (5),0)
+        #Landestützen
+        pygame.draw.line(self.image5, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image5, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image5, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image5, self.color, (55, 85), (65, 85),2)
+        #Antennen
+        pygame.draw.line(self.image5, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image5, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image5, self.color, (15, 10), (25, 3),2)
+        pygame.draw.line(self.image5, self.color, (75, 5), (85, 5),2)
+        #Kanone
+        pygame.draw.line(self.image5, self.color, (20, 40), (0, 30),5)
+        self.image5.set_colorkey((0,0,0))
+        self.image5.convert_alpha()
+        #-----------------
+        self.images = [self.image0, self.image1, self.image2, self.image3, self.image4, self.image5]
+        self.image = self.images[0]
+        
 class Bomb(VectorSprite):
-    
-    def create_image(self):
-        self.image = pygame.Surface((20, 20))
-        pygame.draw.circle(self.image, (10,10,10), (10,10), 10)
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha() 
-
+        
     def update(self, seconds):
-        """gravity sucks bomb downwards"""
+        """Gravity makes bombs faster"""
         VectorSprite.update(self, seconds)
         if self.gravity is not None:
-            self.move += self.gravity 
+           self.move += self.gravity
         if self.pos.y > PygView.height:
+            self.kill
+        if self.pos.x < 0 or self.pos.x > PygView.width:
             self.kill()
+            
+    def create_image(self):
+        self.image = pygame.Surface((20, 20))
+        pygame.draw.circle(self.image, (10, 10, 10), (10, 10), 10)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        
         
 class Fragment(VectorSprite):
-    
     def __init__(self, pos=v.Vec2d(100,100), move=None, color=None, gravity=None, lifetime=None, clone=False, radius=2):
         self.radius = radius
         if gravity is not None:
@@ -207,7 +402,7 @@ class Flashlight(Fragment):
             self.lifetime -= seconds
             
     def kill(self):
-        if self.expand and self.radius < 100:
+        if self.expand and self.radius < 80:
             Flashlight(self.pos, self.radius+10, 0.0, 0.1, True)
         Fragment.kill(self)
         
@@ -361,8 +556,12 @@ class PygView(object):
         self.playtime = 0.0
         self.font = pygame.font.SysFont('mono', 24, bold=True)
         self.allgroup = pygame.sprite.LayeredUpdates()
+        self.bombgroup = pygame.sprite.Group()
+        self.flashgroup = pygame.sprite.Group()
         VectorSprite.groups = self.allgroup
         Fragment.groups = self.allgroup
+        Bomb.groups = self.allgroup, self.bombgroup
+        Flashlight.groups = self.allgroup, self.flashgroup
         
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
@@ -377,7 +576,8 @@ class PygView(object):
             sys.exit()
         self.level = 1
         self.loadbackground()
-        Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0))
+        self.ufo1 = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0))
+        self.city1 = City(v.Vec2d(100, PygView.height-200), v.Vec2d(0,0))
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -452,8 +652,16 @@ class PygView(object):
                         Rocket(random.choice(ground), pos, ex=8)
                     elif event.key == pygame.K_9:
                         Rocket(random.choice(ground), pos, ex=9)
-                    #elif event.key == pygame.K_SPACE:
-                    #    Rocket(random.choice(ground), pos, ex=9) 
+                        
+                        
+                    #r = v.Vec2d(random.randint(0,50), 0)
+                    #    r.rotate(random.randint(0,360))
+                    #    Flashlight( self.ufo1.pos +  )  
+                    #elif event.key == pygame.K_a:
+                    #    Rocket(self.ufo1.pos, r, ex=(9))
+                    
+                    
+                    
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
                                         
@@ -468,13 +676,16 @@ class PygView(object):
             
             left,middle,right = pygame.mouse.get_pressed()
             if left:
-                #Fragment(leftcorner,leftmove,lifetime=lefttime,color=(255,0,0))
                 Rocket(leftcorner, pos)
             if right:
                 Rocket(rightcorner, pos)
-                #Fragment(pos, gravity=v.Vec2d(0,70), color=(random.randint(0,255,0)))
-                #Fragment(rightcorner,rightmove,lifetime=righttime,color=(0,0,255))
-                
+            
+            
+            #------------collision detection-------
+            for flash in self.flashgroup:
+                crashgroup = pygame.sprite.spritecollide(flash, self.bombgroup, True, pygame.sprite.collide_mask)
+                for bomb in crashgroup:
+                    bomb.kill()
             # ---------- update screen ----------- 
             self.screen.blit(self.background, (0, 0))
             # ------ sprite ------
