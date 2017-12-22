@@ -64,12 +64,54 @@ class VectorSprite(pygame.sprite.Sprite):
         self.image = pygame.Surface((maxx, maxy))
         pygame.draw.circle(self.image, self.color, (2,2), 2)
         self.image.convert_alpha()  
+
+class City(VectorSprite):
+    
+    def update(self, seconds):
+        # --- animate ---
+        i = self.age *3 % len(self.images)
+        self.image = self.images[int(i)]
+        VectorSprite.update(self, seconds)
+    
+    def make_houses(self, surface, h, c):
+        for x in range(30):
+            pygame.draw.rect(surface, c[x], (25+x*5, 100-h[x], 5, h[x]))
+    
+    def create_image(self):
+        h = []
+        c = []
+        for x in range(30):
+            h.append(random.randint(30,70))
+            c.append((50, random.randint(25,70), 50))
+        #  --- image1 ------
+        self.image1 = pygame.Surface((200, 100))
+        self.make_houses(self.image1, h, c)
+        #for x in range(30):
+        #    c = (100, random.randint(50,150), 100)
+        #    pygame.draw.rect(self.image1, c, (25+x*5, 100-h[x], 5, h[x]))
+        pygame.draw.ellipse(self.image1, self.color, (0,0,200, 200),1)
+        self.image1.set_colorkey((0,0,0))
+        self.image1.convert_alpha() 
+        # --- image2 -----
+        self.image2 = pygame.Surface((200, 100))
+        self.color2 = (250,0,100)
+        self.make_houses(self.image2, h, c)
+        #for x in range(30):
+        #    pygame.draw.rect(self.image2, self.color, (25+x*5, 100-h[x], 5, h[x]))
+        pygame.draw.ellipse(self.image2, self.color2, (0,0,200, 200),5)
+        self.image2.set_colorkey((0,0,0))
+        self.image2.convert_alpha() 
+        # ----- images ------
+        self.images = [ self.image1, self.image2]
+        self.image = self.images[0]
+
   
 class Ufo(VectorSprite):
   
     def update(self, seconds):
         # --- animate ---
-        # i = self.age *3 % 5
+        i = self.age *3 % len(self.images)
+        self.image = self.images[int(i)]
         # --- chance to throw bomb ---
         if random.random() < 0.015:
             m = v.Vec2d(0, -random.random()*75)
@@ -96,16 +138,33 @@ class Ufo(VectorSprite):
         VectorSprite.update(self, seconds)
   
     def create_image(self):
-        self.image = pygame.Surface((100, 100))
-        pygame.draw.line(self.image, self.color, (15, 50), (85, 50),1)
-        pygame.draw.line(self.image, self.color, (15, 50), (25, 25),3)
-        pygame.draw.line(self.image, self.color, (15, 50), (25, 75),3)
-        pygame.draw.line(self.image, self.color, (85, 50), (75, 25),3)
-        pygame.draw.line(self.image, self.color, (85, 50), (75, 75),3)
-        pygame.draw.line(self.image, self.color, (25, 25), (75, 25),3)
-        pygame.draw.line(self.image, self.color, (25, 75), (75, 75),3)
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha() 
+        #  --- image1 ------
+        self.image1 = pygame.Surface((100, 100))
+        pygame.draw.line(self.image1, self.color, (15, 50), (85, 50),1)
+        pygame.draw.line(self.image1, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image1, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image1, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image1, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image1, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image1, self.color, (25, 75), (75, 75),3)
+        pygame.draw.circle(self.image1, (0,0,255), (50,15), 10)
+        self.image1.set_colorkey((0,0,0))
+        self.image1.convert_alpha() 
+        # --- image2 -----
+        self.image2 = pygame.Surface((100, 100))
+        self.color2 = (200,0,0)
+        pygame.draw.line(self.image2, self.color2, (15, 50), (85, 50),1)
+        pygame.draw.line(self.image2, self.color2, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image2, self.color2, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image2, self.color2, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image2, self.color2, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image2, self.color2, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image2, self.color2, (25, 75), (75, 75),3)
+        self.image2.set_colorkey((0,0,0))
+        self.image2.convert_alpha() 
+        # ----- images ------
+        self.images = [ self.image1, self.image2]
+        self.image = self.images[0]
 
 class Bomb(VectorSprite):
     
@@ -385,7 +444,11 @@ class PygView(object):
             sys.exit()
         self.level = 1
         self.loadbackground()
-        Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0))
+        self.ufo1 = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255))
+        self.city1 = City(v.Vec2d(150, PygView.height-50), v.Vec2d(0,0))
+        self.city2 = City(v.Vec2d(400, PygView.height-50), v.Vec2d(0,0))
+        self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
+        self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -470,7 +533,13 @@ class PygView(object):
             
             if pressed[pygame.K_f]:
                 pos = v.Vec2d(self.width//2, self.height//2)
-                Fragment(pos, gravity=v.Vec2d(0, 200))            
+                Fragment(pos, gravity=v.Vec2d(0, 200))
+            quake = False
+            if pressed[pygame.K_e]:
+                quake = True
+                self.screen.blit(self.background, 
+                    (random.randint(-10,10), random.randint(-10,10)))
+                
             # ------ mouse handler ------
             
             
@@ -489,7 +558,8 @@ class PygView(object):
                      self.bombgroup, True, pygame.sprite.collide_mask)
      
             # ---------- update screen ----------- 
-            self.screen.blit(self.background, (0, 0))
+            if not quake:
+                self.screen.blit(self.background, (0, 0))
             # ------ sprite ------
             self.allgroup.update(seconds)
             self.allgroup.draw(self.screen)
