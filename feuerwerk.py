@@ -35,6 +35,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.lifetime = None
         self.gravity = gravity
         self.age = 0
+        self.hp = 100
+        self.hpfull = 100
         
     
     
@@ -105,8 +107,31 @@ class City(VectorSprite):
         self.images = [ self.image1, self.image2]
         self.image = self.images[0]
 
+class Healthbar(VectorSprite):
+     
+    def __init__(self, boss):
+        self.boss = boss
+        VectorSprite.__init__(self, pos=boss.pos + v.Vec2d(0,-40),
+                              move=boss.move, color=(0,255,0)) 
+        
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        self.move = self.boss.move
+        self.pos = self.boss.pos + v.Vec2d(0,-40)
+        
+    def create_image(self):
+        self.image = pygame.Surface((100,5))
+        self.image.fill((0,255,0))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
   
 class Ufo(VectorSprite):
+    
+    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
+                 color=(255,0,0), gravity=None):
+        VectorSprite.__init__(self, pos, move, color) 
+        Healthbar(self)            
   
     def update(self, seconds):
         # --- animate ---
