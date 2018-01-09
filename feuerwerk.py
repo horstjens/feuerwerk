@@ -166,6 +166,28 @@ class Ufo(VectorSprite):
         self.images = [ self.image1, self.image2]
         self.image = self.images[0]
 
+class Explosion(VectorSprite):
+    
+    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
+                 color=(255,0,0), gravity=None):
+        VectorSprite.__init__(self, pos, move, color)
+        self.move = v.Vec2d(0,0)
+        self.lifetime = 0.25 + random.random() 
+        
+    
+    def create_image(self):
+        self.image = pygame.Surface((20, 20))
+        pygame.draw.circle(self.image, (random.randint(150,255),
+                                        random.randint(150,230),
+                                        48), (10,10), 10)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha() 
+    
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        self.create_image()
+    
+
 class Bomb(VectorSprite):
     
     def create_image(self):
@@ -180,6 +202,7 @@ class Bomb(VectorSprite):
         if self.gravity is not None:
             self.move += self.gravity 
         if self.pos.y > PygView.height:
+            Explosion(self.pos)
             self.kill()
         if self.pos.x < 0 or self.pos.x > PygView.width:
             self.kill()
