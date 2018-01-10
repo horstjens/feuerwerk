@@ -253,8 +253,16 @@ class Explosion(VectorSprite):
         pygame.draw.circle(self.image, (random.randint(150,255),
                                         random.randint(150,230),
                                         48), (10,10), 10)
+        pygame.draw.circle(self.image, (random.randint(0,255),
+                                        random.randint(0,255),
+                                        random.randint(0,255)),
+                                        (10,10), random.randint(5,9))
+        pygame.draw.circle(self.image, (random.randint(0,255),
+                                        random.randint(0,255),
+                                        random.randint(0,255)),
+                                        (10,10), random.randint(1,4))
         self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha() 
+        self.image.convert_alpha()
     
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -274,7 +282,7 @@ class Bomb(VectorSprite):
         VectorSprite.update(self, seconds)
         if self.gravity is not None:
             self.move += self.gravity 
-        if self.pos.y > PygView.height:
+        if self.pos.y > PygView.height - 20:
             Explosion(self.pos)
             self.kill()
         if self.pos.x < 0 or self.pos.x > PygView.width:
