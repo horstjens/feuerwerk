@@ -72,12 +72,17 @@ class VectorSprite(pygame.sprite.Sprite):
 
 class City(VectorSprite):
     
+    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(0,0),
+                 color=(255,0,0), gravity=None):
+        VectorSprite.__init__(self, pos, move, color)
+        self.hp = 10000
+
     def update(self, seconds):
         # --- animate ---
         i = self.age *3 % len(self.images)
         self.image = self.images[int(i)]
         VectorSprite.update(self, seconds)
-    
+
     def make_houses(self, surface, h, c):
         for x in range(30):
             pygame.draw.rect(surface, c[x], (25+x*5, 100-h[x], 5, h[x]))
@@ -144,7 +149,7 @@ class Ufo(VectorSprite):
     
     def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
                  color=(255,0,0), gravity=None):
-        VectorSprite.__init__(self, pos, move, color) 
+        VectorSprite.__init__(self, pos, move, color)
         Healthbar(self)
 
     def update(self, seconds):
@@ -258,7 +263,7 @@ class Explosion(VectorSprite):
                  color=(255,0,0), gravity=None):
         VectorSprite.__init__(self, pos, move, color)
         self.move = v.Vec2d(0,0)
-        self.lifetime = 0.25 + random.random() 
+        self.lifetime = 0.25 + random.random()
         
     
     def create_image(self):
@@ -643,9 +648,9 @@ class PygView(object):
                     elif event.key == pygame.K_9:
                         Rocket(random.choice(ground), pos, ex=9)
                     elif event.key == pygame.K_1:
-                        self.ufo1.hp -= 10
-                    #elif event.key == pygame.K_SPACE:
-                    #    Rocket(random.choice(ground), pos, ex=9) 
+                        self.uf14.hp -= 10
+                    elif event.key == pygame.K_SPACE:
+                        ufo = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255)) 
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
 
