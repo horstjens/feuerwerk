@@ -121,7 +121,11 @@ class Healthbar(VectorSprite):
         
     def create_image(self):
         self.image = pygame.Surface((100,5))
-        self.image.fill((0,255,0))
+        pygame.draw.rect(self.image, (0,0,0), (0,0,100,5), 1)
+        pygame.draw.rect(self.image, (0,200,0), (1,1,99,4), 1)
+        #-----hp-----only shows correctly up to 100 hp
+        pygame.draw.rect(self.image, (0,200,0), (1,1,self.boss.hp,4), 0)
+        #self.image.fill((0,0,0))
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
@@ -131,8 +135,8 @@ class Ufo(VectorSprite):
     def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
                  color=(255,0,0), gravity=None):
         VectorSprite.__init__(self, pos, move, color) 
-        Healthbar(self)            
-  
+        Healthbar(self)
+
     def update(self, seconds):
         # --- animate ---
         i = self.age *3 % len(self.images)
@@ -631,7 +635,7 @@ class PygView(object):
                     #    Rocket(random.choice(ground), pos, ex=9) 
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
-                                        
+
             # --------- pressed key handler --------------            
             pressed = pygame.key.get_pressed()
             
