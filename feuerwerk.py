@@ -48,6 +48,9 @@ class VectorSprite(pygame.sprite.Sprite):
             self.lifetime -= seconds
             if self.lifetime < 0:
                 self.kill()
+        #--------kill because lack of hitpoints---------
+        if self.hp <= 0:
+            self.kill()
         
     def create_image(self):
         minx = 0
@@ -115,9 +118,17 @@ class Healthbar(VectorSprite):
                               move=boss.move, color=(0,255,0)) 
         
     def update(self, seconds):
+        if self.boss.hp <= 0:
+            self.kill()
         VectorSprite.update(self, seconds)
         self.move = self.boss.move
         self.pos = self.boss.pos + v.Vec2d(0,-40)
+        self.image.fill((0,0,0))
+        pygame.draw.rect(self.image, (0,0,0), (0,0,100,5), 1)
+        pygame.draw.rect(self.image, (0,200,0), (1,1,99,4), 1)
+        pygame.draw.rect(self.image, (0,200,0), (1,1,self.boss.hp,4), 0)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
         
     def create_image(self):
         self.image = pygame.Surface((100,5))
@@ -125,7 +136,6 @@ class Healthbar(VectorSprite):
         pygame.draw.rect(self.image, (0,200,0), (1,1,99,4), 1)
         #-----hp-----only shows correctly up to 100 hp
         pygame.draw.rect(self.image, (0,200,0), (1,1,self.boss.hp,4), 0)
-        #self.image.fill((0,0,0))
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
@@ -169,7 +179,6 @@ class Ufo(VectorSprite):
     def create_image(self):
         #---------image1------
         self.image1 = pygame.Surface((100, 100))
-        #pygame.draw.line(self.image, self.color, (15, 50), (85, 50),1)
         pygame.draw.line(self.image1, self.color, (15, 50), (25, 25),3)
         pygame.draw.line(self.image1, self.color, (15, 50), (25, 75),3)
         pygame.draw.line(self.image1, self.color, (85, 50), (75, 25),3)
@@ -534,10 +543,12 @@ class PygView(object):
         self.allgroup = pygame.sprite.LayeredUpdates()
         self.bombgroup = pygame.sprite.Group()
         self.flashgroup = pygame.sprite.Group()
+        self.ufogroup = pygame.sprite.Group()
         VectorSprite.groups = self.allgroup
         Fragment.groups = self.allgroup
         Bomb.groups = self.allgroup, self.bombgroup
         Flashlight.groups = self.allgroup, self.flashgroup
+        Ufo.groups = self.allgroup, self.ufogroup
         
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
@@ -612,8 +623,8 @@ class PygView(object):
                             m.rotate(10)
                     elif event.key == pygame.K_0:
                         Rocket(random.choice(ground), pos, ex=0)
-                    elif event.key == pygame.K_1:
-                        Rocket(random.choice(ground), pos, ex=1)
+                    #elif event.key == pygame.K_1:
+                    #    Rocket(random.choice(ground), pos, ex=1)
                     elif event.key == pygame.K_2:
                         Rocket(random.choice(ground), pos, ex=2)
                     elif event.key == pygame.K_3:
@@ -631,6 +642,8 @@ class PygView(object):
                         Rocket(random.choice(ground), pos, ex=8)
                     elif event.key == pygame.K_9:
                         Rocket(random.choice(ground), pos, ex=9)
+                    elif event.key == pygame.K_1:
+                        self.ufo1.hp -= 10
                     #elif event.key == pygame.K_SPACE:
                     #    Rocket(random.choice(ground), pos, ex=9) 
                     elif event.key == pygame.K_c:
@@ -664,6 +677,10 @@ class PygView(object):
             for flash in self.flashgroup:
                 crashgroup =  pygame.sprite.spritecollide(flash,
                      self.bombgroup, True, pygame.sprite.collide_mask)
+                crashgroup2 =  pygame.sprite.spritecollide(flash,
+                     self.ufogroup, False, pygame.sprite.collide_mask)
+                for ufo in crashgroup2:
+                    ufo.hp -= 1
      
             # ---------- update screen ----------- 
             if not quake:
