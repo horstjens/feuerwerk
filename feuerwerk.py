@@ -399,9 +399,24 @@ class Flashlight(Fragment):
             Flashlight(self.pos, self.radius+10, 0.0, 0.1, True)
         Fragment.kill(self)
         
-
+class GunPlatform(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,200))
+        pygame.draw.rect(self.image, (100,100,100),
+                         (20,30,10,170))
+        pygame.draw.rect(self.image, (160,160,160),
+                         (0,20, 50, 10))
+        pygame.draw.arc(self.image, (173,216,230),
+                         (0,0,50,40), 0, 3.14,2)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+                         
+        
             
 class Smoke(Fragment):
+    
     def create_image(self):
         self.image = pygame.Surface((50,50))
         pygame.draw.circle(self.image, self.color, (25,25), 2)
@@ -552,6 +567,8 @@ class PygView(object):
         self.bombgroup = pygame.sprite.Group()
         self.flashgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
+        self.turretgroup = pygame.sprite.Group()
+        GunPlatform.groups = self.allgroup, self.turretgroup
         VectorSprite.groups = self.allgroup
         Fragment.groups = self.allgroup
         Bomb.groups = self.allgroup, self.bombgroup
@@ -576,6 +593,14 @@ class PygView(object):
         self.city2 = City(v.Vec2d(400, PygView.height-50), v.Vec2d(0,0))
         self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
+        
+        # gun platforms
+        for x in range(0, PygView.width-20, 70):
+            dx = random.randint(-20,20)
+            y = PygView.height - random.randint(30,100)
+            GunPlatform(v.Vec2d(x+dx, y), v.Vec2d(0,0))
+        #self.turret1 = GunPlatform(v.Vec2d(200, PygView.height-100), v.Vec2d(0,0))
+        #self.turret2 = GunPlatform(v.Vec2d(230, PygView.height-90), v.Vec2d(0,0))
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
