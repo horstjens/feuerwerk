@@ -163,9 +163,12 @@ class Ufo(VectorSprite):
             Bomb(pos=self.pos, move=m,
                  gravity = v.Vec2d(0,0.7))
         # --- chance to change move vector ---
-        if random.random() < 0.001:
-            self.move=v.Vec2d(random.randint(-80,80),
-                              random.randint(-80,80))
+        if random.random() < 0.05:
+             m = v.Vec2d(0, random.randint(-10, 10))
+             m.rotate(random.randint(-120, 120))	
+             self.move += m		
+             #self.move=v.Vec2d(random.randint(-80,80),		
+             #                  random.randint(-80,80))
         # --- bounce on screen edge ---
         if self.pos.x < 0:
             self.pos.x = 0
@@ -510,7 +513,7 @@ class Rocket(Fragment):
                         m *= wieoft2
                 
                 elif explosion == 8:
-                    for x in range(50):
+                    for x in range(8):
                         s = v.Vec2d(random.randint(0,50), 0)
                         s.rotate(random.randint(0,360))
                         Flashlight( self.pos + s )
@@ -649,8 +652,8 @@ class PygView(object):
                         Rocket(random.choice(ground), pos, ex=9)
                     elif event.key == pygame.K_1:
                         self.uf14.hp -= 10
-                   # elif event.key == pygame.K_SPACE:
-                    #    ufo = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255)) 
+                    elif event.key == pygame.K_SPACE:
+                        Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255)) 
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
 
@@ -666,6 +669,7 @@ class PygView(object):
                 self.screen.blit(self.background, 
                     (random.randint(-10,10), random.randint(-10,10)))
             if pressed[pygame.K_y]:
+                # y to create many many ufos
                 ufo = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255))
                 
             # ------ mouse handler ------
