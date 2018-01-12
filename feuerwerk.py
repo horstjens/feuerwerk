@@ -163,9 +163,12 @@ class Ufo(VectorSprite):
             Bomb(pos=self.pos, move=m,
                  gravity = v.Vec2d(0,0.7))
         # --- chance to change move vector ---
-        if random.random() < 0.001:
-            self.move=v.Vec2d(random.randint(-80,80),
-                              random.randint(-80,80))
+        if random.random() < 0.05:
+            m = v.Vec2d(0, random.randint(-10, 10))
+            m.rotate(random.randint(-120, 120))
+            self.move += m
+            #self.move=v.Vec2d(random.randint(-80,80),
+            #                  random.randint(-80,80))
         # --- bounce on screen edge ---
         if self.pos.x < 0:
             self.pos.x = 0
