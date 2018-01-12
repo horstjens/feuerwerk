@@ -398,22 +398,19 @@ class Flashlight(Fragment):
         if self.expand and self.radius < 100:
             Flashlight(self.pos, self.radius+10, 0.0, 0.1, True)
         Fragment.kill(self)
-        
+                         
 class GunPlatform(VectorSprite):
     
     def create_image(self):
-        self.image = pygame.Surface((50,200))
-        pygame.draw.rect(self.image, (100,100,100),
-                         (20,30,10,170))
+        self.image = pygame.Surface((100,200))
+        pygame.draw.polygon(self.image, (100, 100, 60), [(0, 200), (20, 20), (30, 20), (50, 200)])
         pygame.draw.rect(self.image, (160,160,160),
                          (0,20, 50, 10))
         pygame.draw.arc(self.image, (173,216,230),
                          (0,0,50,40), 0, 3.14,2)
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
-        self.rect = self.image.get_rect()
-                         
-        
+        self.rect = self.image.get_rect()    
             
 class Smoke(Fragment):
     
@@ -595,7 +592,7 @@ class PygView(object):
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         
         # gun platforms
-        for x in range(0, PygView.width-20, 70):
+        for x in range(0, PygView.width-20, 90):
             dx = random.randint(-20,20)
             y = PygView.height - random.randint(30,100)
             GunPlatform(v.Vec2d(x+dx, y), v.Vec2d(0,0))
@@ -742,9 +739,11 @@ class PygView(object):
 
 
     
-####
+
 
 if __name__ == '__main__':
 
     # call with width of window and fps
     PygView().run()
+    
+
