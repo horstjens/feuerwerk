@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 feuerwerk, a python3/pygame version of missle defense
-
 github: https://github.com/horstjens/feuerwerk/
 author: horstjens@gmail.com
 licence: gpl, see http://www.gnu.org/licenses/gpl.html
@@ -403,11 +402,24 @@ class GunPlatform(VectorSprite):
     
     def create_image(self):
         self.image = pygame.Surface((100,200))
+        farbe = random.randint(10, 150)
+        farbe1 = random.randint(100,200) 
         pygame.draw.polygon(self.image, (100, 100, 60), [(0, 200), (20, 20), (30, 20), (50, 200)])
-        pygame.draw.rect(self.image, (160,160,160),
+        
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (2,180), (50,200), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (4,160), (48,180), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (7,140), (45,160), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (9,120), (43,140), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (12,100), (41,120), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (14,80), (39,100), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (16,60), (37,80), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (20,40), (33,60), 5)
+        
+        pygame.draw.rect(self.image, (farbe1,farbe1,farbe1),
                          (0,20, 50, 10))
         pygame.draw.arc(self.image, (173,216,230),
                          (0,0,50,40), 0, 3.14,2)
+                         
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.rect = self.image.get_rect()    
@@ -745,5 +757,3 @@ if __name__ == '__main__':
 
     # call with width of window and fps
     PygView().run()
-    
-
