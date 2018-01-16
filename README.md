@@ -23,4 +23,4 @@ _Tasten_:
 
 1,2,3,4,5,6,7,8,SPACE,rechte maustaste
 
-![screenshot](Screenshot at 2018-01-16 18_28_30.png)
+![screenshot](/Screenshot at 2018-01-16 18_28_30.png)
