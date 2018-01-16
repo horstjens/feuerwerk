@@ -299,6 +299,10 @@ class Bomb(VectorSprite):
 
     def update(self, seconds):
         """gravity sucks bomb downwards"""
+        if random.random() < 1:
+            c = random.randint(10,150)
+            Smoke(self.pos, move=self.move* -0.1, color=(c,c,c))
+                  
         VectorSprite.update(self, seconds)
         if self.gravity is not None:
             self.move += self.gravity 
