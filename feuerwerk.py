@@ -602,16 +602,19 @@ class PygView(object):
         self.level = 1
         self.loadbackground()
         self.ufo1 = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255))
+        
+        for x in range(0, PygView.width-20, 90):
+            dx = random.randint(-20,20)
+            y = PygView.height - random.randint(30,100)
+            GunPlatform(v.Vec2d(x+dx, y), v.Vec2d(0,0))
+        
         self.city1 = City(v.Vec2d(150, PygView.height-50), v.Vec2d(0,0))
         self.city2 = City(v.Vec2d(400, PygView.height-50), v.Vec2d(0,0))
         self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         
         # gun platforms
-        for x in range(0, PygView.width-20, 90):
-            dx = random.randint(-20,20)
-            y = PygView.height - random.randint(30,100)
-            GunPlatform(v.Vec2d(x+dx, y), v.Vec2d(0,0))
+        
         #self.turret1 = GunPlatform(v.Vec2d(200, PygView.height-100), v.Vec2d(0,0))
         #self.turret2 = GunPlatform(v.Vec2d(230, PygView.height-90), v.Vec2d(0,0))
         
