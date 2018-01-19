@@ -164,9 +164,9 @@ class Ufo(VectorSprite):
         # --- chance to change move vector ---
         if random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
-             m.rotate(random.randint(-120, 120))	
-             self.move += m		
-             #self.move=v.Vec2d(random.randint(-80,80),		
+             m.rotate(random.randint(-120, 120))    
+             self.move += m     
+             #self.move=v.Vec2d(random.randint(-80,80),     
              #                  random.randint(-80,80))
         # --- bounce on screen edge ---
         if self.pos.x < 0:
@@ -618,6 +618,21 @@ class PygView(object):
         #self.turret1 = GunPlatform(v.Vec2d(200, PygView.height-100), v.Vec2d(0,0))
         #self.turret2 = GunPlatform(v.Vec2d(230, PygView.height-90), v.Vec2d(0,0))
         
+        
+        # --- mouse ----
+        self.mousepic=pygame.surface.Surface((40,40))
+        pygame.draw.line(self.mousepic,(200,0,0),(0,0),(40,40))
+        pygame.draw.line(self.mousepic,(200,0,0),(0,40),(40,0))
+        pygame.draw.circle(self.mousepic,(80,0,0),(20,20),7,1)
+        pygame.draw.circle(self.mousepic,(130,0,0),(20,20),13,1)
+        pygame.draw.circle(self.mousepic,(150,0,0),(20,20),17,1)
+        
+        
+        self.mousepic.set_colorkey((0,0,0))
+        self.mousepic.convert_alpha()
+        
+        
+        
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
         self.background.fill((255,255,255)) # fill background white
@@ -639,7 +654,8 @@ class PygView(object):
         third = v.Vec2d(self.width//3, self.height)
         third2 = v.Vec2d(self.width//3*2, self.height)
         ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
-            
+        pygame.mouse.set_visible(False)    
+        self.mousetrail = []
         while running:
             # --------- update time -------------            
             
@@ -651,6 +667,8 @@ class PygView(object):
             self.draw_text(text_time, x = self.width//2-200, y=30, color=(100,0,100))
             
             # ------ 
+            
+            
             
             pos = v.Vec2d(pygame.mouse.get_pos())
             
@@ -742,10 +760,25 @@ class PygView(object):
             # ------ sprite ------
             self.allgroup.update(seconds)
             self.allgroup.draw(self.screen)
+            #-------- blit mouse -----
+            x, y = pygame.mouse.get_pos()
+            self.mousetrail.insert(0, (x,y))
+            self.mousetrail = self.mousetrail[:20]
+            if len(self.mousetrail) > 1:
+                for nr, (xpos, ypos) in enumerate(self.mousetrail):
+                    if nr == 0:
+                        oldx, oldy = pygame.mouse.get_pos()
+                    else:
+                        oldx, oldy = self.mousetrail[nr-1]
+                    pygame.draw.line(self.screen, (255, nr*10, nr*10),
+                                     (xpos,ypos), (oldx, oldy), nr//10)
+                
+                
+            self.screen.blit(self.mousepic,(x-20, y-20))
             # ------ flip screen ------
             pygame.display.flip()
             
-            
+        pygame.mouse.set_visible(True)
         pygame.quit()
 
 
@@ -763,4 +796,4 @@ class PygView(object):
 if __name__ == '__main__':
 
     # call with width of window and fps
-    PygView().run()
+    PygView(1290,700).run()
