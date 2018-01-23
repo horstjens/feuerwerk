@@ -40,8 +40,6 @@ class VectorSprite(pygame.sprite.Sprite):
         self.age = 0
         self.hp = 100
         self.hpfull = 100
-
-       
         
     
     
@@ -164,6 +162,9 @@ class Mouse(VectorSprite):
         
         pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
+
+        
+        pygame.draw.circle(self.image,(255,125,145),(20,20),22,1)
         
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
@@ -681,7 +682,6 @@ class PygView(object):
         self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         self.city5 = City(v.Vec2d(1150, PygView.height-50), v.Vec2d(0,0))
-        
 
         self.mouse = Mouse()
         
