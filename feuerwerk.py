@@ -38,9 +38,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.lifetime = None
         self.gravity = gravity
         self.age = 0
-        self.hp = 500
-        self.hpfull = 500
-       
+        self.hp = 100
+        self.hpfull = 100
         
     
     
@@ -127,6 +126,7 @@ class Mouse(VectorSprite):
         delta1 = 12.5
         delta2 = 25
         
+
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,0),(20.5,6),2)
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,6),(27,0),2)
         
@@ -162,6 +162,7 @@ class Mouse(VectorSprite):
         
         pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
+
         
         pygame.draw.circle(self.image,(255,125,145),(20,20),22,1)
         
@@ -681,7 +682,7 @@ class PygView(object):
         self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         self.city5 = City(v.Vec2d(1150, PygView.height-50), v.Vec2d(0,0))
-        
+
         self.mouse = Mouse()
         
         # gun platforms
