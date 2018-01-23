@@ -28,6 +28,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.pos = v.Vec2d(pos.x, pos.y)
         self.move = v.Vec2d(move.x, move.y)
         self.color = color
+        self.r = 255
+        self.delta = -10
         self.create_image()
         self.rect = self.image.get_rect()
         self.rect.center = self.pos.x, self.pos.y
@@ -36,6 +38,7 @@ class VectorSprite(pygame.sprite.Sprite):
         self.age = 0
         self.hp = 100
         self.hpfull = 100
+       
         
     
     
@@ -113,6 +116,67 @@ class City(VectorSprite):
         # ----- images ------
         self.images = [ self.image1, self.image2]
         self.image = self.images[0]
+
+class Mouse(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.surface.Surface((40,40))
+    
+        delta1 = 12.5
+        delta2 = 25
+        
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(14,0),(20.5,6),2)
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(20.5,6),(27,0),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(14,5),(20.5,11),2)
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(20.5,11),(27,5),2)
+        
+        pygame.draw.line(self.image,(self.r,0,0),(14,10),(20.5,16),2)
+        pygame.draw.line(self.image,(self.r,0,0),(20.5,16),(27,10),2)
+#        
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(14,40),(20.5,34),2)
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(20.5,34),(27,40),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(14,35),(20.5,29),2)
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(20.5,29),(27,35),2)
+        
+        pygame.draw.line(self.image,(self.r,0,0),(14,30),(20.5,24),2)
+        pygame.draw.line(self.image,(self.r,0,0),(20.5,24),(27,30),2)
+#
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(0,14),(6,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(6,20.5),(0,27),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(5,14),(11,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(11,20.5),(5,27),2)
+        
+        pygame.draw.line(self.image,(self.r,0,0),(10,14),(16,20.5),2)
+        pygame.draw.line(self.image,(self.r,0,0),(16,20.5),(10,27),2)
+#
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(40,14),(34,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta2,0,0),(34,20.5),(40,27),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(35,14),(29,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta1,0,0),(29,20.5),(35,27),2)
+        
+        pygame.draw.line(self.image,(self.r,0,0),(30,14),(24,20.5),2)
+        pygame.draw.line(self.image,(self.r,0,0),(24,20.5),(30,27),2)
+        
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        self.pos = v.Vec2d(pygame.mouse.get_pos())
+        # self.r can take the values of 255 until 101
+        self.r += self.delta
+        if self.r < 151:
+            self.r = 151
+            self.delta = 10
+        elif self.r > 255:
+            self.r = 255
+            self.delta = -10
+        
+        self.create_image()
 
 class Healthbar(VectorSprite):
      
@@ -612,26 +676,14 @@ class PygView(object):
         self.city2 = City(v.Vec2d(400, PygView.height-50), v.Vec2d(0,0))
         self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
+        self.city5 = City(v.Vec2d(1150, PygView.height-50), v.Vec2d(0,0))
+        
+        Mouse()
         
         # gun platforms
         
         #self.turret1 = GunPlatform(v.Vec2d(200, PygView.height-100), v.Vec2d(0,0))
         #self.turret2 = GunPlatform(v.Vec2d(230, PygView.height-90), v.Vec2d(0,0))
-        
-        
-        # --- mouse ----
-        self.mousepic=pygame.surface.Surface((40,40))
-        pygame.draw.line(self.mousepic,(200,0,0),(0,0),(40,40))
-        pygame.draw.line(self.mousepic,(200,0,0),(0,40),(40,0))
-        pygame.draw.circle(self.mousepic,(80,0,0),(20,20),7,1)
-        pygame.draw.circle(self.mousepic,(130,0,0),(20,20),13,1)
-        pygame.draw.circle(self.mousepic,(150,0,0),(20,20),17,1)
-        
-        
-        self.mousepic.set_colorkey((0,0,0))
-        self.mousepic.convert_alpha()
-        
-        
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -640,8 +692,7 @@ class PygView(object):
         self.background = pygame.transform.scale(self.background, (PygView.width,PygView.height))
         self.background.convert()
         
-        
-        
+
     def run(self):
         """The mainloop
         """ 
@@ -774,7 +825,7 @@ class PygView(object):
                                      (xpos,ypos), (oldx, oldy), nr//10)
                 
                 
-            self.screen.blit(self.mousepic,(x-20, y-20))
+#            self.screen.blit(self.mousepic,(x-20, y-20))
             # ------ flip screen ------
             pygame.display.flip()
             
@@ -796,4 +847,4 @@ class PygView(object):
 if __name__ == '__main__':
 
     # call with width of window and fps
-    PygView(1290,700).run()
+    PygView(1425,800).run()
