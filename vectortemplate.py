@@ -17,233 +17,6 @@ import operator
 import math
 import vectorclass2d as v
 
-
-class Hitpointbar(pygame.sprite.Sprite):
-        """shows a bar with the hitpoints of a Boss sprite
-        Boss needs a unique number in FlyingObject.numbers,
-        self.hitpoints and self.hitpointsfull"""
-    
-        def __init__(self, bossnumber, height=7, color = (0,255,0), ydistance=10):
-            pygame.sprite.Sprite.__init__(self,self.groups)
-            self.bossnumber = bossnumber # lookup in Flyingobject.numbers
-            self.boss = FlyingObject.numbers[self.bossnumber]
-            self.height = height
-            self.color = color
-            self.ydistance = ydistance
-            self.image = pygame.Surface((self.boss.rect.width,self.height))
-            self.image.set_colorkey((0,0,0)) # black transparent
-            pygame.draw.rect(self.image, self.color, (0,0,self.boss.rect.width,self.height),1)
-            self.rect = self.image.get_rect()
-            self.oldpercent = 0
-            
-            
-        def update(self, time):
-            self.percent = self.boss.hitpoints / self.boss.hitpointsfull * 1.0
-            if self.percent != self.oldpercent:
-                pygame.draw.rect(self.image, (0,0,0), (1,1,self.boss.rect.width-2,5)) # fill black
-                pygame.draw.rect(self.image, (0,255,0), (1,1,
-                    int(self.boss.rect.width * self.percent),5),0) # fill green
-            self.oldpercent = self.percent
-            self.rect.centerx = self.boss.rect.centerx
-            self.rect.centery = self.boss.rect.centery - self.boss.rect.height /2 - self.ydistance
-            #check if boss is still alive
-            if self.bossnumber not in FlyingObject.numbers:
-                self.kill() # kill the hitbar
-
-
-class FlyingObject(pygame.sprite.Sprite):
-    """base class for sprites. this class inherits from pygames sprite class"""
-    number = 0
-    numbers = {} # { number, Sprite }
-    
-    def __init__(self, layer=4, **kwargs):
-        """create a (black) surface and paint a blue ball on it"""
-        self._layer = layer   # pygame Sprite layer
-        pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
-        # self groups is set in PygView.paint()
-        self.number = FlyingObject.number # unique number for each sprite
-        FlyingObject.number += 1 
-        FlyingObject.numbers[self.number] = self 
-        # get unlimited named arguments and turn them into attributes
-        for key, arg in kwargs.items():
-            #print(key, arg)
-            setattr(self, key, arg)
-        # --- default values for missing keywords ----
-        #if "pos" not in kwarts
-        #pos=v.Vec2d(50,50), move=v.Vec2d(0,0), radius = 50, color=None, 
-        #         , hitpoints=100, mass=10, damage=10, bounce_on_edge=True, angle=0
-        if "pos" not in kwargs:
-            self.pos = v.Vec2d(50,50)
-        if "move" not in kwargs:
-            self.move = v.Vec2d(0,0)
-        if "radius" not in kwargs:
-            self.radius = 50
-        if "width" not in kwargs:
-            self.width = self.radius * 2
-        if "height" not in kwargs:
-            self.height = self.radius * 2
-        if "color" not in kwargs:
-            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
-        if "hitpoints" not in kwargs:
-            self.hitpoints = 100
-        self.hitpointsfull = self.hitpoints # makes a copy
-        if "mass" not in kwargs:
-            self.mass = 10
-        if "damage" not in kwargs:
-            self.damage = 10
-        if "bounce_on_edge" not in kwargs:
-            self.bounce_on_edge = False
-        if "kill_on_edge" not in kwargs:
-            self.kill_on_edge = False
-        if "angle" not in kwargs:
-            self.angle = 0 # facing right?
-        if "max_age" not in kwargs:
-            self.max_age = None
-        if "max_distance" not in kwargs:
-            self.max_distance = None
-        if "picture" not in kwargs:
-            self.picture = None
-        if "bossnumber" not in kwargs:
-            self.bossnumber = None
-        # ---
-        self.age = 0 # in seconds
-        self.distance_traveled = 0 # in pixel
-        
-
-        self.create_image()
-        
-        self.rect.center = (-300,-300) # avoid blinking image in topleft corner
-        #self.init2()
-
-        
-        
-    def kill(self):
-        del FlyingObject.numbers[self.number] # remove Sprite from numbers dict
-        pygame.sprite.Sprite.kill(self)
-        
-    def init2(self):
-        pass # for subclasses
-        
-    def create_image(self):
-        if self.picture is not None:
-            self.image = self.picture.copy()
-        else:            
-            self.image = pygame.Surface((self.width,self.height))    
-            self.image.fill((self.color))
-        self.image = self.image.convert()
-        self.image0 = self.image.copy()
-        self.rect= self.image.get_rect()
-        self.width = self.rect.width
-        self.height = self.rect.height
-        
-    def rotate(self, by_degree):
-        """rotates a sprite and changes it's angle by by_degree"""
-        self.angle += by_degree
-        oldcenter = self.rect.center
-        self.image = pygame.transform.rotate(self.image0, self.angle)
-        self.image.convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.center = oldcenter
-        
-    def update(self, seconds):
-        """calculate movement, position and bouncing on edge"""
-        self.pos += self.move * seconds
-        self.distance_traveled += self.move.length * seconds
-        self.age += seconds
-        # ----- kill because... ------
-        if self.hitpoints <= 0:
-            self.kill()
-        if self.max_age is not None and self.age > self.max_age:
-            self.kill()
-        if self.max_distance is not None and self.distance > self.max_distance:
-            self.kill()
-        if self.bossnumber is not None:
-            if self.bossnumber not in FlyingObject.numbers:
-                self.kill
-            
-        
-        # ---- bounce / kill on screen edge ----
-        if self.bounce_on_edge: 
-            if self.pos.x - self.width //2 < 0:
-                self.pos.x = self.width // 2
-                if self.kill_on_edge:
-                    self.kill()
-                self.move.x *= -1 
-            if self.pos.y - self.height // 2 < 0:
-                self.y = self.height // 2
-                if self.kill_on_edge:
-                    self.kill()
-                self.move.y *= -1
-            if self.pos.x + self.width //2 > PygView.width:
-                self.pos.x = PygView.width - self.width //2
-                if self.kill_on_edge:
-                    self.kill()
-                self.move.x *= -1
-            if self.pos.y + self.height //2 > PygView.height:
-                self.pos.y = PygView.height - self.height //2
-                if self.kill_on_edge:
-                    self.kill()
-                self.move.y *= -1
-        # update sprite position 
-        self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
-        
-
-class Cannon(FlyingObject):
-    """it's a line, acting as a cannon. with a Ball as boss"""
-    
-    def create_image(self):
-        self.image = pygame.Surface((100, 20))
-        self.image.fill((50, 200, 100))
-        self.image.convert()
-        self.rect = self.image.get_rect()
-        self.image0 = self.image.copy()
-
-class Ball(FlyingObject):
-    """it's a pygame Sprite!"""
-        
-                
-    def init2(self):
-        self.mass = 150
-        checked = False
-        Hitpointbar(self.number)
-    
-    def create_image(self):
-        # create a rectangular surface for the ball 50x50
-        self.image = pygame.Surface((self.width,self.height))    
-        # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
-        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-        pygame.draw.circle (self.image, (0,0,200) , (self.radius //2 , self.radius //2), self.radius// 3)         # left blue eye
-        pygame.draw.circle (self.image, (255,255,0) , (3 * self.radius //2  , self.radius //2), self.radius// 3)  # right yellow yey
-        pygame.draw.arc(self.image, (32,32,32), (self.radius //2, self.radius, self.radius, self.radius//2), math.pi, 2*math.pi, 1) # grey mouth
-        # self.surface = self.surface.convert() # for faster blitting if no transparency is used. 
-        # to avoid the black background, make black the transparent color:
-        self.image.set_colorkey((0,0,0))
-        self.image = self.image.convert_alpha() # faster blitting with transparent color
-        self.rect= self.image.get_rect()
-        self.image0 = self.image.copy()
-        
-class Bullet(FlyingObject):
-    """a small Sprite"""
-
-    def init2(self):
-        self.mass = 5
-        self.lifetime = 8.5 # seconds
-
-    def update(self, seconds):
-        # FlyingObject(self,seconds):
-        super(Bullet,self).update(seconds)
-        self.lifetime -= seconds # aging
-        if self.lifetime < 0:
-            self.kill() 
-        
-    def create_image(self):
-        self.image = pygame.Surface((self.width,self.height))    
-        # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
-        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-        self.image.set_colorkey((0,0,0))
-        self.image = self.image.convert_alpha() # faster blitting with transparent color
-        self.rect= self.image.get_rect()
-
 def draw_examples(background):
     """painting on the background surface"""
     #------- try out some pygame draw functions --------
@@ -331,6 +104,237 @@ def elastic_collision(sprite1, sprite2):
             sprite1.move.x -= 2 * dirx * cdp 
             sprite1.move.y -= 2 * diry * cdp
 
+class Hitpointbar(pygame.sprite.Sprite):
+        """shows a bar with the hitpoints of a Boss sprite
+        Boss needs a unique number in Vectorsprite.numbers,
+        self.hitpoints and self.hitpointsfull"""
+    
+        def __init__(self, bossnumber, height=7, color = (0,255,0), ydistance=10):
+            pygame.sprite.Sprite.__init__(self,self.groups)
+            self.bossnumber = bossnumber # lookup in Vectorsprite.numbers
+            self.boss = Vectorsprite.numbers[self.bossnumber]
+            self.height = height
+            self.color = color
+            self.ydistance = ydistance
+            self.image = pygame.Surface((self.boss.rect.width,self.height))
+            self.image.set_colorkey((0,0,0)) # black transparent
+            pygame.draw.rect(self.image, self.color, (0,0,self.boss.rect.width,self.height),1)
+            self.rect = self.image.get_rect()
+            self.oldpercent = 0
+            
+            
+        def update(self, time):
+            self.percent = self.boss.hitpoints / self.boss.hitpointsfull * 1.0
+            if self.percent != self.oldpercent:
+                pygame.draw.rect(self.image, (0,0,0), (1,1,self.boss.rect.width-2,5)) # fill black
+                pygame.draw.rect(self.image, (0,255,0), (1,1,
+                    int(self.boss.rect.width * self.percent),5),0) # fill green
+            self.oldpercent = self.percent
+            self.rect.centerx = self.boss.rect.centerx
+            self.rect.centery = self.boss.rect.centery - self.boss.rect.height /2 - self.ydistance
+            #check if boss is still alive
+            if self.bossnumber not in Vectorsprite.numbers:
+                self.kill() # kill the hitbar
+
+
+class Vectorsprite(pygame.sprite.Sprite):
+    """base class for sprites. this class inherits from pygames sprite class"""
+    number = 0
+    numbers = {} # { number, Sprite }
+    
+    def __init__(self, layer=4, **kwargs):
+        """create a (black) surface and paint a blue ball on it"""
+        self._layer = layer   # pygame Sprite layer
+        pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
+        # self groups is set in PygView.paint()
+        self.number = Vectorsprite.number # unique number for each sprite
+        Vectorsprite.number += 1 
+        Vectorsprite.numbers[self.number] = self 
+        # get unlimited named arguments and turn them into attributes
+        for key, arg in kwargs.items():
+            #print(key, arg)
+            setattr(self, key, arg)
+        # --- default values for missing keywords ----
+        #if "pos" not in kwarts
+        #pos=v.Vec2d(50,50), move=v.Vec2d(0,0), radius = 50, color=None, 
+        #         , hitpoints=100, mass=10, damage=10, bounce_on_edge=True, angle=0
+        if "pos" not in kwargs:
+            self.pos = v.Vec2d(50,50)
+        if "move" not in kwargs:
+            self.move = v.Vec2d(0,0)
+        if "radius" not in kwargs:
+            self.radius = 50
+        if "width" not in kwargs:
+            self.width = self.radius * 2
+        if "height" not in kwargs:
+            self.height = self.radius * 2
+        if "color" not in kwargs:
+            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        if "hitpoints" not in kwargs:
+            self.hitpoints = 100
+        self.hitpointsfull = self.hitpoints # makes a copy
+        if "mass" not in kwargs:
+            self.mass = 10
+        if "damage" not in kwargs:
+            self.damage = 10
+        if "bounce_on_edge" not in kwargs:
+            self.bounce_on_edge = False
+        if "kill_on_edge" not in kwargs:
+            self.kill_on_edge = False
+        if "angle" not in kwargs:
+            self.angle = 0 # facing right?
+        if "max_age" not in kwargs:
+            self.max_age = None
+        if "max_distance" not in kwargs:
+            self.max_distance = None
+        if "picture" not in kwargs:
+            self.picture = None
+        if "bossnumber" not in kwargs:
+            self.bossnumber = None
+        # ---
+        self.age = 0 # in seconds
+        self.distance_traveled = 0 # in pixel
+        
+
+        self.create_image()
+        
+        self.rect.center = (-300,-300) # avoid blinking image in topleft corner
+
+        
+        
+    def kill(self):
+        del Vectorsprite.numbers[self.number] # remove Sprite from numbers dict
+        pygame.sprite.Sprite.kill(self)
+        
+    def init2(self):
+        pass # for subclasses
+        
+    def create_image(self):
+        if self.picture is not None:
+            self.image = self.picture.copy()
+        else:            
+            self.image = pygame.Surface((self.width,self.height))    
+            self.image.fill((self.color))
+        self.image = self.image.convert()
+        self.image0 = self.image.copy()
+        self.rect= self.image.get_rect()
+        self.width = self.rect.width
+        self.height = self.rect.height
+        
+    def rotate(self, by_degree):
+        """rotates a sprite and changes it's angle by by_degree"""
+        self.angle += by_degree
+        oldcenter = self.rect.center
+        self.image = pygame.transform.rotate(self.image0, self.angle)
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = oldcenter
+        
+    def update(self, seconds):
+        """calculate movement, position and bouncing on edge"""
+        self.pos += self.move * seconds
+        self.distance_traveled += self.move.length * seconds
+        self.age += seconds
+        # ----- kill because... ------
+        if self.hitpoints <= 0:
+            self.kill()
+        if self.max_age is not None and self.age > self.max_age:
+            self.kill()
+        if self.max_distance is not None and self.distance > self.max_distance:
+            self.kill()
+        if self.bossnumber is not None:
+            if self.bossnumber not in Vectorsprite.numbers:
+                self.kill
+            
+        
+        # ---- bounce / kill on screen edge ----
+        if self.bounce_on_edge: 
+            if self.pos.x - self.width //2 < 0:
+                self.pos.x = self.width // 2
+                if self.kill_on_edge:
+                    self.kill()
+                self.move.x *= -1 
+            if self.pos.y - self.height // 2 < 0:
+                self.y = self.height // 2
+                if self.kill_on_edge:
+                    self.kill()
+                self.move.y *= -1
+            if self.pos.x + self.width //2 > PygView.width:
+                self.pos.x = PygView.width - self.width //2
+                if self.kill_on_edge:
+                    self.kill()
+                self.move.x *= -1
+            if self.pos.y + self.height //2 > PygView.height:
+                self.pos.y = PygView.height - self.height //2
+                if self.kill_on_edge:
+                    self.kill()
+                self.move.y *= -1
+        # update sprite position 
+        self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
+        
+
+class Cannon(Vectorsprite):
+    """it's a line, acting as a cannon. with a Ball as boss"""
+    
+    def create_image(self):
+        self.image = pygame.Surface((100, 20))
+        self.image.fill((50, 200, 100))
+        self.image.convert()
+        self.rect = self.image.get_rect()
+        self.image0 = self.image.copy()
+
+class Ball(Vectorsprite):
+    """it's a pygame Sprite!"""
+        
+                
+    def __init__(self, layer=4, **kwargs):
+        Vectorsprite.__init__(self, layer, **kwargs)
+        self.mass=150
+
+    def create_image(self):
+        # create a rectangular surface for the ball 50x50
+        self.image = pygame.Surface((self.width,self.height))    
+        # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
+        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
+        pygame.draw.circle (self.image, (0,0,200) , (self.radius //2 , self.radius //2), self.radius// 3)         # left blue eye
+        pygame.draw.circle (self.image, (255,255,0) , (3 * self.radius //2  , self.radius //2), self.radius// 3)  # right yellow yey
+        pygame.draw.arc(self.image, (32,32,32), (self.radius //2, self.radius, self.radius, self.radius//2), math.pi, 2*math.pi, 1) # grey mouth
+        # self.surface = self.surface.convert() # for faster blitting if no transparency is used. 
+        # to avoid the black background, make black the transparent color:
+        self.image.set_colorkey((0,0,0))
+        self.image = self.image.convert_alpha() # faster blitting with transparent color
+        self.rect= self.image.get_rect()
+        self.image0 = self.image.copy()
+        
+class Bullet(Vectorsprite):
+    """a small Sprite"""
+
+    #def init2(self):
+        #self.mass = 5
+        #self.lifetime = 8.5 # seconds
+
+    #def update(self, seconds):
+        # Vectorsprite(self,seconds):
+        #super(Bullet,self).update(seconds)
+        #self.lifetime -= seconds # aging
+        #if self.lifetime < 0:
+            #self.kill() 
+        
+    def create_image(self):
+        self.image = pygame.Surface((self.width,self.height))    
+        # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
+        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
+        self.image.set_colorkey((0,0,0))
+        self.image = self.image.convert_alpha() # faster blitting with transparent color
+        self.rect= self.image.get_rect()
+    
+    def __init__(self, layer=4, **kwargs):
+        Vectorsprite.__init__(self, layer, **kwargs)
+        self.mass=150
+        self.max_age=10
+        
+
+
 
 class PygView(object):
     width = 0
@@ -362,7 +366,7 @@ class PygView(object):
         self.bulletgroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
         Bullet.groups = self.allgroup, self.bulletgroup
-        FlyingObject.groups = self.allgroup
+        Vectorsprite.groups = self.allgroup
         Hitpointbar.groups = self.allgroup
         
         self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(-20,-5), bounce_on_edge=True) # creating a Ball Sprite
@@ -370,7 +374,7 @@ class PygView(object):
         
         #self.ball2 = Ball(x=200, y=100) # create another Ball Sprite
 
-        #FlyingObject(horst=14, jens="abc")
+        #Vectorsprite(horst=14, jens="abc")
 
     def run(self):
         """The mainloop"""
@@ -384,12 +388,33 @@ class PygView(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(100,100), move=v.Vec2d(22,4)) # add big balls!
+                        Ball(pos=v.Vec2d(100,100), move=v.Vec2d(22,4), bounce_on_edge=True)
                     if event.key == pygame.K_c:
-                        Bullet(radius=5, x=0,y=0, dx=200, dy=200)
+                        Bullet(radius=5, pos=self.ball1.pos, move=v.Vec2d(120,50))
                     if event.key == pygame.K_LEFT:
-                        self.ball1.rotate(1) # 
+                        self.ball1.rotate(10) # 
                         print(self.ball1.angle)
+                    if event.key == pygame.K_RIGHT:
+                        self.ball1.rotate(-10) #
+                        print(self.ball1.angle)
+                        
+                    if event.key == pygame.K_w:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y) ,move=v.Vec2d(0,-100))
+                    if event.key == pygame.K_s:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(0,100))
+                    if event.key == pygame.K_a:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(-100,0))
+                    if event.key == pygame.K_d:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(100,0))
+                        
+                    if event.key == pygame.K_i:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) ,move=v.Vec2d(0,-100))
+                    if event.key == pygame.K_j:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(0,100))
+                    if event.key == pygame.K_k:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(-100,0))
+                    if event.key == pygame.K_l:
+                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(100,0))
            
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
@@ -402,11 +427,11 @@ class PygView(object):
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
             # the False means the colliding sprite is not killed
             # ---------- collision detection between ball and bullet sprites ---------
-            for ball in self.ballgroup:
-               crashgroup = pygame.sprite.spritecollide(ball, self.bulletgroup, False, pygame.sprite.collide_circle)
-               for bullet in crashgroup:
-                   elastic_collision(ball, bullet) # change dx and dy of both sprites
-                   ball.hitpoints -= bullet.damage
+            #for ball in self.ballgroup:
+            #   crashgroup = pygame.sprite.spritecollide(ball, self.bulletgroup, False, pygame.sprite.collide_circle)
+            #   for bullet in crashgroup:
+            #       elastic_collision(ball, bullet) # change dx and dy of both sprites
+            #       ball.hitpoints -= bullet.damage
             # --------- collision detection between ball and other balls
             for ball in self.ballgroup:
                 crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
