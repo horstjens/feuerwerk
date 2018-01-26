@@ -397,24 +397,32 @@ class PygView(object):
                     if event.key == pygame.K_RIGHT:
                         self.ball1.rotate(-10) #
                         print(self.ball1.angle)
-                        
+                        #-----------Event Keys for Ball1----------------#
                     if event.key == pygame.K_w:
                         Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y) ,move=v.Vec2d(0,-100))
+                        self.ball1.move += v.Vec2d(0,20)
                     if event.key == pygame.K_s:
                         Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(0,100))
+                        self.ball1.move += v.Vec2d(0,-20)
                     if event.key == pygame.K_a:
                         Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(-100,0))
+                        self.ball1.move += v.Vec2d(20,0)
                     if event.key == pygame.K_d:
                         Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(100,0))
-                        
+                        self.ball1.move += v.Vec2d(-20,0)
+                        #-------------Event Keys for Ball2--------------#
                     if event.key == pygame.K_i:
                         Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) ,move=v.Vec2d(0,-100))
+                        self.ball2.move += v.Vec2d(0,20)
                     if event.key == pygame.K_j:
                         Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(0,100))
+                        self.ball2.move += v.Vec2d(0,-20)
                     if event.key == pygame.K_k:
                         Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(-100,0))
+                        self.ball2.move += v.Vec2d(20,0)
                     if event.key == pygame.K_l:
                         Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(100,0))
+                        self.ball2.move += v.Vec2d(-20,0)
            
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
