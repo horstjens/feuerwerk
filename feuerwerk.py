@@ -807,7 +807,7 @@ class PygView(object):
             for MMouse in self.MMousegroup:
                 if len(MMouse.tail)>2:
                     for a in range(1,len(MMouse.tail)):
-                        pygame.draw.line(self.screen,MMouse.color,
+                        pygame.draw.line(self.screen,(255-a,0,0),
                                      MMouse.tail[a-1],
                                      MMouse.tail[a],10-a//10)
             # ------ flip screen ------
