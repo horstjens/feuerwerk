@@ -17,6 +17,8 @@ import operator
 import math
 import vectorclass2d as v
 
+
+
 def draw_examples(background):
     """painting on the background surface"""
     #------- try out some pygame draw functions --------
@@ -46,7 +48,7 @@ def write(background, text, x=50, y=150, color=(0,0,0),
             background.blit(surface, (x,y))
     
 def elastic_collision(sprite1, sprite2):
-        """elasitc collision between 2 Vectorsprites (calculated as disc's).
+        """elasitc collision between 2 VectorSprites (calculated as disc's).
            The function alters the dx and dy movement vectors of both sprites.
            The sprites need the property .mass, .radius, pos.x pos.y, move.x, move.y
            by Leonard Michlmayr"""
@@ -104,40 +106,43 @@ def elastic_collision(sprite1, sprite2):
             sprite1.move.x -= 2 * dirx * cdp 
             sprite1.move.y -= 2 * diry * cdp
 
-class Hitpointbar(pygame.sprite.Sprite):
-        """shows a bar with the hitpoints of a Boss sprite
-        Boss needs a unique number in Vectorsprite.numbers,
-        self.hitpoints and self.hitpointsfull"""
+
+
+
+#class Hitpointbar(pygame.sprite.Sprite):
+        #"""shows a bar with the hitpoints of a Boss sprite
+        #Boss needs a unique number in VectorSprite.numbers,
+        #self.hitpoints and self.hitpointsfull"""
     
-        def __init__(self, bossnumber, height=7, color = (0,255,0), ydistance=10):
-            pygame.sprite.Sprite.__init__(self,self.groups)
-            self.bossnumber = bossnumber # lookup in Vectorsprite.numbers
-            self.boss = Vectorsprite.numbers[self.bossnumber]
-            self.height = height
-            self.color = color
-            self.ydistance = ydistance
-            self.image = pygame.Surface((self.boss.rect.width,self.height))
-            self.image.set_colorkey((0,0,0)) # black transparent
-            pygame.draw.rect(self.image, self.color, (0,0,self.boss.rect.width,self.height),1)
-            self.rect = self.image.get_rect()
-            self.oldpercent = 0
+        #def __init__(self, bossnumber, height=7, color = (0,255,0), ydistance=10):
+            #pygame.sprite.Sprite.__init__(self,self.groups)
+            #self.bossnumber = bossnumber # lookup in VectorSprite.numbers
+            #self.boss = VectorSprite.numbers[self.bossnumber]
+            #self.height = height
+            #self.color = color
+            #self.ydistance = ydistance
+            #self.image = pygame.Surface((self.boss.rect.width,self.height))
+            #self.image.set_colorkey((0,0,0)) # black transparent
+            #pygame.draw.rect(self.image, self.color, (0,0,self.boss.rect.width,self.height),1)
+            #self.rect = self.image.get_rect()
+            #self.oldpercent = 0
             
             
-        def update(self, time):
-            self.percent = self.boss.hitpoints / self.boss.hitpointsfull * 1.0
-            if self.percent != self.oldpercent:
-                pygame.draw.rect(self.image, (0,0,0), (1,1,self.boss.rect.width-2,5)) # fill black
-                pygame.draw.rect(self.image, (0,255,0), (1,1,
-                    int(self.boss.rect.width * self.percent),5),0) # fill green
-            self.oldpercent = self.percent
-            self.rect.centerx = self.boss.rect.centerx
-            self.rect.centery = self.boss.rect.centery - self.boss.rect.height /2 - self.ydistance
-            #check if boss is still alive
-            if self.bossnumber not in Vectorsprite.numbers:
-                self.kill() # kill the hitbar
+        #def update(self, time):
+            #self.percent = self.boss.hitpoints / self.boss.hitpointsfull * 1.0
+            #if self.percent != self.oldpercent:
+                #pygame.draw.rect(self.image, (0,0,0), (1,1,self.boss.rect.width-2,5)) # fill black
+                #pygame.draw.rect(self.image, (0,255,0), (1,1,
+                    #int(self.boss.rect.width * self.percent),5),0) # fill green
+            #self.oldpercent = self.percent
+            #self.rect.centerx = self.boss.rect.centerx
+            #self.rect.centery = self.boss.rect.centery - self.boss.rect.height /2 - self.ydistance
+            ##check if boss is still alive
+            #if self.bossnumber not in VectorSprite.numbers:
+                #self.kill() # kill the hitbar
 
 
-class Vectorsprite(pygame.sprite.Sprite):
+class VectorSprite(pygame.sprite.Sprite):
     """base class for sprites. this class inherits from pygames sprite class"""
     number = 0
     numbers = {} # { number, Sprite }
@@ -147,9 +152,9 @@ class Vectorsprite(pygame.sprite.Sprite):
         self._layer = layer   # pygame Sprite layer
         pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
         # self groups is set in PygView.paint()
-        self.number = Vectorsprite.number # unique number for each sprite
-        Vectorsprite.number += 1 
-        Vectorsprite.numbers[self.number] = self 
+        self.number = VectorSprite.number # unique number for each sprite
+        VectorSprite.number += 1 
+        VectorSprite.numbers[self.number] = self 
         # get unlimited named arguments and turn them into attributes
         for key, arg in kwargs.items():
             #print(key, arg)
@@ -191,6 +196,10 @@ class Vectorsprite(pygame.sprite.Sprite):
             self.picture = None
         if "bossnumber" not in kwargs:
             self.bossnumber = None
+        if "kill_with_boss" not in kwargs:
+            self.kill_with_boss = False
+        if "sticky_with_boss" not in kwargs:
+            self.sticky_with_boss = False
         # ---
         self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
@@ -199,11 +208,12 @@ class Vectorsprite(pygame.sprite.Sprite):
         self.create_image()
         
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
+        #self.init2()
 
         
         
     def kill(self):
-        del Vectorsprite.numbers[self.number] # remove Sprite from numbers dict
+        del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
         pygame.sprite.Sprite.kill(self)
         
     def init2(self):
@@ -229,12 +239,10 @@ class Vectorsprite(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
+        print("rotated!")
         
     def update(self, seconds):
         """calculate movement, position and bouncing on edge"""
-        self.pos += self.move * seconds
-        self.distance_traveled += self.move.length * seconds
-        self.age += seconds
         # ----- kill because... ------
         if self.hitpoints <= 0:
             self.kill()
@@ -242,11 +250,20 @@ class Vectorsprite(pygame.sprite.Sprite):
             self.kill()
         if self.max_distance is not None and self.distance > self.max_distance:
             self.kill()
+        # ---- movement with/without boss ----
         if self.bossnumber is not None:
-            if self.bossnumber not in Vectorsprite.numbers:
-                self.kill
+            if self.kill_with_boss:
+                if self.bossnumber not in VectorSprite.numbers:
+                    self.kill()
+                #print(self.bossnumber)
+            if self.sticky_with_boss:
+                boss = VectorSprite.numbers[self.bossnumber]
+                self.pos = v.Vec2d(boss.pos.x, boss.pos.y)
             
-        
+        self.pos += self.move * seconds
+        self.distance_traveled += self.move.length * seconds
+        self.age += seconds
+  
         # ---- bounce / kill on screen edge ----
         if self.bounce_on_edge: 
             if self.pos.x - self.width //2 < 0:
@@ -273,24 +290,38 @@ class Vectorsprite(pygame.sprite.Sprite):
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
         
 
-class Cannon(Vectorsprite):
+class Cannon(VectorSprite):
     """it's a line, acting as a cannon. with a Ball as boss"""
     
+    def __init__(self, layer=4, **kwargs):
+        VectorSprite.__init__(self, layer, **kwargs)
+        self.mass = 0
+        if "bossnumber" not in kwargs:
+            print("error! cannon without boss number")
+        #checked = False
+        #Hitpointbar(self.number)
+        self.kill_with_boss = True
+        self.sticky_with_boss = True
+    
     def create_image(self):
-        self.image = pygame.Surface((100, 20))
-        self.image.fill((50, 200, 100))
-        self.image.convert()
+        self.image = pygame.Surface((120, 20))
+        #self.image.fill((50, 200, 100))
+        pygame.draw.rect(self.image, (50,90,200), (50, 0, 70, 20))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.image0 = self.image.copy()
 
-class Ball(Vectorsprite):
+class Ball(VectorSprite):
     """it's a pygame Sprite!"""
         
                 
     def __init__(self, layer=4, **kwargs):
-        Vectorsprite.__init__(self, layer, **kwargs)
-        self.mass=150
-
+        VectorSprite.__init__(self, layer, **kwargs)
+        self.mass = 150
+        #checked = False
+        #Hitpointbar(self.number)
+    
     def create_image(self):
         # create a rectangular surface for the ball 50x50
         self.image = pygame.Surface((self.width,self.height))    
@@ -306,35 +337,25 @@ class Ball(Vectorsprite):
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
         
-class Bullet(Vectorsprite):
-    """a small Sprite"""
+#class Bullet(VectorSprite):
+    #"""a small Sprite"""
 
-    #def init2(self):
+    #def __init__(self, layer=4, **kwargs):
+        #VectorSprite.__init__(self, layer, **kwargs)
         #self.mass = 5
-        #self.lifetime = 8.5 # seconds
-
-    #def update(self, seconds):
-        # Vectorsprite(self,seconds):
-        #super(Bullet,self).update(seconds)
-        #self.lifetime -= seconds # aging
-        #if self.lifetime < 0:
-            #self.kill() 
+        #self.radius = 5
+        #self.max_age = 10
+        #self.kill_on_edge = True
+        #p = VectorSprite.numbers[self.bossnumber].pos
+        #self.pos = v.Vec2d(p.x, p.y)
         
-    def create_image(self):
-        self.image = pygame.Surface((self.width,self.height))    
-        # pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
-        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-        self.image.set_colorkey((0,0,0))
-        self.image = self.image.convert_alpha() # faster blitting with transparent color
-        self.rect= self.image.get_rect()
-    
-    def __init__(self, layer=4, **kwargs):
-        Vectorsprite.__init__(self, layer, **kwargs)
-        self.mass=150
-        self.max_age=10
-        
-
-
+    #def create_image(self):
+        #self.image = pygame.Surface((self.width,self.height))    
+        ## pygame.draw.circle(Surface, color, pos, radius, width=0) # from pygame documentation
+        #pygame.draw.circle(self.image, self.color, (5,5), 5) # draw blue filled circle on ball surface
+        #self.image.set_colorkey((0,0,0))
+        #self.image = self.image.convert_alpha() # faster blitting with transparent color
+        #self.rect= self.image.get_rect()
 
 class PygView(object):
     width = 0
@@ -364,17 +385,20 @@ class PygView(object):
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
         self.ballgroup = pygame.sprite.Group()          # for collision detection etc.
         self.bulletgroup = pygame.sprite.Group()
+        self.cannongroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
-        Bullet.groups = self.allgroup, self.bulletgroup
-        Vectorsprite.groups = self.allgroup
-        Hitpointbar.groups = self.allgroup
+        #Bullet.groups = self.allgroup, self.bulletgroup
+        Cannon.groups = self.allgroup, self.cannongroup
+        VectorSprite.groups = self.allgroup
+        #Hitpointbar.groups = self.allgroup
         
         self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(-20,-5), bounce_on_edge=True) # creating a Ball Sprite
+        self.cannon1 = Cannon(bossnumber = self.ball1.number)
         self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(120,50), bounce_on_edge=True)
         
         #self.ball2 = Ball(x=200, y=100) # create another Ball Sprite
 
-        #Vectorsprite(horst=14, jens="abc")
+        #VectorSprite(horst=14, jens="abc")
 
     def run(self):
         """The mainloop"""
@@ -384,46 +408,29 @@ class PygView(object):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False 
+                # ------- pressed and released key ------
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(100,100), move=v.Vec2d(22,4), bounce_on_edge=True)
+                        Ball(pos=v.Vec2d(100,100), move=v.Vec2d(22,4)) # add big balls!
                     if event.key == pygame.K_c:
-                        Bullet(radius=5, pos=self.ball1.pos, move=v.Vec2d(120,50))
+                        m = v.Vec2d(60,0) # lenght of cannon
+                        #m.rotate(self.cannon1.angle)
+                        Bullet(bossnumber = self.ball1.number, move=m, kill_on_edge = True)
                     if event.key == pygame.K_LEFT:
-                        self.ball1.rotate(10) # 
+                        self.ball1.rotate(1) # 
                         print(self.ball1.angle)
-                    if event.key == pygame.K_RIGHT:
-                        self.ball1.rotate(-10) #
-                        print(self.ball1.angle)
-                        #-----------Event Keys for Ball1----------------#
-                    if event.key == pygame.K_w:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y) ,move=v.Vec2d(0,-100))
-                        self.ball1.move += v.Vec2d(0,20)
-                    if event.key == pygame.K_s:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(0,100))
-                        self.ball1.move += v.Vec2d(0,-20)
-                    if event.key == pygame.K_a:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(-100,0))
-                        self.ball1.move += v.Vec2d(20,0)
-                    if event.key == pygame.K_d:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball1.pos.x, self.ball1.pos.y),move=v.Vec2d(100,0))
-                        self.ball1.move += v.Vec2d(-20,0)
-                        #-------------Event Keys for Ball2--------------#
-                    if event.key == pygame.K_i:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y) ,move=v.Vec2d(0,-100))
-                        self.ball2.move += v.Vec2d(0,20)
-                    if event.key == pygame.K_j:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(0,100))
-                        self.ball2.move += v.Vec2d(0,-20)
-                    if event.key == pygame.K_k:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(-100,0))
-                        self.ball2.move += v.Vec2d(20,0)
-                    if event.key == pygame.K_l:
-                        Bullet(radius=5, pos=v.Vec2d(self.ball2.pos.x, self.ball2.pos.y),move=v.Vec2d(100,0))
-                        self.ball2.move += v.Vec2d(-20,0)
-           
+            # ------------ pressed keys ------
+            pressed_keys = pygame.key.get_pressed()
+            if pressed_keys[pygame.K_y]:
+                self.cannon1.rotate(1)
+            if pressed_keys[pygame.K_x]:
+                self.cannon1.rotate(-1)
+                                                
+                    
+                    
+                     
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
