@@ -99,9 +99,6 @@ class City(VectorSprite):
         #  --- image1 ------
         self.image1 = pygame.Surface((200, 100))
         self.make_houses(self.image1, h, c)
-        #for x in range(30):
-        #    c = (100, random.randint(50,150), 100)
-        #    pygame.draw.rect(self.image1, c, (25+x*5, 100-h[x], 5, h[x]))
         pygame.draw.ellipse(self.image1, self.color, (0,0,200, 200),1)
         self.image1.set_colorkey((0,0,0))
         self.image1.convert_alpha() 
@@ -109,8 +106,6 @@ class City(VectorSprite):
         self.image2 = pygame.Surface((200, 100))
         self.color2 = (250,0,100)
         self.make_houses(self.image2, h, c)
-        #for x in range(30):
-        #    pygame.draw.rect(self.image2, self.color, (25+x*5, 100-h[x], 5, h[x]))
         pygame.draw.ellipse(self.image2, self.color2, (0,0,200, 200),5)
         self.image2.set_colorkey((0,0,0))
         self.image2.convert_alpha() 
@@ -118,24 +113,46 @@ class City(VectorSprite):
         self.images = [ self.image1, self.image2]
         self.image = self.images[0]
 
-class Mouse(VectorSprite):
-    
+        
+class MMouse(pygame.sprite.Sprite):
+    """this is a native pygame sprite but instead a pygame surface"""
+    def __init__(self, radius = 5, color=(255,0,0), x=320, y=240,
+                    startx=100,starty=100):
+        """create a (black) surface and paint a blue MMouse on it"""
+        self._layer=1
+        pygame.sprite.Sprite.__init__(self,self.groups)
+        self.radius = radius
+        self.color = color
+        self.startx=startx
+        self.starty=starty
+        self.x = x
+        self.y = y
+        self.dx = 0
+        self.dy = 0
+        self.r = 255
+        self.g = 0
+        self.b = 0
+        self.tail=[]
+        self.create_image()
+        self.rect = self.image.get_rect()
+        
+        
+        
     def create_image(self):
         self.image = pygame.surface.Surface((40,40))
-    
+
         delta1 = 12.5
         delta2 = 25
-        
 
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,0),(20.5,6),2)
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,6),(27,0),2)
-        
+    
         pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(14,5),(20.5,11),2)
         pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(20.5,11),(27,5),2)
-        
+    
         pygame.draw.line(self.image,(self.r,self.g,self.b),(14,10),(20.5,16),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(20.5,16),(27,10),2)
-#        
+
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,40),(20.5,34),2)
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,34),(27,40),2)
         
@@ -144,7 +161,7 @@ class Mouse(VectorSprite):
         
         pygame.draw.line(self.image,(self.r,self.g,self.b),(14,30),(20.5,24),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(20.5,24),(27,30),2)
-#
+
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(0,14),(6,20.5),2)
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(6,20.5),(0,27),2)
         
@@ -153,7 +170,7 @@ class Mouse(VectorSprite):
         
         pygame.draw.line(self.image,(self.r,self.g,self.b),(10,14),(16,20.5),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(16,20.5),(10,27),2)
-#
+
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(40,14),(34,20.5),2)
         pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(34,20.5),(40,27),2)
         
@@ -162,27 +179,19 @@ class Mouse(VectorSprite):
         
         pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
-
-        
-        pygame.draw.circle(self.image,(255,125,145),(20,20),22,1)
         
         self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
+        self.rect=self.image.get_rect()
         
     def update(self, seconds):
-        VectorSprite.update(self, seconds)
-        self.pos = v.Vec2d(pygame.mouse.get_pos())
-        # self.r can take the values of 255 until 101
-        self.r += self.delta
-        if self.r < 151:
-            self.r = 151
-            self.delta = 10
-        elif self.r > 255:
-            self.r = 255
-            self.delta = -10
         
-        self.create_image()
-
+        self.x, self.y = pygame.mouse.get_pos()
+        
+        
+        self.tail.insert(0,(self.x,self.y))
+        self.tail=self.tail[:128]
+        self.rect.center=self.x,self.y
+            
 class Healthbar(VectorSprite):
      
     def __init__(self, boss):
@@ -235,9 +244,6 @@ class Ufo(VectorSprite):
              m = v.Vec2d(0, random.randint(-10, 10))
              m.rotate(random.randint(-120, 120))    
              self.move += m     
-             #self.move=v.Vec2d(random.randint(-80,80),     
-             #                  random.randint(-80,80))
-        # --- bounce on screen edge ---
         if self.pos.x < 0:
             self.pos.x = 0
             self.move.x *= -1
@@ -278,7 +284,6 @@ class Ufo(VectorSprite):
         self.image1.convert_alpha()
         #--------image2
         self.image2 = pygame.Surface((100, 100))
-        #pygame.draw.line(self.image, self.color, (15, 50), (85, 50),1)
         pygame.draw.line(self.image2, self.color, (15, 50), (25, 25),3)
         pygame.draw.line(self.image2, self.color, (15, 50), (25, 75),3)
         pygame.draw.line(self.image2, self.color, (85, 50), (75, 25),3)
@@ -302,7 +307,6 @@ class Ufo(VectorSprite):
         self.image2.convert_alpha()
         #-------image3
         self.image3 = pygame.Surface((100, 100))
-        #pygame.draw.line(self.image, self.color, (15, 50), (85, 50),1)
         pygame.draw.line(self.image3, self.color, (15, 50), (25, 25),3)
         pygame.draw.line(self.image3, self.color, (15, 50), (25, 75),3)
         pygame.draw.line(self.image3, self.color, (85, 50), (75, 25),3)
@@ -515,20 +519,14 @@ class Smoke(Fragment):
         
 class Rocket(Fragment):
     def __init__(self, startpos, target, speed=None, color=(150,99,0), ex=None):
-            #leftcorner = v.Vec2d(0,self.height)
-            #rightcorner = v.Vec2d(self.width,self.height)
             if speed is not None:
                 self.speed = speed
             else:
                 self.speed = random.randint(130,180)
             rocketcolor = color
-            #speed = random.randint(150,180)
             rocketmove = target - startpos
             rockettime = rocketmove.length / self.speed
             rocketmove = rocketmove.normalized() * self.speed
-            #leftmove = pos-leftcorner
-            #lefttime = leftmove.length / speed
-            #leftmove = leftmove.normalized() * speed
             Fragment.__init__(self, pos=startpos, move=rocketmove, color=rocketcolor, gravity=None, lifetime=rockettime)
             if ex is None:
                 self.ex = random.randint(1,7)
@@ -547,8 +545,6 @@ class Rocket(Fragment):
               m.rotate(random.randint(-5, 5))
               Spark(self.pos, move = m)
           else:
-          #if self.lifetime < 0:
-                # explosion
                 c1 = random.randint(0,255)
                 c2 = random.randint(0,255)
                 c3 = random.randint(0,255)
@@ -649,13 +645,16 @@ class PygView(object):
         self.bombgroup = pygame.sprite.Group()
         self.flashgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
+        self.MMousegroup = pygame.sprite.Group()
         self.turretgroup = pygame.sprite.Group()
         GunPlatform.groups = self.allgroup, self.turretgroup
+        MMouse.groups = self.allgroup, self.MMousegroup
         VectorSprite.groups = self.allgroup
         Fragment.groups = self.allgroup
         Bomb.groups = self.allgroup, self.bombgroup
         Flashlight.groups = self.allgroup, self.flashgroup
         Ufo.groups = self.allgroup, self.ufogroup
+        
         
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
@@ -682,13 +681,8 @@ class PygView(object):
         self.city3 = City(v.Vec2d(650, PygView.height-50), v.Vec2d(0,0))
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         self.city5 = City(v.Vec2d(1150, PygView.height-50), v.Vec2d(0,0))
-
-        self.mouse = Mouse()
         
-        # gun platforms
-        
-        #self.turret1 = GunPlatform(v.Vec2d(200, PygView.height-100), v.Vec2d(0,0))
-        #self.turret2 = GunPlatform(v.Vec2d(230, PygView.height-90), v.Vec2d(0,0))
+        self.MMouse1 = MMouse()
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -710,8 +704,6 @@ class PygView(object):
         third = v.Vec2d(self.width//3, self.height)
         third2 = v.Vec2d(self.width//3*2, self.height)
         ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
-        pygame.mouse.set_visible(False)    
-        self.mousetrail = []
         while running:
             # --------- update time -------------            
             
@@ -721,10 +713,6 @@ class PygView(object):
             
             text_time = "FPS: {:4.3} TIME: {:6.3} sec".format(self.clock.get_fps(), self.playtime)
             self.draw_text(text_time, x = self.width//2-200, y=30, color=(100,0,100))
-            
-            # ------ 
-            
-            
             
             pos = v.Vec2d(pygame.mouse.get_pos())
             
@@ -746,8 +734,6 @@ class PygView(object):
                             m.rotate(10)
                     elif event.key == pygame.K_0:
                         Rocket(random.choice(ground), pos, ex=0)
-                    #elif event.key == pygame.K_1:
-                    #    Rocket(random.choice(ground), pos, ex=1)
                     elif event.key == pygame.K_2:
                         Rocket(random.choice(ground), pos, ex=2)
                     elif event.key == pygame.K_3:
@@ -794,14 +780,9 @@ class PygView(object):
             
             left,middle,right = pygame.mouse.get_pressed()
             if left:
-                #Fragment(leftcorner,leftmove,lifetime=lefttime,color=(255,0,0))
-                #Rocket(leftcorner, pos)
                 Rocket(random.choice(ground), pos, ex=8)
             if right:
-                #Rocket(rightcorner, pos)
                 Rocket(random.choice(ground), pos, ex=9)
-                #Fragment(pos, gravity=v.Vec2d(0,70), color=(random.randint(0,255,0)))
-                #Fragment(rightcorner,rightmove,lifetime=righttime,color=(0,0,255))
             
             # ----- collision detection ------
             for flash in self.flashgroup:
@@ -820,23 +801,18 @@ class PygView(object):
             self.allgroup.draw(self.screen)
             #-------- blit mouse -----
             x, y = pygame.mouse.get_pos()
-            self.mousetrail.insert(0, (x,y))
-            self.mousetrail = self.mousetrail[:20]
-            if len(self.mousetrail) > 1:
-                for nr, (xpos, ypos) in enumerate(self.mousetrail):
-                    if nr == 0:
-                        oldx, oldy = pygame.mouse.get_pos()
-                    else:
-                        oldx, oldy = self.mousetrail[nr-1]
-                    pygame.draw.line(self.screen, (255, nr*10, nr*10),
-                                     (xpos,ypos), (oldx, oldy), nr//10)
-                
-                
-#            self.screen.blit(self.mousepic,(x-20, y-20))
+            
+            
+            # --- Martins verbesserter mousetail -----
+            for MMouse in self.MMousegroup:
+                if len(MMouse.tail)>2:
+                    for a in range(1,len(MMouse.tail)):
+                        pygame.draw.line(self.screen,MMouse.color,
+                                     MMouse.tail[a-1],
+                                     MMouse.tail[a],10-a//10)
             # ------ flip screen ------
             pygame.display.flip()
             
-        pygame.mouse.set_visible(True)
         pygame.quit()
 
 
