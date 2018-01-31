@@ -103,21 +103,14 @@ class City(VectorSprite):
         self.image.convert_alpha() 
 
         
-    def create_image2(self):
-        
-        if self.hp//1000 > 0:
-            self.image = pygame.Surface((200, 100))
-            self.make_houses(self.image, self.h, self.c)
-            self.shield = pygame.draw.ellipse(self.image, self.color, (0,0,200, 200), self.hp//1000)
-            self.image.set_colorkey((0,0,0))
-            self.image.convert_alpha()
-        
+
 class Mouse(pygame.sprite.Sprite):
     """this is a native pygame sprite but instead a pygame surface"""
     def __init__(self, radius = 5, color=(255,0,0), x=320, y=240,
-                    startx=100,starty=100):
+                    startx=100,starty=100, control="mouse"):
         """create a (black) surface and paint a blue Mouse on it"""
-        self._layer = 1
+        self._layer=1
+
         pygame.sprite.Sprite.__init__(self,self.groups)
         self.radius = radius
         self.color = color
@@ -127,16 +120,21 @@ class Mouse(pygame.sprite.Sprite):
         self.y = y
         self.dx = 0
         self.dy = 0
-        self.r = 255
-        self.g = 0
-        self.b = 0
+
+
+        self.r = color[0]
+        self.g = color[1]
+        self.b = color[2]
+
         self.delta = -10
         self.age = 0
         self.pos = pygame.mouse.get_pos()
         self.move = 0
+
         self.tail = []
         self.create_image()
         self.rect = self.image.get_rect()
+        self.control = control # "mouse" "keyboard"
         
         
         
@@ -182,30 +180,47 @@ class Mouse(pygame.sprite.Sprite):
         pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
         
-        pygame.draw.circle(self.image,(255,125,145),(20,20),22,1)
+
+        pygame.draw.circle(self.image, (255,125,145), (20,20), 22, 1)
         
         self.image.set_colorkey((0,0,0))
-        self.rect = self.image.get_rect()
+        self.rect=self.image.get_rect()
+
         self.rect.center = self.x, self.y
         
     def update(self, seconds):
         
-        self.x, self.y = pygame.mouse.get_pos()
+
+        if self.control == "mouse":
+            self.x, self.y = pygame.mouse.get_pos()
+        elif self.control == "keyboard":
+            pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_UP]:
+                self.y -= 9
+            if pressed[pygame.K_DOWN]:
+                self.y += 9
+            if pressed[pygame.K_LEFT]:
+                self.x -= 9
+            if pressed[pygame.K_RIGHT]:
+                self.x += 9
         
         self.tail.insert(0,(self.x,self.y))
-        self.tail=self.tail[:128]
+        self.tail = self.tail[:128]
         self.rect.center = self.x, self.y
         
-        # self.r can take the values of 255 until 101
+        # self.r can take the values from 255 to 101
+
         self.r += self.delta
         if self.r < 151:
             self.r = 151
             self.delta = 10
-        elif self.r > 255:
+
+        if self.r > 255:
             self.r = 255
             self.delta = -10
-        
-        self.create_image()        
+            
+        self.create_image()
+
             
 class Healthbar(VectorSprite):
      
@@ -661,10 +676,12 @@ class PygView(object):
         self.bombgroup = pygame.sprite.Group()
         self.flashgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
-        self.Mousegroup = pygame.sprite.Group()
+
+        self.mousegroup = pygame.sprite.Group()
         self.turretgroup = pygame.sprite.Group()
         GunPlatform.groups = self.allgroup, self.turretgroup
-        Mouse.groups = self.allgroup, self.Mousegroup
+        Mouse.groups = self.allgroup, self.mousegroup
+
         VectorSprite.groups = self.allgroup
         Fragment.groups = self.allgroup
         Bomb.groups = self.allgroup, self.bombgroup
@@ -698,9 +715,12 @@ class PygView(object):
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         self.city5 = City(v.Vec2d(1150, PygView.height-50), v.Vec2d(0,0))
         
-        self.mouse1 = Mouse()
+
+        self.mouse1 = Mouse(control="mouse")
+        self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
         
-        pygame.mouse.set_visible(False)
+        
+
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -807,6 +827,7 @@ class PygView(object):
                 Rocket(random.choice(ground), pos, ex=8)
             if right:
                 Rocket(random.choice(ground), pos, ex=9)
+                
             
             # ----- collision detection ------
             for flash in self.flashgroup:
@@ -828,12 +849,16 @@ class PygView(object):
             
             
             # --- Martins verbesserter mousetail -----
-            for Mouse in self.Mousegroup:
-                if len(Mouse.tail)>2:
-                    for a in range(1, len(Mouse.tail)):
-                        pygame.draw.line(self.screen,(255-a,0,0),
-                                     Mouse.tail[a-1],
-                                     Mouse.tail[a],10-a*10//10)
+
+            for mouse in self.mousegroup:
+                if len(mouse.tail)>2:
+                    for a in range(1,len(mouse.tail)):
+                        r,g,b = mouse.color
+                        
+                        pygame.draw.line(self.screen,(r-a,g,b),
+                                     mouse.tail[a-1],
+                                     mouse.tail[a],10-a*10//10)
+
             # ------ flip screen ------
             pygame.display.flip()
             
