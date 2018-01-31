@@ -75,68 +75,63 @@ class VectorSprite(pygame.sprite.Sprite):
 
 class City(VectorSprite):
     
-    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(0,0),
-                 color=(255,0,0), gravity=None):
+    def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(0,0), color=(255,0,0), gravity=None):
+        self.hp = 10000
         VectorSprite.__init__(self, pos, move, color)
         self.hp = 10000
-
+        
     def update(self, seconds):
-        # --- animate ---
-        i = self.age *3 % len(self.images)
-        self.image = self.images[int(i)]
+        self.create_image2()    
         VectorSprite.update(self, seconds)
-
+        
     def make_houses(self, surface, h, c):
         for x in range(30):
             pygame.draw.rect(surface, c[x], (25+x*5, 100-h[x], 5, h[x]))
-    
+        
     def create_image(self):
-        h = []
-        c = []
+        self.h = []
+        self.c = []        
+        
         for x in range(30):
-            h.append(random.randint(30,70))
-            c.append((50, random.randint(25,70), 50))
-        #  --- image1 ------
-        self.image1 = pygame.Surface((200, 100))
-        self.make_houses(self.image1, h, c)
-        pygame.draw.ellipse(self.image1, self.color, (0,0,200, 200),1)
-        self.image1.set_colorkey((0,0,0))
-        self.image1.convert_alpha() 
-        # --- image2 -----
-        self.image2 = pygame.Surface((200, 100))
-        self.color2 = (250,0,100)
-        self.make_houses(self.image2, h, c)
-        pygame.draw.ellipse(self.image2, self.color2, (0,0,200, 200),5)
-        self.image2.set_colorkey((0,0,0))
-        self.image2.convert_alpha() 
-        # ----- images ------
-        self.images = [ self.image1, self.image2]
-        self.image = self.images[0]
+            self.h.append(random.randint(30,70))
+            self.c.append((50, random.randint(25,70), 50))
+        
+        self.image = pygame.Surface((200, 100))
+        self.make_houses(self.image, self.h, self.c)
+        self.shield = pygame.draw.ellipse(self.image, self.color, (0,0,200, 200), self.hp//1000)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha() 
 
         
+
 class Mouse(pygame.sprite.Sprite):
     """this is a native pygame sprite but instead a pygame surface"""
     def __init__(self, radius = 5, color=(255,0,0), x=320, y=240,
                     startx=100,starty=100, control="mouse"):
         """create a (black) surface and paint a blue Mouse on it"""
         self._layer=1
+
         pygame.sprite.Sprite.__init__(self,self.groups)
         self.radius = radius
         self.color = color
-        self.startx=startx
-        self.starty=starty
+        self.startx = startx
+        self.starty = starty
         self.x = x
         self.y = y
         self.dx = 0
         self.dy = 0
+
+
         self.r = color[0]
         self.g = color[1]
         self.b = color[2]
+
         self.delta = -10
         self.age = 0
         self.pos = pygame.mouse.get_pos()
         self.move = 0
-        self.tail=[]
+
+        self.tail = []
         self.create_image()
         self.rect = self.image.get_rect()
         self.control = control # "mouse" "keyboard"
@@ -185,14 +180,17 @@ class Mouse(pygame.sprite.Sprite):
         pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
         pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
         
+
         pygame.draw.circle(self.image, (255,125,145), (20,20), 22, 1)
         
         self.image.set_colorkey((0,0,0))
         self.rect=self.image.get_rect()
+
         self.rect.center = self.x, self.y
         
     def update(self, seconds):
         
+
         if self.control == "mouse":
             self.x, self.y = pygame.mouse.get_pos()
         elif self.control == "keyboard":
@@ -211,15 +209,18 @@ class Mouse(pygame.sprite.Sprite):
         self.rect.center = self.x, self.y
         
         # self.r can take the values from 255 to 101
+
         self.r += self.delta
         if self.r < 151:
             self.r = 151
             self.delta = 10
+
         if self.r > 255:
             self.r = 255
             self.delta = -10
             
         self.create_image()
+
             
 class Healthbar(VectorSprite):
      
@@ -574,6 +575,7 @@ class Rocket(Fragment):
               m.rotate(random.randint(-5, 5))
               Spark(self.pos, move = m)
           else:
+              
                 c1 = random.randint(0,255)
                 c2 = random.randint(0,255)
                 c3 = random.randint(0,255)
@@ -674,10 +676,12 @@ class PygView(object):
         self.bombgroup = pygame.sprite.Group()
         self.flashgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
+
         self.mousegroup = pygame.sprite.Group()
         self.turretgroup = pygame.sprite.Group()
         GunPlatform.groups = self.allgroup, self.turretgroup
         Mouse.groups = self.allgroup, self.mousegroup
+
         VectorSprite.groups = self.allgroup
         Fragment.groups = self.allgroup
         Bomb.groups = self.allgroup, self.bombgroup
@@ -711,10 +715,12 @@ class PygView(object):
         self.city4 = City(v.Vec2d(900, PygView.height-50), v.Vec2d(0,0))
         self.city5 = City(v.Vec2d(1150, PygView.height-50), v.Vec2d(0,0))
         
+
         self.mouse1 = Mouse(control="mouse")
         self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
         
         
+
         
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -788,9 +794,9 @@ class PygView(object):
                     elif event.key == pygame.K_c:
                         self.background.fill((255,255,255))
                     elif event.key == pygame.K_F1:
-                        self.mouse.g = random.randint(1,256)
+                        self.mouse1.g = random.randint(1,256)
                     elif event.key == pygame.K_F2:
-                        self.mouse.b = random.randint(1,256)
+                        self.mouse1.b = random.randint(1,256)
 
             # --------- pressed key handler --------------            
             pressed = pygame.key.get_pressed()
@@ -806,6 +812,12 @@ class PygView(object):
             if pressed[pygame.K_y]:
                 # y to create many many ufos
                 ufo = Ufo(v.Vec2d(PygView.width, 50), v.Vec2d(-50,0),color=(0,0,255))
+            if pressed[pygame.K_RETURN]:
+                self.city1.hp -= 100
+                self.city2.hp -= 100
+                self.city3.hp -= 100
+                self.city4.hp -= 100
+                self.city5.hp -= 100
                 
             # ------ mouse handler ------
             
@@ -837,6 +849,7 @@ class PygView(object):
             
             
             # --- Martins verbesserter mousetail -----
+
             for mouse in self.mousegroup:
                 if len(mouse.tail)>2:
                     for a in range(1,len(mouse.tail)):
@@ -845,6 +858,7 @@ class PygView(object):
                         pygame.draw.line(self.screen,(r-a,g,b),
                                      mouse.tail[a-1],
                                      mouse.tail[a],10-a*10//10)
+
             # ------ flip screen ------
             pygame.display.flip()
             
