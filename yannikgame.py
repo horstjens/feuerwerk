@@ -256,11 +256,13 @@ class VectorSprite(pygame.sprite.Sprite):
     def forward(self, delta=1):
         deltavec = v.Vec2d(delta, 0)
         deltavec.rotate(-self.angle)
+        #self.startpoint += deltavec
+        #self.move += deltavec
         self.move = deltavec
         
     def side_left(self, delta = 1):
         deltavec = v.Vec2d(delta, 0)
-        deltavec.rotate(-self.angle - 90) 
+        deltavec.rotate(-self.angle - 90) # 90
         self.move += deltavec
         
     def side_right(self, delta = 1):
@@ -353,7 +355,8 @@ class Cannon(VectorSprite):
         VectorSprite.__init__(self, layer, **kwargs)
         self.mass = 0
         if "bossnumber" not in kwargs:
-            print("error! cannon without boss number")
+            pass
+            #print("error! cannon without boss number")
         #checked = False
         #Hitpointbar(self.number)
         self.kill_with_boss = True
@@ -367,9 +370,26 @@ class Cannon(VectorSprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.image0 = self.image.copy()
+
+class MOAB(VectorSprite):
+    def create_image(self):
+        if self.picture is not None:
+            self.image = self.picture.copy()
+        else:            
+            self.image = pygame.Surface((self.width,self.height))    
+            #self.image.fill((self.color)) 100x100
+            pygame.draw.polygon(self.image, self.color, (  (0, 20), (20, 40), (60, 40), (60, 20), (70, 40), (80, 40), (100, 50), (80, 60), (70, 60), (60, 80), (60, 60), (20, 60), (0, 80), (10, 60), (0, 60), (0, 40), (10, 40), (0, 20) ))
+        self.image.set_colorkey((0, 0, 0))
+        self.image = self.image.convert_alpha()
+        # yannik scales down image *4
+        self.image=pygame.transform.scale(self.image, (25, 25))
+        self.image0 = self.image.copy()
+        self.rect= self.image.get_rect()
+        self.width = self.rect.width
+        self.height = self.rect.height
         
 class Player(VectorSprite):
-    """ a cool spaceship-like, rotable sprite, controlled by the player"""
+    
     def create_image(self):
         if self.picture is not None:
             self.image = self.picture.copy()
@@ -379,6 +399,8 @@ class Player(VectorSprite):
             pygame.draw.polygon(self.image, self.color, (  (0, 0), (100, 50), (0, 100), (30, 50), (0,0)  ))
         self.image.set_colorkey((0, 0, 0))
         self.image = self.image.convert_alpha()
+        # yannik scales down image *4
+        self.image=pygame.transform.scale(self.image, (25, 25))
         self.image0 = self.image.copy()
         self.rect= self.image.get_rect()
         self.width = self.rect.width
@@ -511,15 +533,17 @@ class PygView(object):
         VectorSprite.groups = self.allgroup
         #Hitpointbar.groups = self.allgroup
         
-        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_v, downkey=pygame.K_b, leftkey=pygame.K_n, rightkey=pygame.K_m, mass=500) # creating a Ball Sprite
+        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_h, downkey=pygame.K_n, leftkey=pygame.K_b, rightkey=pygame.K_m, mass=500) # creating a Ball Sprite
         self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_v, downkey=pygame.K_b, leftkey=pygame.K_n, rightkey=pygame.K_m, mass=333)
+        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_h, downkey=pygame.K_n, leftkey=pygame.K_b, rightkey=pygame.K_m, mass=333)
         self.cannon2 = Cannon(bossnumber = self.ball2.number)
         #self.ball2 = Ball(x=200, y=100) # create another Ball Sprite
 
         #VectorSprite(horst=14, jens="abc")
-        self.player1 = Player(color = (0, 0, 255),stop_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, rotleftkey=pygame.K_q, rotrightkey=pygame.K_e)
-
+        self.player1 = Player(color = (0, 0, 255),stop_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_q, rightkey=pygame.K_e, rotleftkey=pygame.K_a, rotrightkey=pygame.K_d)
+        self.moab1 = MOAB(bounce_on_edge= True, move=v.Vec2d(350, 0))
+        
+        
     def run(self):
         """The mainloop"""
         
@@ -532,6 +556,8 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    if event.key == pygame.K_y:
+                        MOAB(pos = v.Vec2d(self.player1.pos.x, self.player1.pos.y), move = v.Vec2d(350,0))
                     if event.key == pygame.K_b:
                         Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.995, bounce_on_edge=True) # add small balls!
                     if event.key == pygame.K_c:
@@ -555,6 +581,8 @@ class PygView(object):
                 self.cannon1.rotate(1)
             if pressed_keys[pygame.K_x]:
                 self.cannon1.rotate(-1)
+            if pressed_keys[pygame.K_f]:
+                MOAB(pos = v.Vec2d(self.player1.pos.x, self.player1.pos.y), move = v.Vec2d(350,0))
                                            
                                            
             # --- auto aim cannon2 at ball1 ----
@@ -612,6 +640,6 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1440, 900).run() # try PygView(800,600).run()
+    PygView(1440, 815).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
     #menu1.PygView.run()
