@@ -255,19 +255,17 @@ class VectorSprite(pygame.sprite.Sprite):
     
     def forward(self, delta=1):
         deltavec = v.Vec2d(delta, 0)
-        deltavec.rotate(self.angle)
-        #self.startpoint += deltavec
-        #self.move += deltavec
+        deltavec.rotate(-self.angle)
         self.move = deltavec
         
     def side_left(self, delta = 1):
         deltavec = v.Vec2d(delta, 0)
-        deltavec.rotate(-90) # 90
+        deltavec.rotate(-self.angle - 90) 
         self.move += deltavec
         
     def side_right(self, delta = 1):
         deltavec = v.Vec2d(delta, 0)
-        deltavec.rotate(90)
+        deltavec.rotate(-self.angle + 90)
         self.move += deltavec
         
     def set_angle(self, degree):
@@ -278,7 +276,7 @@ class VectorSprite(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
-        print("rotated to !")
+        #print("rotated to !")
         
         
     def update(self, seconds):
@@ -371,7 +369,7 @@ class Cannon(VectorSprite):
         self.image0 = self.image.copy()
         
 class Player(VectorSprite):
-    
+    """ a cool spaceship-like, rotable sprite, controlled by the player"""
     def create_image(self):
         if self.picture is not None:
             self.image = self.picture.copy()
@@ -409,9 +407,11 @@ class Player(VectorSprite):
         if self.rotleftkey is not None:
             if pressedkeys[self.rotleftkey]:
                 self.rotate(5)
+                print(self.angle)
         if self.rotrightkey is not None:
             if pressedkeys[self.rotrightkey]:
                 self.rotate(-5)
+                print(self.angle)
 
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
@@ -420,7 +420,7 @@ class Ball(VectorSprite):
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
         #Hitpointbar(self.number)
-        print("updkey", self.upkey)
+        #print("updkey", self.upkey)
         
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -544,7 +544,7 @@ class PygView(object):
                         #Bullet(bossnumber = self.ball1.number, move=m, kill_on_edge = True)
                     if event.key == pygame.K_LEFT:
                         self.ball1.rotate(1) # 
-                        print(self.ball1.angle)
+                        #print(self.ball1.angle)
                     #if event.key == pygame.K_t:
                     #    a = v.Vec2d(100,100)
                     #    b = v.Vec2d(100, 200)
