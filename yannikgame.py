@@ -212,6 +212,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.mass = 15
         if "friction" not in kwargs:
             self.friction = None
+        if "angle" not in kwargs:
+            self.angle = 0
         # ---
         self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
@@ -221,7 +223,7 @@ class VectorSprite(pygame.sprite.Sprite):
         
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
         #self.init2()
-
+        self.set_angle(self.angle)
         
         
     def kill(self):
@@ -314,6 +316,8 @@ class VectorSprite(pygame.sprite.Sprite):
                     self.kill()
                 if self.bounce_on_edge:#
                     self.move.x *= -1  # schon da
+                    angle = self.move.get_angle()
+                    self.set_angle(angle)
                 if self.stop_on_edge:#
                     self.move.x = 0#
                     #self.move.y = 0#
@@ -323,6 +327,8 @@ class VectorSprite(pygame.sprite.Sprite):
                     self.kill()
                 if self.bounce_on_edge:
                     self.move.y *= -1
+                    angle = self.move.get_angle()
+                    self.set_angle(angle)
                 if self.stop_on_edge:
                     #self.move.x = 0
                     self.move.y = 0
@@ -332,6 +338,8 @@ class VectorSprite(pygame.sprite.Sprite):
                     self.kill()
                 if self.bounce_on_edge:
                     self.move.x *= -1
+                    angle = self.move.get_angle()
+                    self.set_angle(angle)
                 if self.stop_on_edge:
                     self.move.x = 0
                     #self.move.y = 0
@@ -341,6 +349,8 @@ class VectorSprite(pygame.sprite.Sprite):
                     self.kill()
                 if self.bounce_on_edge:
                     self.move.y *= -1
+                    angle = self.move.get_angle()
+                    self.set_angle(angle)
                 if self.stop_on_edge:
                     #self.move.x = 0
                     self.move.y = 0
@@ -557,7 +567,10 @@ class PygView(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_y:
-                        MOAB(pos = v.Vec2d(self.player1.pos.x, self.player1.pos.y), move = v.Vec2d(350,0))
+                        m = v.Vec2d(350, 0)
+                        m = m.rotated(-self.player1.angle)
+                        m += v.Vec2d(self.player1.move.x, self.player1.move.y)
+                        MOAB(pos = v.Vec2d(self.player1.pos.x, self.player1.pos.y), move = m, max_age = 0.9, bounce_on_edge=True, angle = -m.get_angle())
                     if event.key == pygame.K_b:
                         Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.995, bounce_on_edge=True) # add small balls!
                     if event.key == pygame.K_c:
@@ -581,8 +594,8 @@ class PygView(object):
                 self.cannon1.rotate(1)
             if pressed_keys[pygame.K_x]:
                 self.cannon1.rotate(-1)
-            if pressed_keys[pygame.K_f]:
-                MOAB(pos = v.Vec2d(self.player1.pos.x, self.player1.pos.y), move = v.Vec2d(350,0))
+            #if pressed_keys[pygame.K_f]:
+            #    MOAB(pos = v.Vec2d(self.player1.pos.x, self.player1.pos.y), move = v.Vec2d(350,0))
                                            
                                            
             # --- auto aim cannon2 at ball1 ----
