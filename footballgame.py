@@ -425,8 +425,8 @@ class Wall(VectorSprite):
 class Goal(VectorSprite):
     
     def create_image(self):
-        self.width=200
-        self.height=300
+        self.width=100
+        self.height=250
         self.color=(0,0,150)
         if self.picture is not None:
             self.image = self.picture.copy()
@@ -486,17 +486,18 @@ class PygView(object):
         #Hitpointbar.groups = self.allgroup
         
         self.player1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500,color=(150,0,0)) # creating a Ball Sprite
-        self.cannon1 = Cannon(bossnumber = self.player1.number)
+        self.cannon1 = Cannon(bossnumber = self.player1.number, maxrange=300)
         #self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,255,0)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
         #self.cannon2 = Cannon(bossnumber = self.ball2.number)
         self.player2 =Ball(pos=v.Vec2d(1200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500,color=(150,150,150))
-        self.cannon3 = Cannon(bossnumber = self.player2.number)
+        self.cannon3 = Cannon(bossnumber = self.player2.number, maxrange=300)
         #self.ball4 = Ball(pos=v.Vec2d(800,500), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,0,255)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
         #self.cannon4 = Cannon(bossnumber = self.ball4.number)
-        self.cannon5 = Cannon(pos=v.Vec2d(0,0),move=v.Vec2d(0,0),m = v.Vec2d(60,0))
-        self.cannon6 = Cannon(pos=v.Vec2d(1400,0),move=v.Vec2d(0,0),m = v.Vec2d(60,0))
-        self.cannon7 = Cannon(pos=v.Vec2d(0,800),move=v.Vec2d(0,0),m = v.Vec2d(60,0))
-        self.cannon8 = Cannon(pos=v.Vec2d(1400,800),move=v.Vec2d(0,0),m = v.Vec2d(60,0))
+        # cannon5 right upper corner of goal1
+        self.cannon5 = Cannon(pos=v.Vec2d(0,250),move=v.Vec2d(0,0),m = v.Vec2d(60,0), maxrange=300)
+        self.cannon6 = Cannon(pos=v.Vec2d(1400,250),move=v.Vec2d(0,0),m = v.Vec2d(60,0), maxrange=300)
+        self.cannon7 = Cannon(pos=v.Vec2d(0,550),move=v.Vec2d(0,0),m = v.Vec2d(60,0), maxrange=300)
+        self.cannon8 = Cannon(pos=v.Vec2d(1400,550),move=v.Vec2d(0,0),m = v.Vec2d(60,0), maxrange=300)
         
         self.lazyball1 = Ball(pos=v.Vec2d(self.width//2, self.height//2),
                               mass=500, radius=20, color=(1,1,1),
@@ -606,70 +607,32 @@ class PygView(object):
             #self.cannon6.set_angle(-vectordiff.get_angle()-180)
             
             # ----- auto shooting for corner cannons -------
-            #----cannon6---
-            if random.random()<0.01:
-                m = v.Vec2d(60,0) # lenght of cannon
-                m = m.rotated(-self.cannon6.angle)
-                p = v.Vec2d(self.cannon6.pos.x, self.cannon6.pos.y) + m
-                #Ball(pos=p, move=m.normalized()*150+self.cannon6.move,mass=1000,radius=10)
-            #----cannon5
-            if random.random()<0.01:
-                m = v.Vec2d(60,0) # lenght of cannon
-                m = m.rotated(-self.cannon5.angle)
-                p = v.Vec2d(self.cannon5.pos.x, self.cannon5.pos.y) + m
-                #Ball(pos=p, move=m.normalized()*150+self.cannon5.move,mass=1000,radius=10)
-            #----cannon7
-            if random.random()<0.01:
-                m = v.Vec2d(60,0) # lenght of cannon
-                m = m.rotated(-self.cannon7.angle)
-                p = v.Vec2d(self.cannon7.pos.x, self.cannon7.pos.y) + m
-                #Ball(pos=p, move=m.normalized()*150+self.cannon7.move,mass=1000,radius=10)
-            #----cannon8
-            if random.random()<0.01:
-                m = v.Vec2d(60,0) # lenght of cannon
-                m = m.rotated(-self.cannon8.angle)
-                p = v.Vec2d(self.cannon8.pos.x, self.cannon8.pos.y) + m
-                #Ball(pos=p, move=m.normalized()*150+self.cannon8.move,mass=1000,radius=10)
+            
+            # ---- corner cannon auto aim ---- 
+            for c in [self.cannon5, self.cannon6, self.cannon7, self.cannon8]:
+                d1 = c.pos.get_distance(self.player1.pos)
+                d2 = c.pos.get_distance(self.player2.pos)
+                d3 = c.pos.get_distance(self.lazyball1.pos)
+                targetlist = []
+                if d1 < c.maxrange:
+                    targetlist.append(self.player1)
+                if d2 < c.maxrange:
+                    targetlist.append(self.player2)
+                if d3 < c.maxrange:
+                    targetlist.append(self.lazyball1)
+                if len(targetlist) > 0:
+                    target = random.choice(targetlist)
+                    vectordiff = c.pos - target.pos
+                    c.set_angle(-vectordiff.get_angle()-180)
+                    # --- auto shoot ----
+                    if random.random()<0.1:
+                        m = v.Vec2d(60,0) # lenght of cannon
+                        m = m.rotated(-c.angle)
+                        p = v.Vec2d(c.pos.x, c.pos.y) + m
+                        Ball(pos=p, move=m.normalized()*150+c.move,mass=1000,radius=10)
             
             
             
-            
-            #cannon6
-            d1 = self.cannon6.pos.get_distance(self.player1.pos)
-            d2 = self.cannon6.pos.get_distance(self.player2.pos)
-            if d1 < d2:
-                vectordiff = self.cannon6.pos - self.player1.pos
-                self.cannon6.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon6.pos - self.player2.pos
-                self.cannon6.set_angle(-vectordiff.get_angle()-180)
-            #cannon5
-            d3 = self.cannon5.pos.get_distance(self.player1.pos)
-            d4 = self.cannon5.pos.get_distance(self.player2.pos)
-            if d3 < d4:
-                vectordiff = self.cannon5.pos - self.player1.pos
-                self.cannon5.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon5.pos - self.player2.pos
-                self.cannon5.set_angle(-vectordiff.get_angle()-180)
-            #cannon7
-            d5 = self.cannon7.pos.get_distance(self.player1.pos)
-            d6 = self.cannon7.pos.get_distance(self.player2.pos)
-            if d5 < d6:
-                vectordiff = self.cannon7.pos - self.player1.pos
-                self.cannon7.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon7.pos - self.player2.pos
-                self.cannon7.set_angle(-vectordiff.get_angle()-180)
-            #cannon8
-            d7 = self.cannon8.pos.get_distance(self.player1.pos)
-            d8 = self.cannon8.pos.get_distance(self.player2.pos)
-            if d7 < d8:
-                vectordiff = self.cannon8.pos - self.player1.pos
-                self.cannon8.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon8.pos - self.player2.pos
-                self.cannon8.set_angle(-vectordiff.get_angle()-180)
             
             #     ---auto shooting ball2, ball4  ----
             #if random.random()<0.01:
@@ -735,7 +698,7 @@ class PygView(object):
                 #--reset lazyball ---
                 self.lazyball1.pos = v.Vec2d(self.width//2, self.height//2)
                 self.lazyball1.move = v.Vec2d(0,0)
-            
+                
             #for goal in self.goalgroup:
             #    crashgroup2=pygame.sprite.spritecollide(goal,self.lazygroup,False,pygame.sprite.collide_mask)
             #    print(goal, crashgroup2)
