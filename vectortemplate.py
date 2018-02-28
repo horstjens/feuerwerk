@@ -179,7 +179,7 @@ class VectorSprite(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
-        print("rotated to !")
+        #print("rotated to !")
         
         
     def update(self, seconds):
@@ -237,8 +237,8 @@ class Cannon(VectorSprite):
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
         self.mass = 0
-        if "bossnumber" not in kwargs:
-            print("error! cannon without boss number")
+        #if "bossnumber" not in kwargs:
+        #    print("error! cannon without boss number")
         self.kill_with_boss = True
         self.sticky_with_boss = True
         self.readytofire = 0
@@ -268,8 +268,8 @@ class Upercannon(VectorSprite):
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
         self.mass = 0
-        if "bossnumber" not in kwargs:
-            print("error! cannon without boss number")
+        #if "bossnumber" not in kwargs:
+        #    print("error! cannon without boss number")
         self.kill_with_boss = True
         self.sticky_with_boss = True
         self.readytofire = 0
@@ -289,8 +289,8 @@ class Upercannon(VectorSprite):
             delta = 1/len(self.recoil)
             i = (self.readytofire - self.age)/delta
             m = self.recoil[int(-i)]
-            o = v.Vec2d(20+m,0)
-            o.rotated(self.angle)
+            o = v.Vec2d(-20 + m,0)
+            o = o.rotated(-self.angle)
             self.rect.centerx += o.x
             self.rect.centery += o.y
 
@@ -299,8 +299,8 @@ class Lowercannon(VectorSprite):
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
         self.mass = 0
-        if "bossnumber" not in kwargs:
-            print("error! cannon without boss number")
+        #if "bossnumber" not in kwargs:
+        #    print("error! cannon without boss number")
         self.kill_with_boss = True
         self.sticky_with_boss = True
         self.readytofire = 0
@@ -320,8 +320,8 @@ class Lowercannon(VectorSprite):
             delta = 1/len(self.recoil)
             i = (self.readytofire - self.age)/delta
             m = self.recoil[int(-i)]
-            o = v.Vec2d(20+m,0)
-            o.rotated(self.angle)
+            o = v.Vec2d(-20+m,0)
+            o = o.rotated(-self.angle)
             self.rect.centerx += o.x
             self.rect.centery += o.y
 
@@ -330,7 +330,7 @@ class Ball(VectorSprite):
         
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
-        print("updkey", self.upkey)
+        #print("updkey", self.upkey)
         
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -424,7 +424,7 @@ class PygView(object):
                         Ball(pos=p, move=m.normalized()*15, radius=10) # move=v.Vec2d(0,0), 
                     if event.key == pygame.K_LEFT:
                         self.ball1.rotate(1) # 
-                        print(self.ball1.angle)
+                        #print(self.ball1.angle)
                     if event.key == pygame.K_s:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
@@ -536,39 +536,46 @@ class PygView(object):
                 m = m.rotated(-self.cannona2.angle)
                 p = v.Vec2d(self.cannona2.pos.x, self.cannona2.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0))
+                self.cannona2.readytofire = self.cannona2.age + 1
             #---- autofire cannon B ------
             if random.random() < 0.05:
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannonb.angle)
                 p = v.Vec2d(self.cannonb.pos.x, self.cannonb.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=200, color=(255,255,0))
+                self.cannonb.readytofire = self.cannonb.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannonb2.angle)
                 p = v.Vec2d(self.cannonb2.pos.x, self.cannonb2.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=200, color=(255,255,0))
+                self.cannonb2.readytofire = self.cannonb2.age + 1
             #---- autofire cannon C ------
             if random.random() < 0.05:
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannonc.angle)
                 p = v.Vec2d(self.cannonc.pos.x, self.cannonc.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=300, color=(0,255,0))
+                self.cannonc.readytofire = self.cannonc.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannonc2.angle)
                 p = v.Vec2d(self.cannonc2.pos.x, self.cannonc2.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=300, color=(0,255,0))
+                self.cannonc2.readytofire = self.cannonc2.age + 1
             #---- autofire cannon D ------
             if random.random() < 0.05:
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannond.angle)
                 p = v.Vec2d(self.cannond.pos.x, self.cannond.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=400, color=(0,0,255))
+                self.cannond.readytofire = self.cannond.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannond2.angle)
                 p = v.Vec2d(self.cannond2.pos.x, self.cannond2.pos.y) + m
                 Ball(pos=p, move=m.normalized()*100, radius=5,mass=400, color=(0,0,255))
+                self.cannond2.readytofire = self.cannond2.age + 1
                         
                     
                      
@@ -623,4 +630,3 @@ if __name__ == '__main__':
     PygView().run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
     #menu1.PygView.run()
-
