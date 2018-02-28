@@ -80,9 +80,14 @@ class VectorSprite(pygame.sprite.Sprite):
     number = 0
     numbers = {} # { number, Sprite }
     
-    def __init__(self, layer=4, **kwargs):
+    def __init__(self, **kwargs):
         """create a (black) surface and paint a blue ball on it"""
-        self._layer = layer   # pygame Sprite layer
+        for key, arg in kwargs.items():
+            setattr(self, key, arg)
+        if "layer" not in kwargs:
+            self._layer = 4
+        
+        #self._layer = layer   # pygame Sprite layer
         pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
         self.number = VectorSprite.number # unique number for each sprite
         VectorSprite.number += 1 
@@ -93,8 +98,7 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rightkey = None
         self.leftkey = None
         
-        for key, arg in kwargs.items():
-            setattr(self, key, arg)
+
         # --- default values for missing keywords ----
         if "pos" not in kwargs:
             self.pos = v.Vec2d(50,50)
@@ -208,34 +212,42 @@ class VectorSprite(pygame.sprite.Sprite):
         self.age += seconds
   
         # ---- bounce / kill on screen edge ----
-        if self.bounce_on_edge: 
-            if self.pos.x - self.width //2 < 0:
+        if self.pos.x - self.width //2 < 0:
+            if self.kill_on_edge:
+                self.kill()
+                print("Wallkill x < 0")
+            elif self.bounce_on_edge:
                 self.pos.x = self.width // 2
-                if self.kill_on_edge:
-                    self.kill()
                 self.move.x *= -1 
-            if self.pos.y - self.height // 2 < 0:
+        if self.pos.y - self.height // 2 < 0:
+            if self.kill_on_edge:
+                self.kill()
+                print("Wallkill y < 0")
+            elif self.bounce_on_edge:   
                 self.y = self.height // 2
-                if self.kill_on_edge:
-                    self.kill()
                 self.move.y *= -1
-            if self.pos.x + self.width //2 > PygView.width:
+                
+        if self.pos.x + self.width //2 > PygView.width:
+            if self.kill_on_edge:
+                self.kill()
+                print("Wallkill x > w")
+            elif self.bounce_on_edge:
                 self.pos.x = PygView.width - self.width //2
-                if self.kill_on_edge:
-                    self.kill()
                 self.move.x *= -1
-            if self.pos.y + self.height //2 > PygView.height:
+        if self.pos.y + self.height //2 > PygView.height:
+            if self.kill_on_edge:
+                self.kill()
+                print("Wallkill y > w")
+            elif self.bounce_on_edge:
                 self.pos.y = PygView.height - self.height //2
-                if self.kill_on_edge:
-                    self.kill()
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
 class Cannon(VectorSprite):
     """it's a line, acting as a cannon. with a Ball as boss"""
     
-    def __init__(self, layer=4, **kwargs):
-        VectorSprite.__init__(self, layer, **kwargs)
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
         self.mass = 0
         #if "bossnumber" not in kwargs:
         #    print("error! cannon without boss number")
@@ -265,8 +277,8 @@ class Cannon(VectorSprite):
 
 class Upercannon(VectorSprite):
 
-    def __init__(self, layer=4, **kwargs):
-        VectorSprite.__init__(self, layer, **kwargs)
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
         self.mass = 0
         #if "bossnumber" not in kwargs:
         #    print("error! cannon without boss number")
@@ -296,8 +308,8 @@ class Upercannon(VectorSprite):
 
 class Lowercannon(VectorSprite):
     
-    def __init__(self, layer=4, **kwargs):
-        VectorSprite.__init__(self, layer, **kwargs)
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
         self.mass = 0
         #if "bossnumber" not in kwargs:
         #    print("error! cannon without boss number")
@@ -328,8 +340,9 @@ class Lowercannon(VectorSprite):
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
         
-    def __init__(self, layer=4, **kwargs):
-        VectorSprite.__init__(self, layer, **kwargs)
+    def __init__(self, **kwargs):
+        
+        VectorSprite.__init__(self, **kwargs)
         #print("updkey", self.upkey)
         
     def update(self, seconds):
@@ -360,6 +373,14 @@ class Ball(VectorSprite):
         self.image = self.image.convert_alpha() # faster blitting with transparent color
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
+
+
+class Bullet(Ball):
+    
+    def __init__(self, **kwargs):
+        Ball(**kwargs)
+        self.kill_on_edge = True
+        print("i am a bullet. my killedge: ", self.kill_on_edge)
         
 class PygView(object):
     width = 0
@@ -529,52 +550,52 @@ class PygView(object):
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannona.angle)
                 p = v.Vec2d(self.cannona.pos.x, self.cannona.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True)
                 self.cannona.readytofire = self.cannona.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannona2.angle)
                 p = v.Vec2d(self.cannona2.pos.x, self.cannona2.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0))
+                Bullet(pos=p, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True)
                 self.cannona2.readytofire = self.cannona2.age + 1
             #---- autofire cannon B ------
             if random.random() < 0.05:
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannonb.angle)
                 p = v.Vec2d(self.cannonb.pos.x, self.cannonb.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=200, color=(255,255,0))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=200, color=(255,255,0), kill_on_edge=True)
                 self.cannonb.readytofire = self.cannonb.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannonb2.angle)
                 p = v.Vec2d(self.cannonb2.pos.x, self.cannonb2.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=200, color=(255,255,0))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=200, color=(255,255,0), kill_on_edge=True)
                 self.cannonb2.readytofire = self.cannonb2.age + 1
             #---- autofire cannon C ------
             if random.random() < 0.05:
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannonc.angle)
                 p = v.Vec2d(self.cannonc.pos.x, self.cannonc.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=300, color=(0,255,0))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=300, color=(0,255,0), kill_on_edge=True)
                 self.cannonc.readytofire = self.cannonc.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannonc2.angle)
                 p = v.Vec2d(self.cannonc2.pos.x, self.cannonc2.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=300, color=(0,255,0))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=300, color=(0,255,0), kill_on_edge=True)
                 self.cannonc2.readytofire = self.cannonc2.age + 1
             #---- autofire cannon D ------
             if random.random() < 0.05:
                 m = v.Vec2d(60,-15) # lenght of cannon
                 m = m.rotated(-self.cannond.angle)
                 p = v.Vec2d(self.cannond.pos.x, self.cannond.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=400, color=(0,0,255))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=400, color=(0,0,255), kill_on_edge=True)
                 self.cannond.readytofire = self.cannond.age + 1
             if random.random() < 0.05:
                 m = v.Vec2d(60,15) # lenght of cannon
                 m = m.rotated(-self.cannond2.angle)
                 p = v.Vec2d(self.cannond2.pos.x, self.cannond2.pos.y) + m
-                Ball(pos=p, move=m.normalized()*100, radius=5,mass=400, color=(0,0,255))
+                Ball(pos=p, move=m.normalized()*100, radius=5,mass=400, color=(0,0,255), kill_on_edge=True)
                 self.cannond2.readytofire = self.cannond2.age + 1
                         
                     
@@ -627,6 +648,6 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView().run() # try PygView(800,600).run()
+    PygView(1430,800).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
     #menu1.PygView.run()
