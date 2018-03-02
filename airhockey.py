@@ -259,15 +259,15 @@ class Goal(VectorSprite):
             self.image.fill((self.color))
         if self.side == "left":
             pygame.draw.line(self.image, (10,10,10), 
-                      (0,0), (0, self.height), 3)
+                      (0,0), (0, self.height), 5)
         elif self.side == "right":
             pygame.draw.line(self.image, (10,10,10), 
-                      (0,0), (self.width, self.height), 3)
+                      (self.width,0), (self.width, self.height), 5)
         
         pygame.draw.line(self.image, (10,10,10),
-                      (0,0), (self.width, 0), 3)
+                      (0,0), (self.width, 0), 5)
         pygame.draw.line(self.image, (10,10,10),
-                      (0,self.height), (self.width, self.height), 3)
+                      (0,self.height), (self.width, self.height), 7)
 
         self.image = self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -446,7 +446,7 @@ class PygView(object):
         pygame.draw.circle(self.background,
                            (10,10,10),
                            (PygView.width // 2, PygView.height//2),
-                           100, 1)
+                           200, 1)
         # half circle left goal
         pygame.draw.circle(self.background, (10,10,10),
                            (0, PygView.height // 2), 200, 1)
@@ -464,9 +464,9 @@ class PygView(object):
         #Cannon.groups = self.allgroup, self.cannongroup
         VectorSprite.groups = self.allgroup
         
-        self.ball1 = Ball(pos=v.Vec2d(200,150), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500) # creating a Ball Sprite
+        self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100)) # creating a Ball Sprite
         #self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333)
+        self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255))
         #self.cannon2 = Cannon(bossnumber = self.ball2.number)
         #self.cannona = Upercannon(pos=v.Vec2d(20,20), color=(255,0,0))
         #self.cannona2 = Lowercannon(pos=v.Vec2d(20,20), color=(255,0,0))
@@ -484,7 +484,8 @@ class PygView(object):
 
     def run(self):
         """The mainloop"""
-        
+        self.score1 = 0
+        self.score2 = 0
         running = True
         while running:
             for event in pygame.event.get():
@@ -666,6 +667,14 @@ class PygView(object):
             # write text below sprites
             write(self.screen, "FPS: {:6.3}  PLAYTIME: {:6.3} SECONDS".format(
                            self.clock.get_fps(), self.playtime))
+            
+            # left score
+            write(self.screen, "{}".format(self.score1), x=PygView.width // 100 * 25, 
+                  y=PygView.height//2, color= self.ball1.color, center=True, fontsize = 100)
+            write(self.screen, "{}".format(self.score2), x=PygView.width // 100 * 75, 
+                  y=PygView.height//2, color= self.ball2.color, center=True, fontsize = 100)
+            
+                                       
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
             # the False means the colliding sprite is not killed
             # ---------- collision detection between ball and bullet sprites ---------
