@@ -11,11 +11,11 @@ this example is tested using python 3.4 and pygame
 import pygame 
 import math
 import random
-import menu1
+#import menu1
 
 import operator
 import math
-import vectorclass2d as v
+import vectorclass2d as v  # vectorclass2d.py must be in same directory as this file
 
 
 
@@ -428,7 +428,22 @@ class PygView(object):
         
         x = PygView.width // 2
         y = PygView.height // 2
-        self.player1 = Ball(pos=v.Vec2d(x - 400,y), move=v.Vec2d(0,0),
+        # ---- draw playefield decoration ----
+        pygame.draw.line(self.background, (200,200,200),
+                         (x,0), (x, PygView.height), 5)
+        pygame.draw.circle(self.background, (200,200,200),
+                         (x,y), 300, 5)
+        pygame.draw.circle(self.background, (000,000,200),
+                         (0, y-300), 600, 1)
+        pygame.draw.circle(self.background, (000,000,200),
+                         (0, y+300), 600, 1)
+        pygame.draw.circle(self.background, (200,000,000),
+                         (PygView.width, y-300), 600, 1)
+        pygame.draw.circle(self.background, (200,000,000),
+                         (PygView.width, y+300), 600, 1)
+        
+        
+        self.player1 = Ball(pos=v.Vec2d(x - 300,y), move=v.Vec2d(0,0),
                             bounce_on_edge=True, 
                             upkey=pygame.K_w, downkey=pygame.K_s, 
                             leftkey=pygame.K_a, rightkey=pygame.K_d, 
@@ -437,7 +452,7 @@ class PygView(object):
         self.cannon1 = Cannon(bossnumber = self.player1.number,maxrange=300)
         #self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,255,0)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
         #self.cannon2 = Cannon(bossnumber = self.ball2.number)
-        self.player2 =Ball(pos=v.Vec2d(x+400,y), move=v.Vec2d(0,0),
+        self.player2 =Ball(pos=v.Vec2d(x+300,y), move=v.Vec2d(0,0),
                            bounce_on_edge=True,
                            upkey=pygame.K_UP, downkey=pygame.K_DOWN,
                            leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, 
@@ -627,10 +642,10 @@ class PygView(object):
                 self.lazyball1.pos = v.Vec2d(self.width//2, self.height//2)
                 self.lazyball1.move = v.Vec2d(0,0)
                 #--reset ball1
-                self.player1.pos = v.Vec2d(self.width//1.35, self.height//2)
+                self.player1.pos = v.Vec2d(self.width//2 - 300, self.height//2)
                 self.player1.move = v.Vec2d(0,0)
                 #--reset ball3                
-                self.player2.pos = v.Vec2d(self.width//3.5, self.height//2)
+                self.player2.pos = v.Vec2d(self.width//2 +300, self.height//2)
                 self.player2.move = v.Vec2d(0,0)
             
             # --------- collision detection between ball and other balls
