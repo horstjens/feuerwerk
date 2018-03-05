@@ -473,7 +473,7 @@ class PygView(object):
     def paint(self):
         """painting on the surface and create sprites"""
         # score
-        self.p1score = -1
+        self.p1score = 0
         self.p2score = 0 
         # make an interesting background 
         #draw_examples(self.background)
@@ -600,7 +600,6 @@ class PygView(object):
                     #    print("a: {}, b:{}, Winkel: {}".format(a,b, v.Vec2d.get_angle(b-a)))
                     
                     
-                    
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             if pressed_keys[pygame.K_x]:
@@ -712,11 +711,20 @@ class PygView(object):
             self.playtime += seconds
             # delete everything on screen
             self.screen.blit(self.background, (0, 0)) 
+            
             # write text below sprites
             write(self.screen, "FPS: {:6.3}  PLAYTIME: {:6.3} SECONDS".format(
                            self.clock.get_fps(), self.playtime), x=self.width//2, y=50, center=True,)
-            write(self.screen, "player1: {}  : {} player2 ".format(
-                           self.p1score, self.p2score), x=self.width//2, y=100, center=True,)
+            #--- score player1 ----- 
+            write(self.screen, "{}".format(self.p1score), color=(200,0,0),
+                  center=True, fontsize=155, x=PygView.width //3, 
+                  y=PygView.height // 2)
+            #--- score player2 ----
+            write(self.screen, "{}".format(self.p2score), color=(200,0,0),
+                  center=True, fontsize=155, x=PygView.width //3 * 2, 
+                  y=PygView.height // 2)
+            
+            
             
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
             # the False means the colliding sprite is not killed
@@ -729,12 +737,19 @@ class PygView(object):
             #       elastic_collision(ball, bullet) # change dx and dy of both sprites
             #       ball.hitpoints -= bullet.damage
             
+            # ----------- clear, draw , update, flip -----------------  
+            self.allgroup.update(seconds) # would also work with ballgroup
+            self.allgroup.draw(self.screen)  
+            
+            
             # ---- collision detection for lazyball1
             g = pygame.sprite.spritecollideany(self.lazyball1, self.goalgroup)
             if g is not None:
                 #print(g, g.number)
                 if g.number == self.goal1.number:
                     self.p2score += 1
+                    print(g)
+                    print("collision! x {}     y {}".format(self.lazyball1.pos.x, self.lazyball1.pos.y))
                 else:
                     self.p1score += 1
                 #--reset lazyball ---
@@ -772,16 +787,35 @@ class PygView(object):
             #for sprite in self.ballgroup:
             #    if sprite.hitpoints < 1:
             #        sprite.kill()
-            # ----------- clear, draw , update, flip -----------------  
-            #self.allgroup.clear(screen, background)
-            self.allgroup.update(seconds) # would also work with ballgroup
-            self.allgroup.draw(self.screen)           
+                    
             # write text over everything 
             #write(self.screen, "Press b to add another ball", x=self.width//2, y=250, center=True)
             #write(self.screen, "Press c to add another bullet", x=self.width//2, y=350, center=True)
             # next frame
+           
+            # ---- display moving vector for player1 -----
+            pygame.draw.line(self.screen, (0,200,0), 
+                             (self.player1.pos.x, self.player1.pos.y),
+                             (self.player1.pos.x + self.player1.move.x,
+                              self.player1.pos.y + self.player1.move.y),10)
+            # ---- display moving vector for player1 -----
+            pygame.draw.line(self.screen, (200,0,0), 
+                             (self.player2.pos.x, self.player2.pos.y),
+                             (self.player2.pos.x + self.player2.move.x,
+                              self.player2.pos.y + self.player2.move.y),10)
+            # ---- display moving vector for lazyball -----
+            pygame.draw.line(self.screen, (200,200,200), 
+                             (self.lazyball1.pos.x, self.lazyball1.pos.y),
+                             (self.lazyball1.pos.x + self.lazyball1.move.x,
+                              self.lazyball1.pos.y + self.lazyball1.move.y),10)
+      
+       
+       
+            
             pygame.display.flip()
             pygame.display.set_caption("Press ESC to quit. Cannon angle: {}".format(self.cannon1.angle))
+            
+
             #a = v.Vec2d(self.player1.pos.x, self.player1.pos.y)
             #b = v.Vec2d(self.ball2.pos.x, self.ball2.pos.y)
             #print("winkel:1:{} 2:{}  winkel:{}".format(a,b, v.Vec2d.get_angle_between(a,b)))
