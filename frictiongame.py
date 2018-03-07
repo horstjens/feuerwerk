@@ -12,7 +12,7 @@ import pygame
 import math
 import random
 #import menu1
-
+import time
 import operator
 import math
 import vectorclass2d as v
@@ -392,8 +392,7 @@ class Ball(VectorSprite):
         if self.rightkey is not None:
             if pressedkeys[self.rightkey]:
                 self.move.x += 5
-        self.move *= PygView.friction 
-                
+        self.move *= PygView.friction
     def create_image(self):
         self.image = pygame.Surface((self.width,self.height))    
         pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
@@ -420,7 +419,7 @@ class PygView(object):
     width = 0
     height = 0
   
-    def __init__(self, width=640, height=400, fps=30, friction=0.995):
+    def __init__(self, width=640, height=400, fps=30, friction=0.995, gametime=120.0):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
@@ -433,7 +432,7 @@ class PygView(object):
         self.fps = fps
         PygView.friction = friction
         self.playtime = 0.0
-        
+        self.gametime = gametime
         self.paint() 
         
     def paint(self):
@@ -507,6 +506,12 @@ class PygView(object):
                         Ball(pos=p, move=m.normalized()*15, radius=10) # move=v.Vec2d(0,0), 
                     if event.key == pygame.K_LEFT:
                         self.ball1.rotate(1) # 
+                    if event.key == pygame.K_1:
+                        PygView.friction = 0.995
+                    if event.key == pygame.K_2:
+                        PygView.friction = 0.9
+                    if event.key == pygame.K_3:
+                        PygView.friction = 1.01
                         #print(self.ball1.angle)
                     #if event.key == pygame.K_s:
                     #    m = v.Vec2d(60,0) # lenght of cannon
@@ -521,8 +526,6 @@ class PygView(object):
                 #self.cannon1.rotate(1)
             #if pressed_keys[pygame.K_x]:
                 #self.cannon1.rotate(-1)
-                                           
-          
             
                                            
             # --- auto aim cannon2 at ball1 ----
@@ -667,12 +670,24 @@ class PygView(object):
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
+            self.gametime -= seconds
+            if self.gametime <= 0:
+                if self.score1 == self.score2:
+                    text = "Unentschieden!"
+                if self.score1 > self.score2:
+                    text = "Sieg für Rot!"
+                if self.score1 < self.score2:
+                    text = "Sieg für Blau!"
+                write(self.screen, text, x=PygView.width//2, y=PygView.height//2, fontsize = 150, center=True)
+                pygame.display.flip()
+                time.sleep(3)
+                break
+                
             # delete everything on screen
             self.screen.blit(self.background, (0, 0)) 
             # write text below sprites
-            write(self.screen, "FPS: {:6.3}  PLAYTIME: {:6.3} SECONDS".format(
-                           self.clock.get_fps(), self.playtime))
-            
+            write(self.screen, "FPS: {:6.3}  Gametime: {:6.3} SECONDS".format(
+                           self.clock.get_fps(), self.gametime))
             self.allgroup.update(seconds) # would also work with ballgroup
             
             # left score
@@ -724,7 +739,6 @@ class PygView(object):
             #        sprite.kill()
             # ----------- clear, draw , update, flip -----------------  
             #self.allgroup.clear(screen, background)
-       
             self.allgroup.draw(self.screen)           
             # write text over everything 
             #write(self.screen, "Press b to add another ball", x=self.width//2, y=250, center=True)
@@ -738,6 +752,6 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1430,800, friction=0.99).run() # try PygView(800,600).run()
+    PygView(1430,800, friction=0.995, gametime=120).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
     #menu1.PygView.run()
