@@ -16,6 +16,7 @@ import random
 import operator
 import math
 import vectorclass2d as v  # vectorclass2d.py must be in same directory as this file
+import textscroller_vertical as ts
 
 
 
@@ -489,8 +490,20 @@ class PygView(object):
     def run(self):
         """The mainloop"""
         
+        lines= "Ballwars \nCreated 2017 by mobdulla\nHave fun playing this game!"
+        ts.PygView(text=lines, 
+                   width = PygView.width,
+                   height = PygView.height,
+                   new_init = False,
+                   bg_object= self.background,
+                   font=('mono', 48, True)).run()
         running = True
         while running:
+            milliseconds = self.clock.tick(self.fps) #
+            seconds = milliseconds / 1000
+            self.playtime += seconds
+            #if self.playtime < 10.0:
+                
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False 
@@ -596,9 +609,7 @@ class PygView(object):
                 vectordiff = self.cannon8.pos - self.player2.pos
                 self.cannon8.set_angle(-vectordiff.get_angle()-180)
             
-            milliseconds = self.clock.tick(self.fps) #
-            seconds = milliseconds / 1000
-            self.playtime += seconds
+          
             # delete everything on screen
             self.screen.blit(self.background, (0, 0)) 
             
