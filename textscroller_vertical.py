@@ -20,7 +20,8 @@ class PygView(object):
 
   
     def __init__(self, text, width=640, height=400, fps=30, textcolor=(0,0,255), 
-                 bgcolor=(255,255,255), font=('mono', 24, True), new_init=True, bg_filename=None):
+                 bgcolor=(255,255,255), font=('mono', 24, True), new_init=True,
+                 bg_filename=None, bg_object=None):
         """Initialize pygame, window, background, font,...
            default arguments 
         """
@@ -43,7 +44,9 @@ class PygView(object):
         self.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
         self.background = pygame.Surface(self.screen.get_size()).convert()  
-        if bg_filename is None:
+        if bg_object is not None:
+            self.background = bg_object
+        elif bg_filename is None:
            self.background.fill(self.bgcolor) # fill background white
         else:
            try:
