@@ -515,7 +515,7 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*80+self.player1.move, radius=30,color=(1,1,1),mass=9000)
+                        Ball(pos=p, move=m.normalized()*800+self.player1.move, radius=30,color=(1,1,1),mass=5000)
                         self.player1.move+=m.normalized()*-100
                     if event.key == pygame.K_b:
                         Ball(pos=v.Vec2d(self.player1.pos.x,self.player1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.800, bounce_on_edge=True) # add small balls!
@@ -523,14 +523,14 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*150+self.player1.move, radius=2,color=(255,0,0)) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*250+self.player1.move, radius=10,color=(255,0,0),mass=300) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player1.move+=m.normalized()*-10 
                     if event.key == pygame.K_m:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon3.angle)
                         p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*150+self.player2.move,mass=1000,radius=2, color=(0,0,255)) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*250+self.player2.move,mass=300,radius=2, color=(0,0,255)) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player2.move+=m.normalized()*-10
 
@@ -570,7 +570,7 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-c.angle)
                         p = v.Vec2d(c.pos.x, c.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*150+c.move,mass=1000,radius=5, max_distance = c.max_distance-60, color=c.color)
+                        Ball(pos=p, move=m.normalized()*200+c.move,mass=500,radius=5, max_distance = c.max_distance-60, color=c.color)
                     
             #cannon6
             d1 = self.cannon6.pos.get_distance(self.player1.pos)
