@@ -490,7 +490,7 @@ class PygView(object):
     def run(self):
         """The mainloop"""
         
-        lines= "Ballwars \nCreated 2017 by mobdulla\nHave fun playing this game!"
+        lines= "Ballwars \nCreated 2017 by mobdullah\nHave fun playing this game!"
         ts.PygView(text=lines, 
                    width = PygView.width,
                    height = PygView.height,
