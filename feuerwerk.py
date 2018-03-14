@@ -289,6 +289,32 @@ class City(VectorSprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect()
 
+class GunPlatform(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((100,200))
+        farbe = random.randint(10, 150)
+        farbe1 = random.randint(100,200) 
+        pygame.draw.polygon(self.image, (100, 100, 60), [(0, 200), (20, 20), (30, 20), (50, 200)])
+        
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (2,180), (50,200), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (4,160), (48,180), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (7,140), (45,160), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (9,120), (43,140), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (12,100), (41,120), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (14,80), (39,100), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (16,60), (37,80), 5)
+        pygame.draw.line(self.image, (farbe,farbe,farbe), (20,40), (33,60), 5)
+        
+        pygame.draw.rect(self.image, (farbe1,farbe1,farbe1),
+                         (0,20, 50, 10))
+        pygame.draw.arc(self.image, (173,216,230),
+                         (0,0,50,40), 0, 3.14,2)
+                         
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()    
+            
 
 class Goal(VectorSprite):
     
@@ -460,20 +486,39 @@ class PygView(object):
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
         VectorSprite.groups = self.allgroup
+        
         self.cities = []
+        self.platforms = []
+        self.cannons = []
         nr = PygView.width // 200
+        for p in range(nr):
+            x = PygView.width // nr * p + random.randint(25,50)
+            self.platforms.append(GunPlatform(
+                 pos=v.Vec2d(x, PygView.height-100)))
+        
         for c in range(nr):
             x = PygView.width // nr * c
             self.cities.append(City(
                  pos=v.Vec2d(x+100, PygView.height-50)))
-        self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100)) # creating a Ball Sprite
-        #self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255))
-        #self.cannon2 = Cannon(bossnumber = self.ball2.number)
+        
+        for p in self.platforms:
+            self.cannons.append(Cannon(pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
+                                cannonpos="upper", color=(255,0,0)))
+            self.cannons.append(Cannon(pos=v.Vec2d(p.pos.x-30, p.pos.y-80), 
+                                cannonpos="lower", color=(255,0,0)))
+            self.cannons.append(Cannon(pos=v.Vec2d(p.pos.x-30, p.pos.y-80), 
+                                cannonpos="middle", color=(255,0,0)))
+            
+        
         self.cannona = Cannon(pos=v.Vec2d(20,20), color=(255,0,0),
                               cannonpos="upper")
         self.cannona2 = Cannon(pos=v.Vec2d(20,20), color=(255,0,0),
                                cannonpos="lower")
+        self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100)) # creating a Ball Sprite
+        #self.cannon1 = Cannon(bossnumber = self.ball1.number)
+        self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255))
+        #self.cannon2 = Cannon(bossnumber = self.ball2.number)
+      
         #self.cannonb = Upercannon(pos=v.Vec2d(PygView.width-20,20), color=(255,255,0))
         #self.cannonb2 = Lowercannon(pos=v.Vec2d(PygView.width-20,20), color=(255,255,0))
         #self.cannonc = Upercannon(pos=v.Vec2d(20,PygView.height-20), color=(0,255,0))
