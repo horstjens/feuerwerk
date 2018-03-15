@@ -11,7 +11,7 @@ this example is tested using python 3.4 and pygame
 import pygame 
 import math
 import random
-import menu1
+#import menu1
 
 import operator
 import math
