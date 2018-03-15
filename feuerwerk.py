@@ -350,6 +350,8 @@ class Cannon(VectorSprite):
         self.mass = 0
         if "cannonpos" not in kwargs:
             self.cannonpos = "middle"
+        if "maxrange" not in kwargs:
+            self.maxrange = 300
         #else:
        #     if self.cannonpos not in ["middle", "upper", "lower"]:
        #         print("cannonpos error")
@@ -481,7 +483,8 @@ class PygView(object):
         self.cannongroup = pygame.sprite.Group()
         self.goalgroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
-        Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
+        self.targetgroup = pygame.sprite.Group()
+        Ball.groups = self.allgroup, self.ballgroup, self.targetgroup # each Ball object belong to those groups
         Goal.groups = self.allgroup, self.goalgroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
@@ -568,41 +571,55 @@ class PygView(object):
                     #    #p = v.Vec2d(self.cannon1.pos.x, self.cannon1.pos.y) + m
                     #    Ball(pos=p, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0))
                     #    #self.cannon1.readytofire = self.cannon1.age + 1
+            
+            
+            # delete everything on screen
+            self.screen.blit(self.background, (0, 0)) 
                         
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
-            #if pressed_keys[pygame.K_y]:
-                #self.cannon1.rotate(1)
-            #if pressed_keys[pygame.K_x]:
-                #self.cannon1.rotate(-1)
-                                           
-          
             
+            if pressed_keys[pygame.K_LSHIFT]:
+                # paint range circles for cannons
+                for c in self.cannongroup:
+                    pygame.draw.circle(self.screen, (50,50,50),
+                           (int(c.pos.x), int(c.pos.y)),
+                            c.maxrange,1)
                                            
-            # --- auto aim cannon2 at ball1 ----
+            # --- auto aim for cannons  ----
+            for c in self.cannongroup:
+                targets = []
+                for t in self.targetgroup:
+                    if c.pos.get_distance(t.pos) < c.maxrange:
+                        targets.append(t)
+                if len(targets) > 0:
+                    e = random.choice(targets)
+                    d = c.pos - e.pos
+                    c.set_angle(-d.get_angle()-180)
+                    
         
             
             
             #vectordiff = self.cannon2.pos - self.ball1.pos
             #self.cannon2.set_angle(-vectordiff.get_angle()-180)
             # --- auto aim cannona at ball1 ---
-            d1 = self.cannona.pos - self.ball1.pos
-            d2 = self.cannona.pos - self.ball2.pos
-            
-            if d1.get_length() < d2.get_length():
-                d = d1
-            else:
-                d = d2
-            self.cannona.set_angle(-d.get_angle()-180)
-            
-            d1 = self.cannona2.pos - self.ball1.pos
-            d2 = self.cannona2.pos - self.ball2.pos
-            
-            if d1.get_length() < d2.get_length():
-                d = d1
-            else:
-                d = d2
-            self.cannona2.set_angle(-d.get_angle()-180)
+            #d1 = self.cannona.pos - self.ball1.pos
+            #d2 = self.cannona.pos - self.ball2.pos
+           # 
+           # if d1.get_length() < d2.get_length():
+           #     d = d1
+           # else:
+           #     d = d2
+           # self.cannona.set_angle(-d.get_angle()-180)
+           # 
+           # d1 = self.cannona2.pos - self.ball1.pos
+           # d2 = self.cannona2.pos - self.ball2.pos
+           # 
+           # if d1.get_length() < d2.get_length():
+           #     d = d1
+           # else:
+           #     d = d2
+           # self.cannona2.set_angle(-d.get_angle()-180)
             
             # --- auto aim cannonb at ball1 ---
             #d1 = self.cannonb.pos - self.ball1.pos
@@ -736,8 +753,7 @@ class PygView(object):
                 time.sleep(2)
                 break
                 
-            # delete everything on screen
-            self.screen.blit(self.background, (0, 0)) 
+          
             # write text below sprites
             write(self.screen, "FPS: {:6.3}  GAMETIME: {:6.4} sec FRICTION: {:6.3}".format(
                 self.clock.get_fps(), round(self.gametime,1), PygView.friction), x=10, y=10)
