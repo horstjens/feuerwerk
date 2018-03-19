@@ -7,12 +7,16 @@ license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 idea: template to show how to move pygames Sprites, simple physic and
 collision detection between sprite groups. Also Subclassing and super.
 this example is tested using python 3.4 and pygame
+
+image license:
+trollface: By TrumpTrump (Own work) [CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0)], via Wikimedia Commons
+
 """
 import pygame 
 import math
 import random
 #import menu1
-
+import os
 import operator
 import math
 import vectorclass2d as v  # vectorclass2d.py must be in same directory as this file
@@ -277,8 +281,8 @@ class Cannon(VectorSprite):
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
         self.mass = 0
-        if "bossnumber" not in kwargs:
-            print("error! cannon without boss number")
+        #if "bossnumber" not in kwargs:
+        #    print("error! cannon without boss number")
         self.kill_with_boss = True
         self.sticky_with_boss = True
     
@@ -290,6 +294,9 @@ class Cannon(VectorSprite):
         self.rect = self.image.get_rect()
         self.image0 = self.image.copy()
         self.mask = pygame.mask.from_surface(self.image)
+
+
+
 
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
@@ -329,6 +336,8 @@ class Ball(VectorSprite):
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
         self.mask = pygame.mask.from_surface(self.image)
+
+
         
 #class Bullet(VectorSprite):
     #"""a small Sprite"""
@@ -349,6 +358,15 @@ class Ball(VectorSprite):
         #self.image.set_colorkey((0,0,0))
         #self.image = self.image.convert_alpha() # faster blitting with transparent color
         #self.rect= self.image.get_rect()
+
+
+class Troll(Ball):
+    
+    def create_image(self):
+        self.image = PygView.trollfaceimage
+        self.rect = self.image.get_rect()
+        
+        
         
 class Wall(VectorSprite):
     def create_image(self):
@@ -392,7 +410,7 @@ class PygView(object):
     width = 0
     height = 0
   
-    def __init__(self, width=640, height=400, fps=30):
+    def __init__(self, width=640, height=400, fps=30, tolerance=5):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
@@ -404,6 +422,7 @@ class PygView(object):
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.playtime = 0.0
+        self.tolerance = tolerance
         #self.font = pygame.font.SysFont('mono', 24, bold=True)
         self.paint() 
         
@@ -486,6 +505,8 @@ class PygView(object):
         #                        height=random.randint(1,400),
         #                        move=v.Vec2d(random.randint(1,5),20),
         #                        bounce_on_edge = True)
+        PygView.trollfaceimage = pygame.image.load(os.path.join(
+             "data","trollface.png")).convert_alpha()
                     
     def run(self):
         """The mainloop"""
@@ -515,22 +536,22 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*800+self.player1.move, radius=30,color=(1,1,1),mass=5000)
+                        Troll(pos=p, move=m.normalized()*800+self.player1.move, radius=30,color=(1,1,1),mass=5000, max_age=10)
                         self.player1.move+=m.normalized()*-100
-                    if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(self.player1.pos.x,self.player1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.800, bounce_on_edge=True) # add small balls!
+                    #if event.key == pygame.K_b:
+                    #    Ball(pos=v.Vec2d(self.player1.pos.x,self.player1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.800, bounce_on_edge=True) # add small balls!
                     if event.key == pygame.K_c:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*250+self.player1.move, radius=10,color=(255,0,0),mass=300) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*250+self.player1.move, radius=10,color=(255,0,0),mass=300, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player1.move+=m.normalized()*-10 
                     if event.key == pygame.K_m:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon3.angle)
                         p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*250+self.player2.move,mass=300,radius=2, color=(0,0,255)) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*250+self.player2.move,mass=300,radius=2, color=(0,0,255), kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player2.move+=m.normalized()*-10
 
@@ -560,7 +581,9 @@ class PygView(object):
                 if d2< c.max_distance:
                     targetlist.append(self.player2)
                 if d3< c.max_distance:
-                    targetlist.append(self.lazyball1)
+                    #targetlist.append(self.lazyball1)
+                    # lazyball has highest priority
+                    targetlist = [self.lazyball1]
                 if len(targetlist)>0:
                     target = random.choice(targetlist)
                     vectordiff=c.pos-target.pos
@@ -572,43 +595,7 @@ class PygView(object):
                         p = v.Vec2d(c.pos.x, c.pos.y) + m
                         Ball(pos=p, move=m.normalized()*200+c.move,mass=500,radius=5, max_distance = c.max_distance-60, color=c.color)
                     
-            #cannon6
-            d1 = self.cannon6.pos.get_distance(self.player1.pos)
-            d2 = self.cannon6.pos.get_distance(self.player2.pos)
-            if d1 < d2:
-                vectordiff = self.cannon6.pos - self.player1.pos
-                self.cannon6.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon6.pos - self.player2.pos
-                self.cannon6.set_angle(-vectordiff.get_angle()-180)
-            #cannon5
-            d3 = self.cannon5.pos.get_distance(self.player1.pos)
-            d4 = self.cannon5.pos.get_distance(self.player2.pos)
-            if d3 < d4:
-                vectordiff = self.cannon5.pos - self.player1.pos
-                self.cannon5.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon5.pos - self.player2.pos
-                self.cannon5.set_angle(-vectordiff.get_angle()-180)
-            #cannon7
-            d5 = self.cannon7.pos.get_distance(self.player1.pos)
-            d6 = self.cannon7.pos.get_distance(self.player2.pos)
-            if d5 < d6:
-                vectordiff = self.cannon7.pos - self.player1.pos
-                self.cannon7.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon7.pos - self.player2.pos
-                self.cannon7.set_angle(-vectordiff.get_angle()-180)
-            #cannon8
-            d7 = self.cannon8.pos.get_distance(self.player1.pos)
-            d8 = self.cannon8.pos.get_distance(self.player2.pos)
-            if d7 < d8:
-                vectordiff = self.cannon8.pos - self.player1.pos
-                self.cannon8.set_angle(-vectordiff.get_angle()-180)
-            else:
-                vectordiff = self.cannon8.pos - self.player2.pos
-                self.cannon8.set_angle(-vectordiff.get_angle()-180)
-            
+         
           
             # delete everything on screen
             self.screen.blit(self.background, (0, 0)) 
@@ -645,8 +632,8 @@ class PygView(object):
             if g is not None:
                 if g.number == self.goal1.number:
                     self.p2score += 1
-                    print(g)
-                    print("collision! x {}     y {}".format(self.lazyball1.pos.x, self.lazyball1.pos.y))
+                    #print(g)
+                    #print("collision! x {}     y {}".format(self.lazyball1.pos.x, self.lazyball1.pos.y))
                 else:
                     self.p1score += 1
                 #--reset lazyball ---
@@ -701,6 +688,6 @@ class PygView(object):
     pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1400,800).run() # try PygView(800,600).run()
+    PygView(1400,800, 60, tolerance=5).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
     #menu1.PygView.run()
