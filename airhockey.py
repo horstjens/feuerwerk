@@ -573,12 +573,13 @@ class PygView(object):
             for c in crashgroup:
                     c.kill()
                     self.score2 -= 1
+                    self.score1 += 1
                     
             crashgroup = pygame.sprite.spritecollide(self.ball2, self.bonusgroup, False, pygame.sprite.collide_circle)
             for c in crashgroup:
                 c.kill()
                 self.score1 -= 1
-            
+                self.score2 += 1
             
             # --------- collision detection between ball3 and goalgroup --------
             crash = pygame.sprite.spritecollideany(self.ball3, self.goalgroup)
@@ -603,7 +604,7 @@ class PygView(object):
                         elastic_collision(ball, otherball) # change dx and dy of both sprites
             
             ##-------- bonus
-            if random.random() < 0.005:
+            if random.random() < 0.001:
                 Bonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
