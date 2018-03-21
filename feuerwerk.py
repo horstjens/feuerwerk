@@ -154,7 +154,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
         
     def kill(self):
-        del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
+        if self.number in self.numbers:
+            del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
         pygame.sprite.Sprite.kill(self)
         
     def init2(self):
@@ -393,10 +394,10 @@ class Cannon(VectorSprite):
             delta = 1/len(self.recoil)
             i = (self.readytofire - self.age)/delta
             m = self.recoil[int(-i)]
-            o = v.Vec2d(20+m,0)
-            o.rotate(self.angle)
-            self.rect.centerx += o.x
-            self.rect.centery += o.y
+            #o = v.Vec2d(20+m,0)
+            #o.rotate(self.angle)
+            #self.rect.centerx += o.x
+            #self.rect.centery += o.y
 
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
@@ -646,12 +647,12 @@ class PygView(object):
                         c.set_angle(-d.get_angle()-180)
                     # ------- autofire -------
                     #for c in cannons:
-                    #    if c.readytofire < c.age:
+                    #    #if c.readytofire < c.age:
                     #        m = v.Vec2d(60,c.cy) # lenght of cannon
                     #        m = m.rotated(-c.angle)
                     #        start = v.Vec2d(c.pos.x, c.pos.y) + m
                     #        Ball(pos=start, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
-                     #       c.readytofire = c.age + 1
+                    #        #c.readytofire = c.age + 1
                     #        break
                     
                             
@@ -882,6 +883,15 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
+    #try: 
+    #     g = int(input("How many seconds do you want to play? (120)"))
+    #except:
+    #     g = 120
     
     PygView(1430,800, friction=0.99, gametime=90).run() # try PygView(800,600).run()
-   
+    #m=menu1.Menu(menu1.Settings.menu)
+    #menu1.PygView.run()
+    
+    
+    
+    
