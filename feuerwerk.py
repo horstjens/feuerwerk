@@ -12,6 +12,7 @@ import pygame
 import math
 import random
 #import menu1
+import os
 import time
 import operator
 import math
@@ -881,15 +882,6 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    #try: 
-    #     g = int(input("How many seconds do you want to play? (120)"))
-    #except:
-    #     g = 120
     
     PygView(1430,800, friction=0.99, gametime=90).run() # try PygView(800,600).run()
-    #m=menu1.Menu(menu1.Settings.menu)
-    #menu1.PygView.run()
-    
-    
-    
-    
+   
