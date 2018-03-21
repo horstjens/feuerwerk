@@ -154,8 +154,7 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
         
     def kill(self):
-        if self.number in self.numbers:
-            del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
+        del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
         pygame.sprite.Sprite.kill(self)
         
     def init2(self):
@@ -250,6 +249,119 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
+class Ufo(VectorSprite):
+    
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+    
+    #def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
+    #             color=(255,0,0), gravity=None):
+    #    VectorSprite.__init__(self, pos, move, color)
+    #    Healthbar(self)
+
+    def update(self, seconds):
+        # --- animate ---
+        i = self.age *3 % len(self.images)
+        self.image = self.images[int(i)]
+        # --- chance to throw bomb ---
+        #if random.random() < 0.015:
+        #    m = v.Vec2d(0, -random.random()*75)
+        #    m.rotate(random.randint(-90,90))
+        #    Bomb(pos=self.pos, move=m,
+        #         gravity = v.Vec2d(0,0.7))
+        # --- chance to change move vector ---
+        if random.random() < 0.05:
+             m = v.Vec2d(0, random.randint(-10, 10))
+             m.rotate(random.randint(-120, 120))    
+             self.move += m     
+        if self.pos.x < 0:
+            self.pos.x = 0
+            self.move.x *= -1
+        elif self.pos.x > PygView.width:
+            self.pos.x = PygView.width
+            self.move.x *= -1
+        if self.pos.y < 0:
+            self.pos.y = 0
+            self.move.y *= -1
+        elif self.pos.y > PygView.height // 2:
+            self.pos.y = PygView.height // 2
+            self.move.y *= -1
+        VectorSprite.update(self, seconds)
+  
+    def create_image(self):
+        #---------image1------
+        self.image1 = pygame.Surface((100, 100))
+        pygame.draw.line(self.image1, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image1, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image1, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image1, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image1, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image1, self.color, (25, 75), (75, 75),3)
+        pygame.draw.circle(self.image1, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image1, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image1, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image1, (255, 0, 255), (30, 50), (5),0)
+        pygame.draw.circle(self.image1, (0, 255, 255), (50, 50), (5),0)
+        pygame.draw.circle(self.image1, (255, 255, 0), (70, 50), (5),0)
+        pygame.draw.line(self.image1, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image1, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image1, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image1, self.color, (55, 85), (65, 85),2)
+        pygame.draw.line(self.image1, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image1, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image1, self.color, (20, 40), (0, 30),5)
+        self.image1.set_colorkey((0,0,0))
+        self.image1.convert_alpha()
+        #--------image2
+        self.image2 = pygame.Surface((100, 100))
+        pygame.draw.line(self.image2, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image2, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image2, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image2, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image2, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image2, self.color, (25, 75), (75, 75),3)
+        pygame.draw.circle(self.image2, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image2, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image2, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image2, (255, 255, 0), (30, 50), (5),0)
+        pygame.draw.circle(self.image2, (255, 0, 255), (50, 50), (5),0)
+        pygame.draw.circle(self.image2, (0, 255, 255), (70, 50), (5),0)
+        pygame.draw.line(self.image2, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image2, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image2, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image2, self.color, (55, 85), (65, 85),2)
+        pygame.draw.line(self.image2, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image2, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image2, self.color, (20, 40), (0, 30),5)
+        self.image2.set_colorkey((0,0,0))
+        self.image2.convert_alpha()
+        #-------image3
+        self.image3 = pygame.Surface((100, 100))
+        pygame.draw.line(self.image3, self.color, (15, 50), (25, 25),3)
+        pygame.draw.line(self.image3, self.color, (15, 50), (25, 75),3)
+        pygame.draw.line(self.image3, self.color, (85, 50), (75, 25),3)
+        pygame.draw.line(self.image3, self.color, (85, 50), (75, 75),3)
+        pygame.draw.line(self.image3, self.color, (25, 25), (75, 25),3)
+        pygame.draw.line(self.image3, self.color, (25, 75), (75, 75),3)
+        pygame.draw.circle(self.image3, self.color, (30, 50), (7),1)
+        pygame.draw.circle(self.image3, self.color, (50, 50), (7),1)
+        pygame.draw.circle(self.image3, self.color, (70, 50), (7),1)
+        pygame.draw.circle(self.image3, (0, 255, 255), (30, 50), (5),0)
+        pygame.draw.circle(self.image3, (255, 255, 0), (50, 50), (5),0)
+        pygame.draw.circle(self.image3, (255, 0, 255), (70, 50), (5),0)
+        pygame.draw.line(self.image3, self.color, (40, 75), (40, 85),2)
+        pygame.draw.line(self.image3, self.color, (60, 75), (60, 85),2)
+        pygame.draw.line(self.image3, self.color, (35, 85), (45, 85),2)
+        pygame.draw.line(self.image3, self.color, (55, 85), (65, 85),2)
+        pygame.draw.line(self.image3, self.color, (30, 25), (20, 5),2)
+        pygame.draw.line(self.image3, self.color, (70, 25), (80, 5),2)
+        pygame.draw.line(self.image3, self.color, (20, 40), (0, 30),5)
+        self.image3.set_colorkey((0,0,0))
+        self.image3.convert_alpha()
+        
+        self.images = [ self.image1, self.image2, self.image3]
+        self.image = self.images[0]
+        self.rect= self.image.get_rect()
 
 class City(VectorSprite):
     
@@ -394,10 +506,10 @@ class Cannon(VectorSprite):
             delta = 1/len(self.recoil)
             i = (self.readytofire - self.age)/delta
             m = self.recoil[int(-i)]
-            #o = v.Vec2d(20+m,0)
-            #o.rotate(self.angle)
-            #self.rect.centerx += o.x
-            #self.rect.centery += o.y
+            o = v.Vec2d(20+m,0)
+            o.rotate(self.angle)
+            self.rect.centerx += o.x
+            self.rect.centery += o.y
 
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
@@ -521,12 +633,15 @@ class PygView(object):
         self.citygroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
+        self.ufogroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup, self.targetgroup # each Ball object belong to those groups
         #Goal.groups = self.allgroup, self.goalgroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
         VectorSprite.groups = self.allgroup
         GunPlatform.groups = self.allgroup, self.platformgroup
+        Ufo.groups = self.allgroup, self.ufogroup
+        
         
         self.cities = []
         self.platforms = []
@@ -567,7 +682,7 @@ class PygView(object):
         #self.cannond = Upercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         #self.cannond2 = Lowercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
-        
+        self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
         #self.goal1 = Goal(pos=v.Vec2d(25, PygView.height//2), side="left", width=50, height=250, color=(200,50,50))
         #self.goal2 = Goal(pos=v.Vec2d(PygView.width - 25, PygView.height//2), side="right", width=50, height=250, color=(200,200,50
         #))
@@ -601,7 +716,8 @@ class PygView(object):
                         self.ball1.move = v.Vec2d(0,0)
                         self.ball2.move = v.Vec2d(0,0)
                         self.ball3.move = v.Vec2d(0,0)
-                        
+                    if event.key == pygame.K_u:
+                        Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
                         #print(self.ball1.angle)
                     #if event.key == pygame.K_s:
                     #    m = v.Vec2d(60,0) # lenght of cannon
@@ -647,12 +763,12 @@ class PygView(object):
                         c.set_angle(-d.get_angle()-180)
                     # ------- autofire -------
                     #for c in cannons:
-                    #    #if c.readytofire < c.age:
+                    #    if c.readytofire < c.age:
                     #        m = v.Vec2d(60,c.cy) # lenght of cannon
                     #        m = m.rotated(-c.angle)
                     #        start = v.Vec2d(c.pos.x, c.pos.y) + m
                     #        Ball(pos=start, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
-                    #        #c.readytofire = c.age + 1
+                     #       c.readytofire = c.age + 1
                     #        break
                     
                             
@@ -883,15 +999,6 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    #try: 
-    #     g = int(input("How many seconds do you want to play? (120)"))
-    #except:
-    #     g = 120
     
     PygView(1430,800, friction=0.99, gametime=90).run() # try PygView(800,600).run()
-    #m=menu1.Menu(menu1.Settings.menu)
-    #menu1.PygView.run()
-    
-    
-    
-    
+   
