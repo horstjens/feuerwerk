@@ -291,6 +291,11 @@ class City(VectorSprite):
 
 class GunPlatform(VectorSprite):
     
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+        if "maxrange" not in kwargs:
+            self.maxrange = 300
+    
     def create_image(self):
         self.image = pygame.Surface((100,200))
         farbe = random.randint(10, 150)
@@ -350,8 +355,8 @@ class Cannon(VectorSprite):
         self.mass = 0
         if "cannonpos" not in kwargs:
             self.cannonpos = "middle"
-        if "maxrange" not in kwargs:
-            self.maxrange = 300
+        #if "maxrange" not in kwargs:
+        #    self.maxrange = 300
         #else:
        #     if self.cannonpos not in ["middle", "upper", "lower"]:
        #         print("cannonpos error")
@@ -366,10 +371,13 @@ class Cannon(VectorSprite):
         self.image = pygame.Surface((120, 50))
         # uppercannon self.image = pygame.Surface((120,50))
         if self.cannonpos == "middle":
+            self.cy = 0
             pygame.draw.rect(self.image, self.color, (50, 15, 70, 5))
         elif self.cannonpos == "upper":
+            self.cy = -15
             pygame.draw.rect(self.image, self.color, (50, 0, 70, 5))
         elif self.cannonpos == "lower":
+            self.cy = 15
             pygame.draw.rect(self.image, self.color, (50, 30, 70, 5))
         # lowercannon pygame.draw.rect(self.image, self.color, (50, 30, 70, 20))
         # uppercannon pygame.draw.rect(self.image, self.color, (50, 0, 70, 20))
@@ -454,41 +462,69 @@ class PygView(object):
         PygView.friction = friction
         self.playtime = 0.0
         self.gametime = gametime
+        
+        # ------ background images ------
+        self.backgroundfilenames = [] # every .jpg file in folder 'data'
+        for root, dirs, files in os.walk("data"):
+            for file in files:
+                if file[-4:] == ".jpg" or file[-5:] == ".jpeg":
+                    self.backgroundfilenames.append(file)
+        random.shuffle(self.backgroundfilenames) # remix sort order
+        if len(self.backgroundfilenames) == 0:
+            print("Error: no .jpg files found")
+            pygame.quit
+            sys.exit()
+        self.level = 1
+        self.loadbackground()
+        # ------------------------------------ 
         self.paint() 
+
+    def loadbackground(self):
+        self.background = pygame.Surface(self.screen.get_size()).convert()
+        self.background.fill((255,255,255)) # fill background white
+        self.background = pygame.image.load(os.path.join("data",
+             self.backgroundfilenames[self.level % 
+             len(self.backgroundfilenames)]))
+        self.background = pygame.transform.scale(self.background, 
+             (PygView.width,PygView.height))
+        self.background.convert()
+               
         
     def paint(self):
         """painting on the surface and create sprites"""
         # ---- playing field decoration ----
         # vertical middle line
-        pygame.draw.line(self.background,
-                         (10,10,10), 
-                         (PygView.width // 2, 0),
-                         (PygView.width // 2, PygView.height),
-                         3)
+        #pygame.draw.line(self.background,
+        #                 (10,10,10), 
+        #                 (PygView.width // 2, 0),
+        #                 (PygView.width // 2, PygView.height),
+        #                 3)
         # middle circle
-        pygame.draw.circle(self.background,
-                           (10,10,10),
-                           (PygView.width // 2, PygView.height//2),
-                           200, 1)
+        #pygame.draw.circle(self.background,
+        #                   (10,10,10),
+        #                   (PygView.width // 2, PygView.height//2),
+        #                   200, 1)
         # half circle left goal
-        pygame.draw.circle(self.background, (10,10,10),
-                           (0, PygView.height // 2), 200, 1)
+        #pygame.draw.circle(self.background, (10,10,10),
+        #                   (0, PygView.height // 2), 200, 1)
         # half circle right goal
-        pygame.draw.circle(self.background, (10,10,10),
-                           (PygView.width, PygView.height // 2), 200, 1)
+        #pygame.draw.circle(self.background, (10,10,10),
+        #                   (PygView.width, PygView.height // 2), 200, 1)
                 
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
         self.ballgroup = pygame.sprite.Group()          # for collision detection etc.
         self.bulletgroup = pygame.sprite.Group()
         self.cannongroup = pygame.sprite.Group()
-        self.goalgroup = pygame.sprite.Group()
+        #self.goalgroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
+        self.platformgroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup, self.targetgroup # each Ball object belong to those groups
-        Goal.groups = self.allgroup, self.goalgroup
+        #Goal.groups = self.allgroup, self.goalgroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
         VectorSprite.groups = self.allgroup
+        GunPlatform.groups = self.allgroup, self.platformgroup
         
         self.cities = []
         self.platforms = []
@@ -505,18 +541,18 @@ class PygView(object):
                  pos=v.Vec2d(x+100, PygView.height-50)))
         
         for p in self.platforms:
-            self.cannons.append(Cannon(pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
+            self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
                                 cannonpos="upper", color=(255,0,0)))
-            self.cannons.append(Cannon(pos=v.Vec2d(p.pos.x-30, p.pos.y-80), 
+            self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80), 
                                 cannonpos="lower", color=(255,0,0)))
-            self.cannons.append(Cannon(pos=v.Vec2d(p.pos.x-30, p.pos.y-80), 
+            self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80), 
                                 cannonpos="middle", color=(255,0,0)))
             
         
-        self.cannona = Cannon(pos=v.Vec2d(20,20), color=(255,0,0),
-                              cannonpos="upper")
-        self.cannona2 = Cannon(pos=v.Vec2d(20,20), color=(255,0,0),
-                               cannonpos="lower")
+        #self.cannona = Cannon(pos=v.Vec2d(20,20), color=(255,0,0),
+        #                      cannonpos="upper")
+        #self.cannona2 = Cannon(pos=v.Vec2d(20,20), color=(255,0,0),
+        #                       cannonpos="lower")
         self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100)) # creating a Ball Sprite
         #self.cannon1 = Cannon(bossnumber = self.ball1.number)
         self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255))
@@ -530,14 +566,14 @@ class PygView(object):
         #self.cannond2 = Lowercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
         
-        self.goal1 = Goal(pos=v.Vec2d(25, PygView.height//2), side="left", width=50, height=250, color=(200,50,50))
-        self.goal2 = Goal(pos=v.Vec2d(PygView.width - 25, PygView.height//2), side="right", width=50, height=250, color=(200,200,50
-        ))
+        #self.goal1 = Goal(pos=v.Vec2d(25, PygView.height//2), side="left", width=50, height=250, color=(200,50,50))
+        #self.goal2 = Goal(pos=v.Vec2d(PygView.width - 25, PygView.height//2), side="right", width=50, height=250, color=(200,200,50
+        #))
 
     def run(self):
         """The mainloop"""
-        self.score1 = 0
-        self.score2 = 0
+        #self.score1 = 0
+        #self.score2 = 0
         running = True
         while running:
             for event in pygame.event.get():
@@ -581,23 +617,44 @@ class PygView(object):
             
             if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
-                for c in self.cannongroup:
+                for p in self.platformgroup:
                     pygame.draw.circle(self.screen, (50,50,50),
-                           (int(c.pos.x), int(c.pos.y)),
-                            c.maxrange,1)
+                           (int(p.pos.x), int(p.pos.y)),
+                            p.maxrange,1)
                                            
             # --- auto aim for cannons  ----
-            for c in self.cannongroup:
+            for p in self.platformgroup:
+            #for c in self.cannongroup:
                 targets = []
                 for t in self.targetgroup:
-                    if c.pos.get_distance(t.pos) < c.maxrange:
+                    if p.pos.get_distance(t.pos) < p.maxrange:
                         targets.append(t)
-                if len(targets) > 0:
-                    e = random.choice(targets)
-                    d = c.pos - e.pos
-                    c.set_angle(-d.get_angle()-180)
+                distance = 2 * p.maxrange
+                for t in targets:
+                    dd = p.pos.get_distance(t.pos)
+                    if dd < distance:
+                        distance = dd
+                        e = t
+                #if len(targets) > 0:
+                #    e = random.choice(targets)
+                if distance < p.maxrange:
+                    cannons = [c for c in self.cannongroup if c.platform == p]
+                    # ------ aiming -------
+                    for c in cannons:
+                        d = c.pos - e.pos
+                        c.set_angle(-d.get_angle()-180)
+                    # ------- autofire -------
+                    #for c in cannons:
+                    #    if c.readytofire < c.age:
+                    #        m = v.Vec2d(60,c.cy) # lenght of cannon
+                    #        m = m.rotated(-c.angle)
+                    #        start = v.Vec2d(c.pos.x, c.pos.y) + m
+                    #        Ball(pos=start, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
+                     #       c.readytofire = c.age + 1
+                    #        break
                     
-        
+                            
+                
             
             
             #vectordiff = self.cannon2.pos - self.ball1.pos
@@ -739,19 +796,19 @@ class PygView(object):
             seconds = milliseconds / 1000
             self.playtime += seconds
             self.gametime -= seconds
-            if self.gametime <= 0:
-                if self.score1 == self.score2 :
-                    text = "draw"
-                elif self.score1 > self.score2:
-                    text = "red player wins"
-                else:
-                    text = "blue player wins"
-                write(self.screen, text, x=PygView.width//2,
-                      y=PygView.height//2, fontsize = 150,
-                      center=True)
-                pygame.display.flip()
-                time.sleep(2)
-                break
+            #if self.gametime <= 0:
+            #    if self.score1 == self.score2 :
+            #        text = "draw"
+            #    elif self.score1 > self.score2:
+            #        text = "red player wins"
+            #    else:
+            #        text = "blue player wins"
+            #    write(self.screen, text, x=PygView.width//2,
+            #          y=PygView.height//2, fontsize = 150,
+            #          center=True)
+            #    pygame.display.flip()
+            #    time.sleep(2)
+            #    break
                 
           
             # write text below sprites
@@ -761,10 +818,10 @@ class PygView(object):
             self.allgroup.update(seconds) # would also work with ballgroup
             
             # left score
-            write(self.screen, "{}".format(self.score1), x=PygView.width // 100 * 25, 
-                  y=PygView.height//2, color= self.ball1.color, center=True, fontsize = 100)
-            write(self.screen, "{}".format(self.score2), x=PygView.width // 100 * 75, 
-                  y=PygView.height//2, color= self.ball2.color, center=True, fontsize = 100)
+            #write(self.screen, "{}".format(self.score1), x=PygView.width // 100 * 25, 
+            #      y=PygView.height//2, color= self.ball1.color, center=True, fontsize = 100)
+            #write(self.screen, "{}".format(self.score2), x=PygView.width // 100 * 75, 
+            #      y=PygView.height//2, color= self.ball2.color, center=True, fontsize = 100)
         
         
                                        
@@ -778,18 +835,18 @@ class PygView(object):
             #       ball.hitpoints -= bullet.damage
             
             # --------- collision detection between ball3 and goalgroup --------
-            crash = pygame.sprite.spritecollideany(self.ball3, self.goalgroup)
-                    #collided = collide_mask) 
-            if crash is not None:
-                if crash.side == "left":
-                    self.score2 += 1
-                elif crash.side == "right":
-                    self.score1 += 1
-                for b in [self.ball1, self.ball2, self.ball3]:
-                    b.move = v.Vec2d(0,0)
-                self.ball1.pos = v.Vec2d(PygView.width//2 - 100, PygView.height //2)
-                self.ball2.pos = v.Vec2d(PygView.width//2 + 100, PygView.height //2)
-                self.ball3.pos = v.Vec2d(PygView.width//2, PygView.height //2)
+            #crash = pygame.sprite.spritecollideany(self.ball3, self.goalgroup)
+            #        #collided = collide_mask) 
+            #if crash is not None:
+            #    if crash.side == "left":
+            #        self.score2 += 1
+            #    elif crash.side == "right":
+            #        self.score1 += 1
+            #    for b in [self.ball1, self.ball2, self.ball3]:
+            #        b.move = v.Vec2d(0,0)
+            #    self.ball1.pos = v.Vec2d(PygView.width//2 - 100, PygView.height //2)
+            #    self.ball2.pos = v.Vec2d(PygView.width//2 + 100, PygView.height //2)
+            #    self.ball3.pos = v.Vec2d(PygView.width//2, PygView.height //2)
                     
             
             # --------- collision detection between ball and other balls
