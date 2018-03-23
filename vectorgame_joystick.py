@@ -454,8 +454,15 @@ class VectorSprite(pygame.sprite.Sprite):
 class Bonus(VectorSprite):
     
     def create_image(self):
-        self.image = pygame.Surface((maxx, maxy))
-        pygame.draw.circle(self.image, (255,0,0), (2,2), 2)
+        self.image = pygame.Surface((5, 5))
+        pygame.draw.circle(self.image, (225,80,67), (2,2), 2)
+        self.image.convert_alpha()
+        
+class Block(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((5, 5))
+        pygame.draw.rect(self.image, (255,0,0), (2,2), 2)
         self.image.convert_alpha()
            
 
@@ -581,7 +588,8 @@ class PygView(object):
                                            Vec2d(50,25)))
         self.cannon1.rotate(90)
         
-
+        self.bonus1 = Shape(self.screen, Vec2d(50,50),
+                             (Vec2d(25,50), Vec2d(0, 25), Vec2d(25, 0), Vec2d(50, 25)))
 
     def run(self):
         """-----------The mainloop------------"""
@@ -628,7 +636,10 @@ class PygView(object):
                     if event.key == pygame.K_3:
                         self.niklas_ship.startpoint.x = 400
                         self.niklas_ship.startpoint.y = 200
-                        
+                    if event.key == pygame.K_6:
+                        Bonus()
+                    if event.key == pygame.K_5:
+                        Block()
                     #--------- circle shot of middle ship ------   
                     # cooldown ?
                     if event.key == pygame.K_r and self.niklas_ship.hitpoints > 0:
@@ -736,6 +747,12 @@ class PygView(object):
             if self.niklas_ship.hitpoints > 0:
                 self.niklas_ship.draw()
             self.cannon1.draw()
+            
+            # -------- update and draw bonus ----
+            self.bonus1.update(seconds)
+            self.bonus1.draw()
+            self.bonus1.forward(50)
+            
             
             # -----update and draw balls-----
             for b in Ball.group:
@@ -944,4 +961,4 @@ class PygView(object):
 if __name__ == '__main__':
 
     # call with width of window and fps
-    PygView().run()
+    PygView(1450, 815).run()
