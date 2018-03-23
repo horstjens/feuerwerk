@@ -590,6 +590,13 @@ class PygView(object):
         
         self.bonus1 = Shape(self.screen, Vec2d(50,50),
                              (Vec2d(25,50), Vec2d(0, 25), Vec2d(25, 0), Vec2d(50, 25)))
+        
+        self.bricks = []
+        self.bricks.append(   Shape(self.screen, Vec2d(400, 400),
+                              (Vec2d(0, 0), Vec2d(10, 0), Vec2d(10, 10), Vec2d(0, 10))))
+        for x in range(0, 300, 10):
+            self.bricks.append(   Shape(self.screen, Vec2d(x, 200),
+                              (Vec2d(0, 0), Vec2d(10, 0), Vec2d(10, 10), Vec2d(0, 10))))
 
     def run(self):
         """-----------The mainloop------------"""
@@ -752,7 +759,10 @@ class PygView(object):
             self.bonus1.update(seconds)
             self.bonus1.draw()
             self.bonus1.forward(50)
-            
+            # --------- update and draw bricks----
+            for b in self.bricks:
+                b.update(seconds)
+                b.draw()
             
             # -----update and draw balls-----
             for b in Ball.group:
