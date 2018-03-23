@@ -451,6 +451,12 @@ class VectorSprite(pygame.sprite.Sprite):
         pygame.draw.circle(self.image, (255,0,0), (2,2), 2)
         self.image.convert_alpha()  
         
+class Bonus(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((maxx, maxy))
+        pygame.draw.circle(self.image, (255,0,0), (2,2), 2)
+        self.image.convert_alpha()
            
 
 class Ball():
@@ -740,7 +746,7 @@ class PygView(object):
             Ball.group = [b for b in Ball.group if b.age < Ball.maxage]
             
             # ----- collision detection -----
-            critical_distance = 20
+            critical_distance = 35
             for b in Ball.group:
                 if b.bossnumber != self.pixelhirn.number and self.pixelhirn.hitpoints > 0:
                     if (b.startpoint - self.pixelhirn.startpoint).get_length() < critical_distance:
