@@ -219,34 +219,35 @@ class VectorSprite(pygame.sprite.Sprite):
         self.age += seconds
   
         # ---- bounce / kill on screen edge ----
-        if self.pos.x - self.width //2 < 0:
+        if self.pos.x < 0:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill x < 0")
+                #print("Wallkill x < 0")
             elif self.bounce_on_edge:
-                self.pos.x = self.width // 2
+                self.pos.x = 0
                 self.move.x *= -1 
-        if self.pos.y - self.height // 2 < 0:
+        if self.pos.y  < 0:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill y < 0")
+                #print("Wallkill y < 0")
             elif self.bounce_on_edge:   
-                self.y = self.height // 2
+                self.y = 0 
                 self.move.y *= -1
                 
-        if self.pos.x + self.width //2 > PygView.width:
+        if self.pos.x  > PygView.width:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill x > w")
+                #print("Wallkill x > w")
             elif self.bounce_on_edge:
-                self.pos.x = PygView.width - self.width //2
+                self.pos.x = PygView.width 
                 self.move.x *= -1
-        if self.pos.y + self.height //2 > PygView.height:
+        #if self.pos.y + self.height //2 > PygView.height:
+        if self.pos.y   > PygView.height:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill y > w")
+                #print("Wallkill y > w")
             elif self.bounce_on_edge:
-                self.pos.y = PygView.height - self.height //2
+                self.pos.y = PygView.height 
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
@@ -489,6 +490,9 @@ class Cannon(VectorSprite):
     """it's a line, acting as a cannon. with a Ball as boss"""
     
     def __init__(self, **kwargs):
+        self.recoil = [0,-10,-20,-17,-14,-12,-10,-8,-6,-4,-2, 0]
+        self.recoiltime = 1.5 # seconds
+        self.recoildelta = self.recoiltime / len(self.recoil)
         VectorSprite.__init__(self, **kwargs)
         self.mass = 0
         if "cannonpos" not in kwargs:
@@ -503,37 +507,48 @@ class Cannon(VectorSprite):
         self.kill_with_boss = True
         self.sticky_with_boss = True
         self.readytofire = 0
-        self.recoil = [-10,-20,-17,-14,-12,-10,-8,-6,-4,-2]
+        
+        
     
     def create_image(self):
-        self.image = pygame.Surface((120, 50))
+        self.images = []
+        
         # uppercannon self.image = pygame.Surface((120,50))
-        if self.cannonpos == "middle":
-            self.cy = 0
-            pygame.draw.rect(self.image, self.color, (50, 15, 70, 5))
-        elif self.cannonpos == "upper":
-            self.cy = -15
-            pygame.draw.rect(self.image, self.color, (50, 0, 70, 5))
-        elif self.cannonpos == "lower":
-            self.cy = 15
-            pygame.draw.rect(self.image, self.color, (50, 30, 70, 5))
-        # lowercannon pygame.draw.rect(self.image, self.color, (50, 30, 70, 20))
-        # uppercannon pygame.draw.rect(self.image, self.color, (50, 0, 70, 20))
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
-        self.rect = self.image.get_rect()
+        for cx in self.recoil:
+            self.image = pygame.Surface((120, 50))
+            if self.cannonpos == "middle":
+                self.cy = 0
+                #pygame.draw.rect(self.image, self.color, (50, 15, 70, 5))
+            elif self.cannonpos == "upper":
+                self.cy = -15
+                #pygame.draw.rect(self.image, self.color, (50, 0, 70, 5))
+            elif self.cannonpos == "lower":
+                self.cy = 15
+                #pygame.draw.rect(self.image, self.color, (50, 30, 70, 5))
+            pygame.draw.rect(self.image, self.color, ( 50+ cx, 15+self.cy, 70,5))
+            self.image.set_colorkey((0,0,0))
+            self.image.convert_alpha()
+            self.rect = self.image.get_rect()
+            #self.image0 = self.image.copy()
+            self.images.append(self.image)
+        self.image = self.images[0]
         self.image0 = self.image.copy()
         
     def update(self,seconds):
         VectorSprite.update(self, seconds)
         if self.age < self.readytofire:
-            delta = 1/len(self.recoil)
-            i = (self.readytofire - self.age)/delta
-            m = self.recoil[int(-i)]
-            o = v.Vec2d(20+m,0)
-            o.rotate(self.angle)
-            self.rect.centerx += o.x
-            self.rect.centery += o.y
+            timeleft = self.readytofire - self.age
+            i = int(timeleft / self.recoildelta)
+            #print("i:",i)
+            #delta = 1/len(self.recoil)
+            #i = (self.readytofire - self.age)/delta
+            self.image = self.images[i]
+            self.image0 = self.images[i]
+            self.set_angle(self.angle)
+            #self.
+            #o.rotate(self.angle)
+            #self.rect.centerx += o.x
+            #self.rect.centery += o.y
 
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
@@ -580,7 +595,7 @@ class Bullet(Ball):
         Ball(**kwargs)
         self.kill_on_edge = True
         
-        print("i am a bullet. my killedge: ", self.kill_on_edge)
+        #print("i am a bullet. my killedge: ", self.kill_on_edge)
         
 class PygView(object):
     width = 0
@@ -658,7 +673,7 @@ class PygView(object):
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
-        Ball.groups = self.allgroup, self.ballgroup, self.targetgroup # each Ball object belong to those groups
+        Ball.groups = self.allgroup, self.ballgroup # self.targetgroup # each Ball object belong to those groups
         #Goal.groups = self.allgroup, self.goalgroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
@@ -666,6 +681,7 @@ class PygView(object):
         GunPlatform.groups = self.allgroup, self.platformgroup
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
         Bomb.groups = self.allgroup, self.targetgroup
+        #Bullet.groups = self.allgroup
         
         self.cities = []
         self.platforms = []
@@ -787,17 +803,17 @@ class PygView(object):
                         d = c.pos - e.pos
                         c.set_angle(-d.get_angle()-180)
                     # ------- autofire -------
-                    #for c in cannons:
-                    #    if c.readytofire < c.age and random.random()<0.1:
-                    #        m = v.Vec2d(60,c.cy) # lenght of cannon
-                    #        #m = m.rotated(-c.get_angle())
-                    #        m.rotate(c.angle)
-                    #        m2 = v.Vec2d(60,0)
-                    #        m2.rotate(c.angle)
-                    #        start = v.Vec2d(c.pos.x, c.pos.y) + m
-                    #        Ball(pos=start, move=m2.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
-                    #        c.readytofire = c.age + 1
-                    #        break
+                    for c in cannons:
+                        if c.readytofire < c.age and random.random()<0.1:
+                            m = v.Vec2d(60,c.cy) # lenght of cannon
+                            #m = m.rotated(-c.get_angle())
+                            m.rotate(-c.angle)
+                            m2 = v.Vec2d(60,0)
+                            m2.rotate(-c.angle)
+                            start = v.Vec2d(c.pos.x, c.pos.y) + m
+                            Bullet(pos=start, move=m.normalized()*200, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
+                            c.readytofire = c.age + 1
+                            break
                     
                             
                 
