@@ -154,7 +154,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
         
     def kill(self):
-        del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
+        if self.number in self.numbers:
+           del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
         pygame.sprite.Sprite.kill(self)
         
     def init2(self):
@@ -264,11 +265,11 @@ class Ufo(VectorSprite):
         i = self.age *3 % len(self.images)
         self.image = self.images[int(i)]
         # --- chance to throw bomb ---
-        #if random.random() < 0.015:
-        #    m = v.Vec2d(0, -random.random()*75)
-        #    m.rotate(random.randint(-90,90))
-        #    Bomb(pos=self.pos, move=m,
-        #         gravity = v.Vec2d(0,0.7))
+        if random.random() < 0.015:
+            m = v.Vec2d(0, -random.random()*75)
+            m.rotate(random.randint(-90,90))
+            Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
+                 gravity = v.Vec2d(0,0.7), kill_on_edge=True)
         # --- chance to change move vector ---
         if random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
@@ -403,12 +404,35 @@ class City(VectorSprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect()
 
+class Bomb(VectorSprite):
+
+   def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+        if "gravity" not in kwargs:
+            self.gravity = v.Vec2d(0, 7)
+
+   def create_image(self):
+        self.image = pygame.Surface((20,40))
+        pygame.draw.circle(self.image, (15,15,50), (10,30), 10)
+        pygame.draw.polygon(self.image, (15,15,50), [(0,30),
+            (5, 10), (15,10), (20,30)])
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha() 
+        self.rect = self.image.get_rect()
+ 
+   def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        self.move += self.gravity
+        
+
+        
+
 class GunPlatform(VectorSprite):
     
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
         if "maxrange" not in kwargs:
-            self.maxrange = 300
+            self.maxrange = 400
     
     def create_image(self):
         self.image = pygame.Surface((100,200))
@@ -640,8 +664,8 @@ class PygView(object):
         City.groups = self.allgroup, self.citygroup
         VectorSprite.groups = self.allgroup
         GunPlatform.groups = self.allgroup, self.platformgroup
-        Ufo.groups = self.allgroup, self.ufogroup
-        
+        Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
+        Bomb.groups = self.allgroup, self.targetgroup
         
         self.cities = []
         self.platforms = []
@@ -701,12 +725,13 @@ class PygView(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.995, bounce_on_edge=True) # add small balls!
+                        Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5,
+                             friction=0.995, bounce_on_edge=True, max_age=4) # add small balls!
                     if event.key == pygame.K_c:
                         m = v.Vec2d(60,0) # lenght of cannon
                         #m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.ball1.pos.x, self.ball1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*15, radius=10) # move=v.Vec2d(0,0), 
+                        Ball(pos=p, move=m.normalized()*15, radius=10, max_age=4) # move=v.Vec2d(0,0), 
                     if event.key == pygame.K_LEFT:
                         self.ball1.rotate(1) # 
                     if event.key == pygame.K_r:   # ---- reset balls -----
@@ -763,12 +788,15 @@ class PygView(object):
                         c.set_angle(-d.get_angle()-180)
                     # ------- autofire -------
                     #for c in cannons:
-                    #    if c.readytofire < c.age:
+                    #    if c.readytofire < c.age and random.random()<0.1:
                     #        m = v.Vec2d(60,c.cy) # lenght of cannon
-                    #        m = m.rotated(-c.angle)
+                    #        #m = m.rotated(-c.get_angle())
+                    #        m.rotate(c.angle)
+                    #        m2 = v.Vec2d(60,0)
+                    #        m2.rotate(c.angle)
                     #        start = v.Vec2d(c.pos.x, c.pos.y) + m
-                    #        Ball(pos=start, move=m.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
-                     #       c.readytofire = c.age + 1
+                    #        Ball(pos=start, move=m2.normalized()*100, radius=5,mass=100, color=(255,0,0), kill_on_edge=True, max_age=3)
+                    #        c.readytofire = c.age + 1
                     #        break
                     
                             
