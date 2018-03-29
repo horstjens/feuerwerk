@@ -295,6 +295,89 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
+
+        
+class Mothership(VectorSprite):
+    
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+    
+    #def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
+    #             color=(255,0,0), gravity=None):
+    #    VectorSprite.__init__(self, pos, move, color)
+    #    Healthbar(self)
+ 
+    def update(self, seconds):
+        # --- animate ---
+        i = self.age *3 % len(self.images)
+        self.image = self.images[int(i)]
+        # --- chance to throw bomb ---
+        #if random.random() < 0.015:
+        #    m = v.Vec2d(0, -random.random()*75)
+        #    m.rotate(random.randint(-90,90))
+        #    Bomb(pos=self.pos, move=m,
+        #         gravity = v.Vec2d(0,0.7))
+        #------------------chance to spawn Ufo
+        if random.random()<0.007:
+            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50))
+        
+        # --- chance to change move vector ---
+        if random.random() < 0.05:
+             m = v.Vec2d(0, random.randint(-10, 10))
+             m.rotate(random.randint(-120, 120))    
+             self.move += m     
+        if self.pos.x < 0:
+            self.pos.x = 0
+            self.move.x *= -1
+        elif self.pos.x > PygView.width:
+            self.pos.x = PygView.width
+            self.move.x *= -1
+        if self.pos.y < 0:
+            self.pos.y = 0
+            self.move.y *= -1
+        elif self.pos.y > PygView.height // 2:
+            self.pos.y = PygView.height // 2
+            self.move.y *= -1
+        VectorSprite.update(self, seconds)
+        
+    def paint(self, color, color2, color3):  
+        tmp=pygame.Surface((200, 200))
+        pygame.draw.polygon (tmp, color, [(0, 0),  (50 , 75), (0, 150), (100, 112.5), (200, 150), (150,75), (200, 0), (100, 25), (0, 0)], 0)
+        pygame.draw.polygon (tmp, color2, [(50, 100), (175, 25), (100, 25),  (25, 25), (150, 100), (25, 175), (100, 50), (175, 175), (50, 100)], 0)
+        pygame.draw.polygon(tmp, color3, [ (70, 160), (200, 0), (130, 160), (0, 0), (70, 160)        ], 0)
+        tmp.set_colorkey((0,0,0))
+        tmp.convert_alpha()
+        return tmp
+        
+    def create_image(self):
+        
+        
+        #---------image1------
+        self.image1=self.paint((10, 1, 17), (255, 255, 255), (100, 100, 100))
+        #--------image2
+        self.image2 = self.paint((80, 80, 15), (50, 50, 50), (0, 0, 255))
+        #-------image3
+        self.image3 = self.paint((60, 100, 17), (150, 0, 245), (85, 85, 135))
+        #---------------image4
+        self.image4=self.paint((14, 140, 11), (45, 12, 0), (0, 0, 1))
+        #--------------image5
+        self.image5=self.paint((166, 110, 255), (67, 200, 145), (128, 76, 128))
+        #------------------
+        self.images = [ self.image1, self.image2, self.image3, self.image4]
+        self.image = self.images[0]
+        self.rect= self.image.get_rect()
+        
+#class Explosion(VectorSprite):
+#	
+#	def create_image(self):
+#		self.image=pygame.Surface(self.radius*2, self.radius*2)
+#		pygame.draw.circle(self.image, (197, 37,  37), self.radius
+#		pygame.draw.cicle(self.image, (200, 37, 37)) 
+		
+		
+        
+
+
 class Ufo(VectorSprite):
     
     def __init__(self, **kwargs):
@@ -304,6 +387,10 @@ class Ufo(VectorSprite):
     #             color=(255,0,0), gravity=None):
     #    VectorSprite.__init__(self, pos, move, color)
     #    Healthbar(self)
+
+
+       
+
 
     def update(self, seconds):
         # --- animate ---
@@ -333,79 +420,35 @@ class Ufo(VectorSprite):
             self.pos.y = PygView.height // 2
             self.move.y *= -1
         VectorSprite.update(self, seconds)
+        
+        
+    def paint(self, color):  
+        tmp=pygame.Surface((200, 100))
+        pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
+        pygame.draw.arc(tmp, color, (0, -20, 100, 100), (math.pi*1.5)-(math.pi/4),(math.pi*1.5)+(math.pi/4), 2 )  
+        pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
+        pygame.draw.line(tmp, color, (10, 80), (25, 73),  2)
+        pygame.draw.line(tmp, color, (85, 80), (70, 73),  2)
+        tmp.set_colorkey((0,0,0))
+        tmp.convert_alpha()
+        return tmp
+        
   
     def create_image(self):
         #---------image1------
-        self.image1 = pygame.Surface((100, 100))
-        pygame.draw.line(self.image1, self.color, (15, 50), (25, 25),3)
-        pygame.draw.line(self.image1, self.color, (15, 50), (25, 75),3)
-        pygame.draw.line(self.image1, self.color, (85, 50), (75, 25),3)
-        pygame.draw.line(self.image1, self.color, (85, 50), (75, 75),3)
-        pygame.draw.line(self.image1, self.color, (25, 25), (75, 25),3)
-        pygame.draw.line(self.image1, self.color, (25, 75), (75, 75),3)
-        pygame.draw.circle(self.image1, self.color, (30, 50), (7),1)
-        pygame.draw.circle(self.image1, self.color, (50, 50), (7),1)
-        pygame.draw.circle(self.image1, self.color, (70, 50), (7),1)
-        pygame.draw.circle(self.image1, (255, 0, 255), (30, 50), (5),0)
-        pygame.draw.circle(self.image1, (0, 255, 255), (50, 50), (5),0)
-        pygame.draw.circle(self.image1, (255, 255, 0), (70, 50), (5),0)
-        pygame.draw.line(self.image1, self.color, (40, 75), (40, 85),2)
-        pygame.draw.line(self.image1, self.color, (60, 75), (60, 85),2)
-        pygame.draw.line(self.image1, self.color, (35, 85), (45, 85),2)
-        pygame.draw.line(self.image1, self.color, (55, 85), (65, 85),2)
-        pygame.draw.line(self.image1, self.color, (30, 25), (20, 5),2)
-        pygame.draw.line(self.image1, self.color, (70, 25), (80, 5),2)
-        pygame.draw.line(self.image1, self.color, (20, 40), (0, 30),5)
-        self.image1.set_colorkey((0,0,0))
-        self.image1.convert_alpha()
+        self.image1=self.paint((210, 51, 177))
         #--------image2
-        self.image2 = pygame.Surface((100, 100))
-        pygame.draw.line(self.image2, self.color, (15, 50), (25, 25),3)
-        pygame.draw.line(self.image2, self.color, (15, 50), (25, 75),3)
-        pygame.draw.line(self.image2, self.color, (85, 50), (75, 25),3)
-        pygame.draw.line(self.image2, self.color, (85, 50), (75, 75),3)
-        pygame.draw.line(self.image2, self.color, (25, 25), (75, 25),3)
-        pygame.draw.line(self.image2, self.color, (25, 75), (75, 75),3)
-        pygame.draw.circle(self.image2, self.color, (30, 50), (7),1)
-        pygame.draw.circle(self.image2, self.color, (50, 50), (7),1)
-        pygame.draw.circle(self.image2, self.color, (70, 50), (7),1)
-        pygame.draw.circle(self.image2, (255, 255, 0), (30, 50), (5),0)
-        pygame.draw.circle(self.image2, (255, 0, 255), (50, 50), (5),0)
-        pygame.draw.circle(self.image2, (0, 255, 255), (70, 50), (5),0)
-        pygame.draw.line(self.image2, self.color, (40, 75), (40, 85),2)
-        pygame.draw.line(self.image2, self.color, (60, 75), (60, 85),2)
-        pygame.draw.line(self.image2, self.color, (35, 85), (45, 85),2)
-        pygame.draw.line(self.image2, self.color, (55, 85), (65, 85),2)
-        pygame.draw.line(self.image2, self.color, (30, 25), (20, 5),2)
-        pygame.draw.line(self.image2, self.color, (70, 25), (80, 5),2)
-        pygame.draw.line(self.image2, self.color, (20, 40), (0, 30),5)
-        self.image2.set_colorkey((0,0,0))
-        self.image2.convert_alpha()
+        self.image2 = self.paint((180, 80, 157))
         #-------image3
-        self.image3 = pygame.Surface((100, 100))
-        pygame.draw.line(self.image3, self.color, (15, 50), (25, 25),3)
-        pygame.draw.line(self.image3, self.color, (15, 50), (25, 75),3)
-        pygame.draw.line(self.image3, self.color, (85, 50), (75, 25),3)
-        pygame.draw.line(self.image3, self.color, (85, 50), (75, 75),3)
-        pygame.draw.line(self.image3, self.color, (25, 25), (75, 25),3)
-        pygame.draw.line(self.image3, self.color, (25, 75), (75, 75),3)
-        pygame.draw.circle(self.image3, self.color, (30, 50), (7),1)
-        pygame.draw.circle(self.image3, self.color, (50, 50), (7),1)
-        pygame.draw.circle(self.image3, self.color, (70, 50), (7),1)
-        pygame.draw.circle(self.image3, (0, 255, 255), (30, 50), (5),0)
-        pygame.draw.circle(self.image3, (255, 255, 0), (50, 50), (5),0)
-        pygame.draw.circle(self.image3, (255, 0, 255), (70, 50), (5),0)
-        pygame.draw.line(self.image3, self.color, (40, 75), (40, 85),2)
-        pygame.draw.line(self.image3, self.color, (60, 75), (60, 85),2)
-        pygame.draw.line(self.image3, self.color, (35, 85), (45, 85),2)
-        pygame.draw.line(self.image3, self.color, (55, 85), (65, 85),2)
-        pygame.draw.line(self.image3, self.color, (30, 25), (20, 5),2)
-        pygame.draw.line(self.image3, self.color, (70, 25), (80, 5),2)
-        pygame.draw.line(self.image3, self.color, (20, 40), (0, 30),5)
-        self.image3.set_colorkey((0,0,0))
-        self.image3.convert_alpha()
+        self.image3 = self.paint((160, 100, 137))
+        #---------------image4
+        self.image4=self.paint((140, 140, 117))
+        #--------------image5
+        self.image5=self.paint((166, 0, 255))
+        #------------------
+        self.images = [ self.image1, self.image2, self.image3, self.image4]
         
-        self.images = [ self.image1, self.image2, self.image3]
+
         self.image = self.images[0]
         self.rect= self.image.get_rect()
 
@@ -705,7 +748,7 @@ class PygView(object):
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
         Bomb.groups = self.allgroup, self.targetgroup 
         Flytext.groups = self.allgroup
-        
+        Mothership.groups = self.allgroup, self.ufogroup
         
         self.cities = []
         self.platforms = []
@@ -739,7 +782,7 @@ class PygView(object):
   
         self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
         self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
-
+        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
 
     def run(self):
         """The mainloop"""
@@ -818,7 +861,7 @@ class PygView(object):
                             m2 = v.Vec2d(60,0)
                             m2.rotate(-c.angle)
                             start = v.Vec2d(c.pos.x, c.pos.y) + m
-                            Bullet(pos=start, move=m.normalized()*200, radius=5, mass=10, color=(255,0,0),
+                            Bullet(pos=start, move=m.normalized()*200, radius=5, mass=100, color=(255,0,0),
                                    kill_on_edge=True, max_age=3, damage=5)
                             c.readytofire = c.age + 1
                             break
