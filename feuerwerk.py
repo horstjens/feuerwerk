@@ -196,6 +196,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.distance_traveled = 0 # in pixel
         self.create_image()
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
+        if self.angle != 0:
+            self.set_angle(self.angle)
 
     def kill(self):
         if self.number in self.numbers:
@@ -515,6 +517,29 @@ class City(VectorSprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect()
 
+
+class Rocket(VectorSprite):
+    
+   def create_image(self):
+        self.image = pygame.Surface((10,20))
+        pygame.draw.polygon(self.image, (255,156,0), [(5,0),
+            (9, 10), (9,20), (5,15), (0,20), (0,10)])
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+ 
+class Tracer(VectorSprite): 
+    
+    def create_image(self):
+        self.image = pygame.Surface((8,2))
+        self.image.fill((255,255,0))
+        #pygame.draw.line(self.image, (255,255,0), (1,3),(9,3), 2)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+ 
+
 class Bomb(VectorSprite):
 
    def __init__(self, **kwargs):
@@ -577,7 +602,7 @@ class Cannon(VectorSprite):
 
     def __init__(self, **kwargs):
         self.recoil = [0,-10,-20,-17,-14,-12,-10,-8,-6,-4,-2, 0]
-        self.recoiltime = 1.5 # seconds
+        self.recoiltime = 1.2 # seconds
         self.recoildelta = self.recoiltime / len(self.recoil)
         VectorSprite.__init__(self, **kwargs)
         self.mass = 0
@@ -773,6 +798,8 @@ class PygView(object):
         Flytext.groups = self.allgroup
         Mothership.groups = self.allgroup, self.ufogroup
         Explosion.groups=self.allgroup
+        Rocket.groups = self.allgroup
+        Tracer.groups = self.allgroup, self.bulletgroup
 
         self.cities = []
         self.platforms = []
@@ -824,6 +851,8 @@ class PygView(object):
                         Explosion()
                     if event.key == pygame.K_1:
                         Flytext(500,300, text="Hallo Alex", delay=0, duration=4, dy=-200)
+                    if event.key == pygame.K_2:
+                        Rocket()
                     if event.key == pygame.K_b:
                         Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5,
                              friction=0.995, bounce_on_edge=True, max_age=4) # add small balls!
@@ -880,15 +909,15 @@ class PygView(object):
                         c.set_angle(-d.get_angle()-180)
                     # ------- autofire -------
                     for c in cannons:
-                        if c.readytofire < c.age and random.random()<0.1:
+                        if c.readytofire < c.age and random.random()<0.9:
                             m = v.Vec2d(60,c.cy) # lenght of cannon
                             #m = m.rotated(-c.get_angle())
                             m.rotate(-c.angle)
                             m2 = v.Vec2d(60,0)
                             m2.rotate(-c.angle)
                             start = v.Vec2d(c.pos.x, c.pos.y) + m
-                            Bullet(pos=start, move=m.normalized()*200, radius=5, mass=50, color=(255,0,0),
-                                   kill_on_edge=True, max_age=3, damage=5)
+                            Tracer(pos=start, move=m2.normalized()*200, radius=5, mass=50, color=(255,0,0),
+                                   kill_on_edge=True, max_age=3, damage=5, angle=c.angle)
                             c.readytofire = c.age + 1
                             break
 
@@ -943,4 +972,3 @@ class PygView(object):
 if __name__ == '__main__':
 
     PygView(1430,800, friction=0.99, gametime=90).run() # try PygView(800,600).run()
-
