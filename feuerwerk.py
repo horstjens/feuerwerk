@@ -539,6 +539,11 @@ class Tracer(VectorSprite):
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+        
+    #def update(self, seconds):
+    #    self.create_image()
+    #    self.set_angle(self.angle)
+    #    VectorSprite.update(self, seconds)
  
 
 class Bomb(VectorSprite):
@@ -860,8 +865,10 @@ class PygView(object):
                     if event.key == pygame.K_2:
                         Rocket()
                     if event.key == pygame.K_b:
-                        Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5,
-                             friction=0.995, bounce_on_edge=True, max_age=4) # add small balls!
+                        #Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5,
+                        #     friction=0.995, bounce_on_edge=True, max_age=4) # add small balls!
+                        self.level += 1
+                        self.loadbackground()
                     if event.key == pygame.K_c:
                         m = v.Vec2d(60,0) # lenght of cannon
                         #m = m.rotated(-self.cannon1.angle)
@@ -964,7 +971,7 @@ class PygView(object):
                 for b in crashgroup:
                     c.pos.y += 1
                     c.hitpoints -= b.damage
-                    Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 0.4)
+                    Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5)
                     b.kill()
                     
 
