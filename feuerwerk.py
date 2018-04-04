@@ -290,7 +290,7 @@ class VectorSprite(pygame.sprite.Sprite):
         #if self.pos.y + self.height //2 > PygView.height:
         if self.pos.y   > PygView.height:
             if self.kill_on_edge:
-                Explosion(pos=self.pos, max_age=random.random()*10)
+                #Explosion(pos=self.pos, max_age=random.random()*10)
                 self.hitpoints = 0
                 self.kill()
 
@@ -321,7 +321,7 @@ class Mothership(VectorSprite):
         #    m.rotate(random.randint(-90,90))
         #    Bomb(pos=self.pos, move=m,
         #         gravity = v.Vec2d(0,0.7))
-        #------------------chance to spawn Ufo
+        #------------------chance to spawn Ufo-------------------
         if random.random()<0.009:
             Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50))
 
@@ -427,7 +427,7 @@ class Ufo(VectorSprite):
             m = v.Vec2d(0, -random.random()*75)
             m.rotate(random.randint(-90,90))
             Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
-                 gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=200, hitpoints=20 )
+                 gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=200 )
         # --- chance to change move vector ---
         if random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
@@ -558,6 +558,9 @@ class Bomb(VectorSprite):
         self.rect = self.image.get_rect()
 
    def update(self, seconds):
+        if self.pos.y   > PygView.height:
+            if self.kill_on_edge:
+                Explosion(pos=self.pos, max_age=random.random()*10)
         VectorSprite.update(self, seconds)
         self.move += self.gravity
 
@@ -702,15 +705,15 @@ class Ball(VectorSprite):
         self.image0 = self.image.copy()
 
 
-class Bullet(VectorSprite):
-
-    def create_image(self):
-        self.image = pygame.Surface((self.radius,self.radius))
-        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-        self.image.set_colorkey((0,0,0))
-        self.image = self.image.convert_alpha() # faster blitting with transparent color
-        self.rect= self.image.get_rect()
-        self.image0 = self.image.copy()
+#class Bullet(VectorSprite):
+#
+#    def create_image(self):
+#        self.image = pygame.Surface((self.radius,self.radius))
+#        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
+#        self.image.set_colorkey((0,0,0))
+#        self.image = self.image.convert_alpha() # faster blitting with transparent color
+#        self.rect= self.image.get_rect()
+#        self.image0 = self.image.copy()
 
 class PygView(object):
     width = 0
@@ -781,27 +784,28 @@ class PygView(object):
 
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
         self.ballgroup = pygame.sprite.Group()          # for collision detection etc.
-        self.bulletgroup = pygame.sprite.Group()
+        self.tracergroup = pygame.sprite.Group()
         self.cannongroup = pygame.sprite.Group()
         #self.goalgroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
+        self.bombgroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # self.targetgroup # each Ball object belong to those groups
         #Goal.groups = self.allgroup, self.goalgroup
-        Bullet.groups = self.allgroup, self.bulletgroup
+        #Bullet.groups = self.allgroup, self.bulletgroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
         VectorSprite.groups = self.allgroup
         GunPlatform.groups = self.allgroup, self.platformgroup
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
-        Bomb.groups = self.allgroup, self.targetgroup
+        Bomb.groups = self.allgroup, self.targetgroup, self.bombgroup 
         Flytext.groups = self.allgroup
         Mothership.groups = self.allgroup, self.ufogroup
         Explosion.groups=self.allgroup
         Rocket.groups = self.allgroup
-        Tracer.groups = self.allgroup, self.bulletgroup
+        Tracer.groups = self.allgroup, self.tracergroup
 
         self.cities = []
         self.platforms = []
@@ -835,7 +839,7 @@ class PygView(object):
 
         #self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
         self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
-        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
+        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=10000)
 
     def run(self):
         """The mainloop"""
@@ -918,8 +922,8 @@ class PygView(object):
                             m2 = v.Vec2d(60,0)
                             m2.rotate(-c.angle)
                             start = v.Vec2d(c.pos.x, c.pos.y) + m
-                            Tracer(pos=start, move=m2.normalized()*200, radius=5, mass=50, color=(255,0,0),
-                                   kill_on_edge=True, max_age=3, damage=5, angle=c.angle)
+                            Tracer(pos=start, move=m2.normalized()*200, radius=5, mass=5, color=(255,0,0),
+                                   kill_on_edge=True, max_age=1.5, damage=5, angle=c.angle)
                             c.readytofire = c.age + c.recoiltime
                             break
 
@@ -944,22 +948,34 @@ class PygView(object):
 
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
             # the False means the colliding sprite is not killed
-            # ---------- collision detection between ball and bullet sprites ---------
+            
+            # ---------- collision detection between target and tracer sprites ---------
             for t in self.targetgroup:
-               crashgroup = pygame.sprite.spritecollide(t, self.bulletgroup, False, pygame.sprite.collide_mask)
+               crashgroup = pygame.sprite.spritecollide(t, self.tracergroup, False, pygame.sprite.collide_mask)
                for b in crashgroup:
                    elastic_collision(t, b) # change dx and dy of both sprites
                    t.hitpoints -= b.damage
                    b.kill()
+            
+            # -------- collision detection betwenn bomb and city -----------
+            for c in self.citygroup:
+                crashgroup = pygame.sprite.spritecollide(c, self.bombgroup, False, 
+                             pygame.sprite.collide_mask)
+                for b in crashgroup:
+                    c.pos.y += 1
+                    c.hitpoints -= b.damage
+                    Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 0.4)
+                    b.kill()
+                    
 
 
 
             # --------- collision detection between ball and other balls
-            for ball in self.ballgroup:
-                crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
-                for otherball in crashgroup:
-                    if ball.number > otherball.number:     # make sure no self-collision or calculating collision twice
-                        elastic_collision(ball, otherball) # change dx and dy of both sprites
+            #for ball in self.ballgroup:
+            #    crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
+            #    for otherball in crashgroup:
+            #        if ball.number > otherball.number:     # make sure no self-collision or calculating collision twice
+            #            elastic_collision(ball, otherball) # change dx and dy of both sprites
 
             # ----------- clear, draw , update, flip -----------------
             #self.allgroup.clear(screen, background)
