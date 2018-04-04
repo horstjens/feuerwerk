@@ -291,6 +291,7 @@ class VectorSprite(pygame.sprite.Sprite):
         if self.pos.y   > PygView.height:
             if self.kill_on_edge:
                 Explosion(pos=self.pos, max_age=random.random()*10)
+                self.hitpoints = 0
                 self.kill()
 
             elif self.bounce_on_edge:
@@ -426,7 +427,7 @@ class Ufo(VectorSprite):
             m = v.Vec2d(0, -random.random()*75)
             m.rotate(random.randint(-90,90))
             Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
-                 gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=200)
+                 gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=200, hitpoints=20 )
         # --- chance to change move vector ---
         if random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
@@ -602,7 +603,7 @@ class Cannon(VectorSprite):
 
     def __init__(self, **kwargs):
         self.recoil = [0,-10,-20,-17,-14,-12,-10,-8,-6,-4,-2, 0]
-        self.recoiltime = 1.2 # seconds
+        self.recoiltime = 0.2#1.2 # seconds
         self.recoildelta = self.recoiltime / len(self.recoil)
         VectorSprite.__init__(self, **kwargs)
         self.mass = 0
@@ -649,7 +650,8 @@ class Cannon(VectorSprite):
         VectorSprite.update(self, seconds)
         if self.age < self.readytofire:
             timeleft = self.readytofire - self.age
-            i = int(timeleft / self.recoildelta)
+            #print(timeleft, self.recoildelta)
+            i = int(timeleft / self.recoildelta) % len(self.recoil)
             #print("i:",i)
             #delta = 1/len(self.recoil)
             #i = (self.readytofire - self.age)/delta
@@ -918,7 +920,7 @@ class PygView(object):
                             start = v.Vec2d(c.pos.x, c.pos.y) + m
                             Tracer(pos=start, move=m2.normalized()*200, radius=5, mass=50, color=(255,0,0),
                                    kill_on_edge=True, max_age=3, damage=5, angle=c.angle)
-                            c.readytofire = c.age + 1
+                            c.readytofire = c.age + c.recoiltime
                             break
 
 
