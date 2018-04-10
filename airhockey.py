@@ -146,6 +146,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.rightkey = None
         if "leftkey" not in kwargs:
             self.leftkey = None
+        if "target" not in kwargs:
+            self.target = None
         # ---
         self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
@@ -392,6 +394,12 @@ class Ball(VectorSprite):
         if self.rightkey is not None:
             if pressedkeys[self.rightkey]:
                 self.move.x += 5
+        #----------seeking target------------
+        if self.target is not None:
+            
+            m =self.target.pos - self.pos
+            m = m.normalized() * random.randint(42,80)
+            self.move = m
                 
     def create_image(self):
         self.image = pygame.Surface((self.width,self.height))    
@@ -518,7 +526,13 @@ class PygView(object):
         #self.cannond = Upercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         #self.cannond2 = Lowercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
+        self.seeker1 = Ball(pos = v.Vec2d(PygView.width/2,0), target = self.ball3, mass = 2000,
+                            color = (0,200,0), radius = 15)
+        self.seeker2 = Ball(pos = v.Vec2d(PygView.width/2, PygView.height),target = self.ball3, mass = 2000,
+                            color = (0,200,0), radius = 15)
         
+
+
         self.goal1 = Goal(pos=v.Vec2d(25, PygView.height//2), side="left", width=50, height=250, color=(200,50,50))
         self.goal2 = Goal(pos=v.Vec2d(PygView.width - 25, PygView.height//2), side="right", width=50, height=250, color=(200,200,50
         ))
@@ -652,7 +666,7 @@ class PygView(object):
                         elastic_collision(ball, otherball) # change dx and dy of both sprites
             
             ##-------- bonus
-            if random.random() < 0.002:
+            if random.random() < 0.01:
                 Bonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
