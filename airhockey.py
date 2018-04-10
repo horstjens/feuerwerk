@@ -427,7 +427,23 @@ class Bonus(VectorSprite):
         
         
 
-
+class Fragment(VectorSprite):
+    
+    def create_image(self):
+        if self.picture is not None:
+            self.image = self.picture.copy()
+        else:            
+            self.image = pygame.Surface((self.radius*2,self.radius*2))    
+            #self.image.fill((self.color))
+            pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+            self.image.set_colorkey((0,0,0))
+        self.image = self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect= self.image.get_rect()
+        self.width = self.rect.width
+        self.height = self.rect.height
+    
+    
 
 class Bullet(Ball):
     
@@ -569,26 +585,58 @@ class PygView(object):
             self.allgroup.update(seconds) # would also work with ballgroup
             
             # ---------- collision detection between ball1 and bonusgroup ------
-            crashgroup = pygame.sprite.spritecollide(self.ball1, self.bonusgroup, False, pygame.sprite.collide_circle)
-            for c in crashgroup:
-                    c.kill()
-                    self.score2 -= 1
-                    self.score1 += 1
+            for ball in [self.ball1, self.ball2]:
+        
+                crashgroup = pygame.sprite.spritecollide(ball, self.bonusgroup, False, pygame.sprite.collide_circle)
+                for bonus in crashgroup:
                     
-            crashgroup = pygame.sprite.spritecollide(self.ball2, self.bonusgroup, False, pygame.sprite.collide_circle)
-            for c in crashgroup:
-                c.kill()
-                self.score1 -= 1
-                self.score2 += 1
+                    if ball == self.ball1:
+                        self.score2 -= 1
+                        self.score1 += 1
+                        c = (random.randint(100,255),0,0)
+                    elif ball == self.ball2:
+                        self.score2 += 1
+                        self.score1 -= 1
+                        c = (0,0,random.randint(100,255))
+                    
+                    
+                     #--------grafphical effect----------
+                     
+                   
+                    for w in range (0,360,1):
+                        m = v.Vec2d (random.randint(50,250),0)
+                        m.rotate(w)
+                        Fragment(radius = 5, pos = v.Vec2d(bonus.pos.x, bonus.pos.y),
+                                              move = v.Vec2d(m.x, m.y),
+                                              max_age=random.random()+0.5, 
+                                              color = c)
+                       
+                     
+                     #-----------------------------------
+                    bonus.kill()
+                   
+                    
             
             # --------- collision detection between ball3 and goalgroup --------
             crash = pygame.sprite.spritecollideany(self.ball3, self.goalgroup)
                     #collided = collide_mask) 
             if crash is not None:
+                
                 if crash.side == "left":
                     self.score2 += 1
+                    c = (0,0,random.randint(100,255))
                 elif crash.side == "right":
                     self.score1 += 1
+                    c = (random.randint(100,255),0,0)
+                    
+                for w in range (0,360,1):
+                    
+                    m = v.Vec2d (random.randint(50,300),0)
+                    m.rotate(w)
+                    Fragment(radius = random.randint(1,10), pos = v.Vec2d(crash.pos.x, crash.pos.y), 
+                                            move = v.Vec2d(m.x, m.y), 
+                                            max_age = random.random()+1,
+                                            color = c)
                 for b in [self.ball1, self.ball2, self.ball3]:
                     b.move = v.Vec2d(0,0)
                 self.ball1.pos = v.Vec2d(PygView.width//2 - 100, PygView.height //2)
@@ -604,7 +652,7 @@ class PygView(object):
                         elastic_collision(ball, otherball) # change dx and dy of both sprites
             
             ##-------- bonus
-            if random.random() < 0.001:
+            if random.random() < 0.002:
                 Bonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
