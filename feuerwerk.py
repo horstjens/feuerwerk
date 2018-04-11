@@ -11,7 +11,6 @@ this example is tested using python 3.4 and pygame
 import pygame
 import math
 import random
-#import menu1
 import os
 import time
 import operator
@@ -46,27 +45,13 @@ def elastic_collision(sprite1, sprite2):
            The function alters the dx and dy movement vectors of both sprites.
            The sprites need the property .mass, .radius, pos.x pos.y, move.x, move.y
            by Leonard Michlmayr"""
-        # here we do some physics: the elastic
-        # collision
-        #
-        # first we get the direction of the push.
-        # Let's assume that the sprites are disk
-        # shaped, so the direction of the force is
-        # the direction of the distance.
+        if sprite1.static and sprite2.static:
+            return 
         dirx = sprite1.pos.x - sprite2.pos.x
         diry = sprite1.pos.y - sprite2.pos.y
-        #
-        # the velocity of the centre of mass
         sumofmasses = sprite1.mass + sprite2.mass
         sx = (sprite1.move.x * sprite1.mass + sprite2.move.x * sprite2.mass) / sumofmasses
         sy = (sprite1.move.y * sprite1.mass + sprite2.move.y * sprite2.mass) / sumofmasses
-        # if we sutract the velocity of the centre
-        # of mass from the velocity of the sprite,
-        # we get it's velocity relative to the
-        # centre of mass. And relative to the
-        # centre of mass, it looks just like the
-        # sprite is hitting a mirror.
-        #
         bdxs = sprite2.move.x - sx
         bdys = sprite2.move.y - sy
         cbdxs = sprite1.move.x - sx
@@ -81,10 +66,12 @@ def elastic_collision(sprite1, sprite2):
         cdp = (cbdxs * dirx + cbdys * diry)
         cdp /= distancesquare
         if dp > 0:
-            sprite2.move.x -= 2 * dirx * dp
-            sprite2.move.y -= 2 * diry * dp
-            sprite1.move.x -= 2 * dirx * cdp
-            sprite1.move.y -= 2 * diry * cdp
+            if not sprite2.static:
+                sprite2.move.x -= 2 * dirx * dp
+                sprite2.move.y -= 2 * diry * dp
+            if not sprite1.static:
+                sprite1.move.x -= 2 * dirx * cdp
+                sprite1.move.y -= 2 * diry * cdp
 
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
@@ -114,11 +101,8 @@ class Flytext(pygame.sprite.Sprite):
             self.dy *= self.acc  # slower and slower
             self.dx *= self.acc
             self.rect.center = (self.x, self.y)
-
             if self.time > self.duration:
                 self.kill()      # remove Sprite from screen and from groups
-
-
 
 class VectorSprite(pygame.sprite.Sprite):
     """base class for sprites. this class inherits from pygames sprite class"""
@@ -131,17 +115,15 @@ class VectorSprite(pygame.sprite.Sprite):
             setattr(self, key, arg)
         if "layer" not in kwargs:
             self._layer = 4
-
         #self._layer = layer   # pygame Sprite layer
         pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
         self.number = VectorSprite.number # unique number for each sprite
         VectorSprite.number += 1
         VectorSprite.numbers[self.number] = self
         # get unlimited named arguments and turn them into attributes
-
-
-
         # --- default values for missing keywords ----
+        if "static" not in kwargs:
+            self.static = False
         if "pos" not in kwargs:
             self.pos = v.Vec2d(50,50)
         if "move" not in kwargs:
@@ -236,8 +218,6 @@ class VectorSprite(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
-        #print("rotated to !")
-
 
     def update(self, seconds):
         """calculate movement, position and bouncing on edge"""
@@ -263,7 +243,6 @@ class VectorSprite(pygame.sprite.Sprite):
             self.move *= self.friction # friction between 1.0 and 0.1
         self.distance_traveled += self.move.length * seconds
         self.age += seconds
-
         # ---- bounce / kill on screen edge ----
         if self.pos.x < 0:
             if self.kill_on_edge:
@@ -293,23 +272,15 @@ class VectorSprite(pygame.sprite.Sprite):
                 #Explosion(pos=self.pos, max_age=random.random()*10)
                 self.hitpoints = 0
                 self.kill()
-
             elif self.bounce_on_edge:
                 self.pos.y = PygView.height
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
-
-
 class Mothership(VectorSprite):
 
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
-
-    #def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
-    #             color=(255,0,0), gravity=None):
-    #    VectorSprite.__init__(self, pos, move, color)
-    #    Healthbar(self)
 
     def update(self, seconds):
         # --- animate ---
@@ -354,8 +325,6 @@ class Mothership(VectorSprite):
         return tmp
 
     def create_image(self):
-
-
         #---------image1------
         self.image1=self.paint((10, 1, 17), (255, 255, 255), (100, 100, 100))
         #--------image2
@@ -380,19 +349,14 @@ class Explosion(VectorSprite):
             pygame.draw.circle(self.image, (random.randint(200, 255), 0,  0), (self.radius, self.radius), self.radius-5, 0)
         if self.radius>10:
             pygame.draw.circle(self.image, (random.randint(150, 200), 0, 0), (self.radius, self.radius), self.radius-10, 0)
-        
         if self.radius>15:
             pygame.draw.circle(self.image, (random.randint(100, 150), 0, 0), (self.radius, self.radius), self.radius-15, 0)
         if self.radius>20:
             pygame.draw.circle(self.image, (random.randint(50, 100), 0, 0), (self.radius, self.radius), self.radius-20, 0)
         if self.radius>30:
             pygame.draw.circle(self.image, (random.randint(1, 51), 0, 0), (self.radius, self.radius), self.radius-30, 0)
-                  
-            
         self.image.set_colorkey((0,0,0))
-
         self.rect= self.image.get_rect()
-
 
     def update(self,seconds):
          VectorSprite.update(self, seconds)
@@ -401,22 +365,10 @@ class Explosion(VectorSprite):
          self.rect.center=(self.pos.x, self.pos.y)
          self.radius+=1
          
-        
-
-
 class Ufo(VectorSprite):
 
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
-
-    #def __init__(self, pos=v.Vec2d(100,100), move=v.Vec2d(50,0),
-    #             color=(255,0,0), gravity=None):
-    #    VectorSprite.__init__(self, pos, move, color)
-    #    Healthbar(self)
-
-
-
-
 
     def update(self, seconds):
         # --- animate ---
@@ -447,7 +399,6 @@ class Ufo(VectorSprite):
             self.move.y *= -1
         VectorSprite.update(self, seconds)
 
-
     def paint(self, color):
         tmp=pygame.Surface((200, 100))
         pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
@@ -458,7 +409,6 @@ class Ufo(VectorSprite):
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
         return tmp
-
 
     def create_image(self):
         #---------image1------
@@ -473,8 +423,6 @@ class Ufo(VectorSprite):
         self.image5=self.paint((166, 0, 255))
         #------------------
         self.images = [ self.image1, self.image2, self.image3, self.image4]
-
-
         self.image = self.images[0]
         self.rect= self.image.get_rect()
 
@@ -518,7 +466,6 @@ class City(VectorSprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect()
 
-
 class Rocket(VectorSprite):
     
    def create_image(self):
@@ -540,12 +487,6 @@ class Tracer(VectorSprite):
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
         
-    #def update(self, seconds):
-    #    self.create_image()
-    #    self.set_angle(self.angle)
-    #    VectorSprite.update(self, seconds)
- 
-
 class Bomb(VectorSprite):
 
    def __init__(self, **kwargs):
@@ -569,9 +510,6 @@ class Bomb(VectorSprite):
         VectorSprite.update(self, seconds)
         self.move += self.gravity
 
-
-
-
 class GunPlatform(VectorSprite):
 
     def __init__(self, **kwargs):
@@ -584,7 +522,6 @@ class GunPlatform(VectorSprite):
         farbe = random.randint(10, 150)
         farbe1 = random.randint(100,200)
         pygame.draw.polygon(self.image, (100, 100, 60), [(0, 200), (20, 20), (30, 20), (50, 200)])
-
         pygame.draw.line(self.image, (farbe,farbe,farbe), (2,180), (50,200), 5)
         pygame.draw.line(self.image, (farbe,farbe,farbe), (4,160), (48,180), 5)
         pygame.draw.line(self.image, (farbe,farbe,farbe), (7,140), (45,160), 5)
@@ -593,18 +530,13 @@ class GunPlatform(VectorSprite):
         pygame.draw.line(self.image, (farbe,farbe,farbe), (14,80), (39,100), 5)
         pygame.draw.line(self.image, (farbe,farbe,farbe), (16,60), (37,80), 5)
         pygame.draw.line(self.image, (farbe,farbe,farbe), (20,40), (33,60), 5)
-
         pygame.draw.rect(self.image, (farbe1,farbe1,farbe1),
                          (0,20, 50, 10))
         pygame.draw.arc(self.image, (173,216,230),
                          (0,0,50,40), 0, 3.14,2)
-
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
-
-
-
 
 class Cannon(VectorSprite):
     """it's a line, acting as a cannon. with a Ball as boss"""
@@ -617,22 +549,12 @@ class Cannon(VectorSprite):
         self.mass = 0
         if "cannonpos" not in kwargs:
             self.cannonpos = "middle"
-        #if "maxrange" not in kwargs:
-        #    self.maxrange = 300
-        #else:
-       #     if self.cannonpos not in ["middle", "upper", "lower"]:
-       #         print("cannonpos error")
-        #if "bossnumber" not in kwargs:
-        #    print("error! cannon without boss number")
         self.kill_with_boss = True
         self.sticky_with_boss = True
         self.readytofire = 0
 
-
-
     def create_image(self):
         self.images = []
-
         # uppercannon self.image = pygame.Surface((120,50))
         for cx in self.recoil:
             self.image = pygame.Surface((120, 50))
@@ -658,26 +580,16 @@ class Cannon(VectorSprite):
         VectorSprite.update(self, seconds)
         if self.age < self.readytofire:
             timeleft = self.readytofire - self.age
-            #print(timeleft, self.recoildelta)
             i = int(timeleft / self.recoildelta) % len(self.recoil)
-            #print("i:",i)
-            #delta = 1/len(self.recoil)
-            #i = (self.readytofire - self.age)/delta
             self.image = self.images[i]
             self.image0 = self.images[i]
             self.set_angle(self.angle)
-            #self.
-            #o.rotate(self.angle)
-            #self.rect.centerx += o.x
-            #self.rect.centery += o.y
-
+            
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
 
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
-
-
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -699,8 +611,7 @@ class Ball(VectorSprite):
     def create_image(self):
         self.image = pygame.Surface((self.width,self.height))
         pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-        if self.radius > 40:
-            # paint a face
+        if self.radius > 40:             # paint a face
             pygame.draw.circle (self.image, (0,0,200) , (self.radius //2 , self.radius //2), self.radius// 3)         # left blue eye
             pygame.draw.circle (self.image, (255,255,0) , (3 * self.radius //2  , self.radius //2), self.radius// 3)  # right yellow yey
             pygame.draw.arc(self.image, (32,32,32), (self.radius //2, self.radius, self.radius, self.radius//2), math.pi, 2*math.pi, 1) # grey mouth
@@ -708,17 +619,6 @@ class Ball(VectorSprite):
         self.image = self.image.convert_alpha() # faster blitting with transparent color
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
-
-
-#class Bullet(VectorSprite):
-#
-#    def create_image(self):
-#        self.image = pygame.Surface((self.radius,self.radius))
-#        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
-#        self.image.set_colorkey((0,0,0))
-#        self.image = self.image.convert_alpha() # faster blitting with transparent color
-#        self.rect= self.image.get_rect()
-#        self.image0 = self.image.copy()
 
 class PygView(object):
     width = 0
@@ -738,7 +638,6 @@ class PygView(object):
         PygView.friction = friction
         self.playtime = 0.0
         self.gametime = gametime
-
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
         for root, dirs, files in os.walk("data"):
@@ -765,28 +664,8 @@ class PygView(object):
              (PygView.width,PygView.height))
         self.background.convert()
 
-
     def paint(self):
         """painting on the surface and create sprites"""
-        # ---- playing field decoration ----
-        # vertical middle line
-        #pygame.draw.line(self.background,
-        #                 (10,10,10),
-        #                 (PygView.width // 2, 0),
-        #                 (PygView.width // 2, PygView.height),
-        #                 3)
-        # middle circle
-        #pygame.draw.circle(self.background,
-        #                   (10,10,10),
-        #                   (PygView.width // 2, PygView.height//2),
-        #                   200, 1)
-        # half circle left goal
-        #pygame.draw.circle(self.background, (10,10,10),
-        #                   (0, PygView.height // 2), 200, 1)
-        # half circle right goal
-        #pygame.draw.circle(self.background, (10,10,10),
-        #                   (PygView.width, PygView.height // 2), 200, 1)
-
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
         self.ballgroup = pygame.sprite.Group()          # for collision detection etc.
         self.tracergroup = pygame.sprite.Group()
@@ -811,21 +690,21 @@ class PygView(object):
         Explosion.groups=self.allgroup
         Rocket.groups = self.allgroup
         Tracer.groups = self.allgroup, self.tracergroup
-
         self.cities = []
         self.platforms = []
         self.cannons = []
         nr = PygView.width // 200
-        for p in range(nr):
+        # ----- add Gun Platforms -----
+        for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
             self.platforms.append(GunPlatform(
                  pos=v.Vec2d(x, PygView.height-100)))
-
+        # ------ add Cities -------
         for c in range(nr):
             x = PygView.width // nr * c
             self.cities.append(City(
                  pos=v.Vec2d(x+100, PygView.height-50)))
-
+        # ----- add Cannons ------
         for p in self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
                                 cannonpos="upper", color=(255,0,0)))
@@ -833,22 +712,11 @@ class PygView(object):
                                 cannonpos="lower", color=(255,0,0)))
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
                                 cannonpos="middle", color=(255,0,0)))
-
-
-
-        #self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100)) # creating a Ball Sprite
-        #self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        #self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255))
-        #self.cannon2 = Cannon(bossnumber = self.ball2.number)
-
-
-        #self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
         self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
         self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=10000)
 
     def run(self):
         """The mainloop"""
-
         running = True
         while running:
             for event in pygame.event.get():
@@ -865,40 +733,21 @@ class PygView(object):
                     if event.key == pygame.K_2:
                         Rocket()
                     if event.key == pygame.K_b:
-                        #Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y), move=v.Vec2d(0,0), radius=5,
-                        #     friction=0.995, bounce_on_edge=True, max_age=4) # add small balls!
                         self.level += 1
                         self.loadbackground()
-                    if event.key == pygame.K_c:
-                        m = v.Vec2d(60,0) # lenght of cannon
-                        #m = m.rotated(-self.cannon1.angle)
-                        p = v.Vec2d(self.ball1.pos.x, self.ball1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*15, radius=10, max_age=4) # move=v.Vec2d(0,0),
-                    if event.key == pygame.K_LEFT:
-                        self.ball1.rotate(1) #
-                    if event.key == pygame.K_r:   # ---- reset balls -----
-                        self.ball1.pos = v.Vec2d(PygView.width//2 - 100, PygView.height //2)
-                        self.ball2.pos = v.Vec2d(PygView.width//2 + 100, PygView.height //2)
-                        self.ball3.pos = v.Vec2d(PygView.width//2, PygView.height //2)
-                        self.ball1.move = v.Vec2d(0,0)
-                        self.ball2.move = v.Vec2d(0,0)
-                        self.ball3.move = v.Vec2d(0,0)
                     if event.key == pygame.K_u:
                         Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
-
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
-
             if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
                 for p in self.platformgroup:
                     pygame.draw.circle(self.screen, (50,50,50),
                            (int(p.pos.x), int(p.pos.y)),
                             p.maxrange,1)
-
             # --- auto aim for cannons  ----
             for p in self.platformgroup:
             #for c in self.cannongroup:
@@ -933,29 +782,17 @@ class PygView(object):
                                    kill_on_edge=True, max_age=1.5, damage=5, angle=c.angle)
                             c.readytofire = c.age + c.recoiltime
                             break
-
-
-
-
-
-
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
             self.gametime -= seconds
-
-
             # write text below sprites
             write(self.screen, "FPS: {:6.3}  GAMETIME: {:6.4} sec FRICTION: {:6.3}".format(
                 self.clock.get_fps(), round(self.gametime,1), PygView.friction), x=10, y=10)
 
             self.allgroup.update(seconds) # would also work with ballgroup
-
-
-
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
-            # the False means the colliding sprite is not killed
-            
+            # the False means the colliding sprite is not killed          
             # ---------- collision detection between target and tracer sprites ---------
             for t in self.targetgroup:
                crashgroup = pygame.sprite.spritecollide(t, self.tracergroup, False, pygame.sprite.collide_mask)
@@ -963,7 +800,6 @@ class PygView(object):
                    elastic_collision(t, b) # change dx and dy of both sprites
                    t.hitpoints -= b.damage
                    b.kill()
-            
             # -------- collision detection betwenn bomb and city -----------
             for c in self.citygroup:
                 crashgroup = pygame.sprite.spritecollide(c, self.bombgroup, False, 
@@ -973,10 +809,6 @@ class PygView(object):
                     c.hitpoints -= b.damage
                     Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5)
                     b.kill()
-                    
-
-
-
             # --------- collision detection between ball and other balls
             #for ball in self.ballgroup:
             #    crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
@@ -986,14 +818,10 @@ class PygView(object):
 
             # ----------- clear, draw , update, flip -----------------
             #self.allgroup.clear(screen, background)
-
             self.allgroup.draw(self.screen)
-
             # next frame
             pygame.display.flip()
-
         pygame.quit()
 
 if __name__ == '__main__':
-
     PygView(1430,800, friction=0.99, gametime=90).run() # try PygView(800,600).run()
