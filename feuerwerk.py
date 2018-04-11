@@ -921,7 +921,7 @@ class PygView(object):
                             m2.rotate(-c.angle)
                             start = v.Vec2d(c.pos.x, c.pos.y) + m
                             Tracer(pos=start, move=m2.normalized()*200, radius=5, mass=5, color=(255,0,0),
-                                   kill_on_edge=True, max_age=1.5, damage=5, angle=c.angle)
+                                   kill_on_edge=True, max_age=1.5, damage=15, angle=c.angle)
                             c.readytofire = c.age + c.recoiltime
                             break
             # --------- mouse and joystick ----------
@@ -973,6 +973,9 @@ class PygView(object):
                for b in crashgroup:
                    elastic_collision(t, b) # change dx and dy of both sprites
                    t.hitpoints -= b.damage
+                   if t.hitpoints <= 0:
+                       Explosion(pos=v.Vec2d(t.pos.x, t.pos.y),
+                                 max_age = 0.3)
                    b.kill()
             # -------- collision detection betwenn bomb and city -----------
             for c in self.citygroup:
