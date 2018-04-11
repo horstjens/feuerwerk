@@ -982,9 +982,9 @@ class PygView(object):
                 crashgroup = pygame.sprite.spritecollide(c, self.bombgroup, False, 
                              pygame.sprite.collide_mask)
                 for b in crashgroup:
-                    c.pos.y += 1
+                    c.pos.y += 5 # city sink into ground
                     c.hitpoints -= b.damage
-                    Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5)
+                    Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
                     b.kill()
             # --------- collision detection between ball and other balls
             #for ball in self.ballgroup:
