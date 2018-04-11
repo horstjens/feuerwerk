@@ -104,6 +104,130 @@ class Flytext(pygame.sprite.Sprite):
             if self.time > self.duration:
                 self.kill()      # remove Sprite from screen and from groups
 
+class Mouse(pygame.sprite.Sprite):
+    def __init__(self, radius = 5, color=(255,0,0), x=320, y=240,
+                    startx=100,starty=100, control="mouse"):
+        """create a (black) surface and paint a blue Mouse on it"""
+        self._layer=1
+        pygame.sprite.Sprite.__init__(self,self.groups)
+        self.radius = radius
+        self.color = color
+        self.startx=startx
+        self.starty=starty
+        self.x = x
+        self.y = y
+        self.dx = 0
+        self.dy = 0
+        self.r = color[0]
+        self.g = color[1]
+        self.b = color[2]
+        self.delta = -10
+        self.age = 0
+        self.pos = pygame.mouse.get_pos()
+        self.move = 0
+        self.tail=[]
+        self.create_image()
+        self.rect = self.image.get_rect()
+        self.control = control # "mouse" "keyboard"
+        
+        
+        
+    def create_image(self):
+        self.image = pygame.surface.Surface((40,40))
+
+        delta1 = 12.5
+        delta2 = 25
+
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,0),(20.5,6),2)
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,6),(27,0),2)
+    
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(14,5),(20.5,11),2)
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(20.5,11),(27,5),2)
+    
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(14,10),(20.5,16),2)
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(20.5,16),(27,10),2)
+
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,40),(20.5,34),2)
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,34),(27,40),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(14,35),(20.5,29),2)
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(20.5,29),(27,35),2)
+        
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(14,30),(20.5,24),2)
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(20.5,24),(27,30),2)
+
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(0,14),(6,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(6,20.5),(0,27),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(5,14),(11,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(11,20.5),(5,27),2)
+        
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(10,14),(16,20.5),2)
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(16,20.5),(10,27),2)
+
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(40,14),(34,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(34,20.5),(40,27),2)
+        
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(35,14),(29,20.5),2)
+        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(29,20.5),(35,27),2)
+        
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
+        pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
+        
+        pygame.draw.circle(self.image, (255,125,145), (20,20), 22, 1)
+        
+        self.image.set_colorkey((0,0,0))
+        self.rect=self.image.get_rect()
+        self.rect.center = self.x, self.y
+        
+    def update(self, seconds):
+        
+        if self.control == "mouse":
+            self.x, self.y = pygame.mouse.get_pos()
+        
+        elif self.control == "keyboard":
+            pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_UP]:
+                self.y -= 9
+            if pressed[pygame.K_DOWN]:
+                self.y += 9
+            if pressed[pygame.K_LEFT]:
+                self.x -= 9
+            if pressed[pygame.K_RIGHT]:
+                self.x += 9
+        
+        elif self.control == "joystick1":
+            pass 
+        elif self.control == "joystick2":
+            pass
+            
+        if self.x < 0:
+            self.x = 0
+        elif self.x > PygView.width:
+            self.x = PygView.width
+        if self.y < 0:
+            self.y = 0
+        elif self.y > PygView.height:
+            self.y = PygView.height
+            
+            
+            
+        
+        self.tail.insert(0,(self.x,self.y))
+        self.tail = self.tail[:128]
+        self.rect.center = self.x, self.y
+        
+        # self.r can take the values from 255 to 101
+        self.r += self.delta
+        if self.r < 151:
+            self.r = 151
+            self.delta = 10
+        if self.r > 255:
+            self.r = 255
+            self.delta = -10
+            
+        self.create_image()
+
 class VectorSprite(pygame.sprite.Sprite):
     """base class for sprites. this class inherits from pygames sprite class"""
     number = 0
@@ -676,9 +800,11 @@ class PygView(object):
         self.platformgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
         self.bombgroup = pygame.sprite.Group()
+        self.mousegroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # self.targetgroup # each Ball object belong to those groups
         #Goal.groups = self.allgroup, self.goalgroup
         #Bullet.groups = self.allgroup, self.bulletgroup
+        Mouse.groups = self.allgroup, self.mousegroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
         VectorSprite.groups = self.allgroup
@@ -694,6 +820,13 @@ class PygView(object):
         self.platforms = []
         self.cannons = []
         nr = PygView.width // 200
+        
+        # ------ joysticks ----
+        pygame.joystick.init()
+        self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        for j in self.joysticks:
+            j.init()
+        
         # ----- add Gun Platforms -----
         for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
@@ -712,12 +845,29 @@ class PygView(object):
                                 cannonpos="lower", color=(255,0,0)))
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
                                 cannonpos="middle", color=(255,0,0)))
+        # ----- ufo, mothership ----
         self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
         self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=10000)
-
+        # ------ player1,2,3: mouse, keyboard, joystick ---
+        self.mouse1 = Mouse(control="mouse", color=(255,0,0))
+        self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
+        self.mouse3 = Mouse(control="joystick1", color=(255,0,255))
+        
+        
     def run(self):
         """The mainloop"""
         running = True
+        
+        
+        leftcorner = v.Vec2d(0,self.height)
+        rightcorner = v.Vec2d(self.width,self.height)
+        middle = v.Vec2d(self.width//2,self.height)
+        quarter = v.Vec2d(self.width//4,self.height)
+        quarter3 = v.Vec2d(self.width//4*3,self.height)
+        third = v.Vec2d(self.width//3, self.height)
+        third2 = v.Vec2d(self.width//3*2, self.height)
+        ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
+        
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -782,6 +932,39 @@ class PygView(object):
                                    kill_on_edge=True, max_age=1.5, damage=5, angle=c.angle)
                             c.readytofire = c.age + c.recoiltime
                             break
+            # --------- mouse and joystick ----------
+            # ------ mouse handler ------
+            
+            left,middle,right = pygame.mouse.get_pressed()
+            if left:
+                Rocket(random.choice(ground), pos1, ex=8)
+            if right:
+                Rocket(random.choice(ground), pos1, ex=9)
+        
+                
+            # ------ joystick handler -------
+            for number, j in enumerate(self.joysticks):
+                if number == 0:
+                   x = j.get_axis(0)
+                   y = j.get_axis(1)
+                   #print(x,y)
+                   self.mouse3.x += x # *2 
+                   self.mouse3.y += y # *2 
+                   buttons = j.get_numbuttons()
+                   for b in range(buttons):
+                       pushed = j.get_button( b )
+                       if b == 0 and pushed:
+                            Rocket(random.choice(ground), pos3, ex=8)
+                       if b == 1 and pushed:
+                            Rocket(random.choice(ground), pos3, ex=9)
+                       
+            
+           
+            pos1 = v.Vec2d(pygame.mouse.get_pos())
+            pos2 = self.mouse2.rect.center
+            pos3 = self.mouse3.rect.center
+            
+            
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
