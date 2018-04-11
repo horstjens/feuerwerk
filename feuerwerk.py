@@ -105,7 +105,7 @@ class Flytext(pygame.sprite.Sprite):
                 self.kill()      # remove Sprite from screen and from groups
 
 class Mouse(pygame.sprite.Sprite):
-    def __init__(self, radius = 5, color=(255,0,0), x=320, y=240,
+    def __init__(self, radius = 50, color=(255,0,0), x=320, y=240,
                     startx=100,starty=100, control="mouse"):
         """create a (black) surface and paint a blue Mouse on it"""
         self._layer=1
@@ -133,48 +133,40 @@ class Mouse(pygame.sprite.Sprite):
         
         
     def create_image(self):
-        self.image = pygame.surface.Surface((40,40))
+        
+        self.image = pygame.surface.Surface((self.radius*2,
+                                             self.radius*2))
 
         delta1 = 12.5
         delta2 = 25
-
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,0),(20.5,6),2)
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,6),(27,0),2)
+        w = self.radius*2 / 100.0
+        h = self.radius*2 / 100.0
+        # pointing down / up
+        for y in (0,5,10):
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (35*w,0+y),(50*w,15*h+y),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (50*w,15*h+y),(65*w,0+y),2)
     
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(14,5),(20.5,11),2)
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(20.5,11),(27,5),2)
-    
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(14,10),(20.5,16),2)
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(20.5,16),(27,10),2)
-
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(14,40),(20.5,34),2)
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(20.5,34),(27,40),2)
-        
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(14,35),(20.5,29),2)
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(20.5,29),(27,35),2)
-        
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(14,30),(20.5,24),2)
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(20.5,24),(27,30),2)
-
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(0,14),(6,20.5),2)
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(6,20.5),(0,27),2)
-        
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(5,14),(11,20.5),2)
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(11,20.5),(5,27),2)
-        
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(10,14),(16,20.5),2)
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(16,20.5),(10,27),2)
-
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(40,14),(34,20.5),2)
-        pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),(34,20.5),(40,27),2)
-        
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(35,14),(29,20.5),2)
-        pygame.draw.line(self.image,(self.r-delta1,self.g,self.b),(29,20.5),(35,27),2)
-        
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(30,14),(24,20.5),2)
-        pygame.draw.line(self.image,(self.r,self.g,self.b),(24,20.5),(30,27),2)
-        
-        pygame.draw.circle(self.image, (255,125,145), (20,20), 22, 1)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (35*w,100*h-y),(50*w,85*h-y),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (50*w,85*h-y),(65*w,100*h-y),2)
+        # pointing right / left                 
+        for x in (0,5,10):
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (0+x,35*h),(15*w+x,50*h),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (15*w+x,50*h),(0+x,65*h),2)
+            
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (100*w-x,35*h),(85*w-x,50*h),2)
+            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
+                         (85*w-x,50*h),(100*w-x,65*h),2)
+            
+        for delta in (-5, 0, 5 ):
+            pygame.draw.circle(self.image, (self.r, self.g, self.b), 
+                      (self.radius,self.radius), self.radius-delta, 1)
         
         self.image.set_colorkey((0,0,0))
         self.rect=self.image.get_rect()
@@ -857,7 +849,7 @@ class PygView(object):
     def run(self):
         """The mainloop"""
         running = True
-        
+        pygame.mouse.set_visible(False)
         
         leftcorner = v.Vec2d(0,self.height)
         rightcorner = v.Vec2d(self.width,self.height)
@@ -940,8 +932,7 @@ class PygView(object):
                 Rocket(random.choice(ground), pos1, ex=8)
             if right:
                 Rocket(random.choice(ground), pos1, ex=9)
-        
-                
+              
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
                 if number == 0:
@@ -1002,8 +993,19 @@ class PygView(object):
             # ----------- clear, draw , update, flip -----------------
             #self.allgroup.clear(screen, background)
             self.allgroup.draw(self.screen)
-            # next frame
+            
+            # --- Martins verbesserter mousetail -----
+            for mouse in self.mousegroup:
+                if len(mouse.tail)>2:
+                    for a in range(1,len(mouse.tail)):
+                        r,g,b = mouse.color
+                        pygame.draw.line(self.screen,(r-a,g,b),
+                                     mouse.tail[a-1],
+                                     mouse.tail[a],10-a*10//10)
+            
+            # -------- next frame -------------
             pygame.display.flip()
+        pygame.mouse.set_visible(True)    
         pygame.quit()
 
 if __name__ == '__main__':
