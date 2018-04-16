@@ -578,12 +578,12 @@ class PygView(object):
                               
         self.goal1 = Goal(layer=2, pos=v.Vec2d(0,y))
         self.goal2 = Goal(layer=2, pos=v.Vec2d(PygView.width,y))
-        self.bouncer1 = Bouncer(pos = v.Vec2d(800,50),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 50, mass = 10000, static = True)
-        self.bouncer2 = Bouncer(pos = v.Vec2d(60,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
-        self.bouncer3 = Bouncer(pos = v.Vec2d(1000,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
-        self.bouncer4 = Bouncer(pos = v.Vec2d(800,750),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
-        self.bouncer5 = Bouncer(pos = v.Vec2d(600,50),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
-        self.bouncer6 = Bouncer(pos = v.Vec2d(60,30),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.bouncer1 = Bouncer(pos = v.Vec2d(800,50),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 50, mass = 10000,color = (0,0,255) ,static = True)
+        self.bouncer2 = Bouncer(pos = v.Vec2d(60,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000,color = (255,0,0) ,static = True)
+        self.bouncer3 = Bouncer(pos = v.Vec2d(1000,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000,color = (0,255,0) ,static = True)
+        self.bouncer4 = Bouncer(pos = v.Vec2d(800,750),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000,color = (0,0,255) ,static = True)
+        self.bouncer5 = Bouncer(pos = v.Vec2d(600,50),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000,color = (255,0,0) ,static = True)
+        self.bouncer6 = Bouncer(pos = v.Vec2d(60,30),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000,color = (0,255,0) ,static = True)
         self.wall1 = Hwall(pos = v.Vec2d(0,y-125), width = 100, height = 15, color=(0,0,1))
         self.wall2 = Hwall(pos = v.Vec2d(0,y+125), width = 100, height = 15, color =(0,0,1))
         self.wall3 = Hwall(pos = v.Vec2d(PygView.width ,y-125), width = 100, height = 15, color =(0,0,1))
@@ -739,9 +739,11 @@ class PygView(object):
                 #--reset ball1
                 self.player1.pos = v.Vec2d(self.width//2 - 300, self.height//2)
                 self.player1.move = v.Vec2d(0,0)
+                self.cannon1.set_angle(0)
                 #--reset ball3                
                 self.player2.pos = v.Vec2d(self.width//2 +300, self.height//2)
                 self.player2.move = v.Vec2d(0,0)
+                self.cannon3.set_angle(180)
             # -- - - - - - - - - -- collision detection between lazyball and bouncer- - - - - -- - -
             #g = pygame.sprite.spritecollideany(self.lazyball1, self.bouncergroup)
             crashgroup = pygame.sprite.spritecollide(self.lazyball1, self.bouncergroup, False, pygame.sprite.collide_circle)
