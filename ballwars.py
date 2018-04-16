@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 author: mobdullah
 email: abad.saby@gmail.com or moha.alsaby@gmail.com
@@ -8,7 +7,6 @@ rules:
 first to 10 wins.
 to score a goal you have to push or shoot the ball in the enemy goal, player1 goal is at the left side, player2 goal is at the right side.
 this example is tested using python 3.4 and pygame
-
 license:
 gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 image license:
@@ -80,10 +78,12 @@ def elastic_collision(sprite1, sprite2):
         cdp = (cbdxs * dirx + cbdys * diry)
         cdp /= distancesquare
         if dp > 0:
-            sprite2.move.x -= 2 * dirx * dp 
-            sprite2.move.y -= 2 * diry * dp
-            sprite1.move.x -= 2 * dirx * cdp 
-            sprite1.move.y -= 2 * diry * cdp
+            if not sprite2.static:
+                sprite2.move.x -= 2 * dirx * dp 
+                sprite2.move.y -= 2 * diry * dp
+            if not sprite1.static:
+                    sprite1.move.x -= 2 * dirx * cdp 
+                    sprite1.move.y -= 2 * diry * cdp
 
 
 
@@ -139,6 +139,8 @@ class VectorSprite(pygame.sprite.Sprite):
         for key, arg in kwargs.items():
             setattr(self, key, arg)
         # --- default values for missing keywords ----
+        if "static" not in kwargs:
+            self.static = False
         if "pos" not in kwargs:
             self.pos = v.Vec2d(50,50)
         if "move" not in kwargs:
@@ -341,22 +343,24 @@ class Ball(VectorSprite):
         self.image0 = self.image.copy()
         self.mask = pygame.mask.from_surface(self.image)
 
+
 class Bouncer(VectorSprite):
+    
     def create_image(self):
+    
         if self.picture is not None:
             self.image = self.picture.copy()
         else:            
-            self.image = pygame.Surface((2*self.radius,2*self.radius))    
-            #self.image.fill((self.color))
-        pygame.draw.circle(self.image,(150,200,0),(self.radius,self.radius),self.radius,1)
-        self.image.set_colorkey((0,0,0))
-        self.image = self.image.convert_alpha()
-        self.image0 = self.image.copy()
-        self.rect= self.image.get_rect()
-        self.width = self.rect.width
-        self.height = self.rect.height
-        self.mask = pygame.mask.from_surface(self.image)
-
+            self.image = pygame.Surface((2*self.radius,2*self.radius))
+            pygame.draw.circle(self.image, (0,0,1), (self.radius, self.radius), self.radius,0)
+            self.image.set_colorkey((0,0,0))  
+            self.image = self.image.convert_alpha()
+            self.image0 = self.image.copy()
+            self.rect= self.image.get_rect()
+            self.width = self.rect.width
+            self.height = self.rect.height
+            self.mask = pygame.mask.from_surface(self.image)
+    
     def update(self, seconds):
         """calculate movement, position and bouncing on edge"""
         # ----- kill because... ------
@@ -374,12 +378,14 @@ class Bouncer(VectorSprite):
             if self.sticky_with_boss:
                 boss = VectorSprite.numbers[self.bossnumber]
                 self.pos = v.Vec2d(boss.pos.x, boss.pos.y)   
-        #self.pos += self.move * seconds
+        self.pos += self.move * seconds
         if self.friction is not None:
             self.move *= self.friction # friction between 1.0 and 0.1
         self.distance_traveled += self.move.length * seconds
         self.age += seconds
-  
+    
+   
+        
         # ---- bounce / kill on screen edge ----
         if self.bounce_on_edge: 
             if self.pos.x - self.width //2 < 0:
@@ -404,8 +410,8 @@ class Bouncer(VectorSprite):
                 self.move.y *= -1
         # update sprite position 
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
+            
     
-        
 #class Bullet(VectorSprite):
     #"""a small Sprite"""
 
@@ -452,6 +458,11 @@ class Wall(VectorSprite):
         self.radius=0
         self.mask = pygame.mask.from_surface(self.image)
         
+class Hwall(Wall):
+    pass
+    
+class Vwall(Wall):
+    pass
 class Goal(VectorSprite):
     
     def create_image(self):
@@ -504,16 +515,19 @@ class PygView(object):
         self.cannongroup = pygame.sprite.Group()
         self.goalgroup = pygame.sprite.Group()
         self.wallgroup = pygame.sprite.Group()
+        self.hwallgroup= pygame.sprite.Group()
+        self.vwallgroup= pygame.sprite.Group()
+        self.bouncergroup = pygame.sprite.Group()
         self.lazygroup = pygame.sprite.Group()
-        self.bouncergroup=pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
         Goal.groups = self.allgroup, self.goalgroup
-        
         #Bullet.groups = self.allgroup, self.bulletgroup
         Cannon.groups = self.allgroup, self.cannongroup
+        Hwall.group = self.allgroup, self.wallgroup, self.wallgroup
+        Vwallgroup = self.allgroup, self.wallgroup, self.vwallgroup
         VectorSprite.groups = self.allgroup
+        Bouncer.groups = self.allgroup, self.bouncergroup 
         Wall.group =self.allgroup,self.wallgroup
-        Bouncer.groups=self.allgroup,self.bouncergroup
         #Hitpointbar.groups = self.allgroup
         
         x = PygView.width // 2
@@ -537,7 +551,7 @@ class PygView(object):
                             bounce_on_edge=True, 
                             upkey=pygame.K_w, downkey=pygame.K_s, 
                             leftkey=pygame.K_a, rightkey=pygame.K_d, 
-                            mass=500,color=(150,0,0),
+                            mass=1000,color=(150,0,0),
                             friction=0.99) # creating a Ball Sprite
         self.cannon1 = Cannon(bossnumber = self.player1.number,maxrange=300)
         #self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,255,0)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
@@ -546,9 +560,9 @@ class PygView(object):
                            bounce_on_edge=True,
                            upkey=pygame.K_UP, downkey=pygame.K_DOWN,
                            leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, 
-                           mass=500,color=(150,150,150),
-                           friction=0.99)
-        self.cannon3 =Cannon(bossnumber =self.player2.number,maxrange=300)
+                           mass=1000,color=(150,150,150),
+                           friction=0.99, angle = 180)
+        self.cannon3 = Cannon(bossnumber = self.player2.number,maxrange=300)
         self.cannon3.rotate(180)
         #self.ball4 = Ball(pos=v.Vec2d(800,500), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,0,255)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
         #self.cannon4 = Cannon(bossnumber = self.ball4.number)
@@ -564,14 +578,17 @@ class PygView(object):
                               
         self.goal1 = Goal(layer=2, pos=v.Vec2d(0,y))
         self.goal2 = Goal(layer=2, pos=v.Vec2d(PygView.width,y))
-        self.bouncer1 = Bouncer(pos=v.Vec2d(600,200),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        self.bouncer2 = Bouncer(pos=v.Vec2d(600,600),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        #self.bouncer3 = Bouncer(pos=v.Vec2d(750,150),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        #self.bouncer4 = Bouncer(pos=v.Vec2d(750,650),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        #self.bouncer5 = Bouncer(pos=v.Vec2d(850,600),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        #self.bouncer5 = Bouncer(pos=v.Vec2d(900,400),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        #self.bouncer5 = Bouncer(pos=v.Vec2d(450,400),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
-        #self.bouncer6 = Bouncer(pos=v.Vec2d(920,300),move=v.Vec2d(0,0),color=(100,180,0),radius= 100,mass=10000)
+        self.bouncer1 = Bouncer(pos = v.Vec2d(800,50),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 50, mass = 10000, static = True)
+        self.bouncer2 = Bouncer(pos = v.Vec2d(60,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.bouncer3 = Bouncer(pos = v.Vec2d(1000,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.bouncer4 = Bouncer(pos = v.Vec2d(800,750),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.bouncer5 = Bouncer(pos = v.Vec2d(600,50),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.bouncer6 = Bouncer(pos = v.Vec2d(60,30),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.wall1 = Hwall(pos = v.Vec2d(0,y-125), width = 100, height = 15, color=(0,0,1))
+        self.wall2 = Hwall(pos = v.Vec2d(0,y+125), width = 100, height = 15, color =(0,0,1))
+        self.wall3 = Hwall(pos = v.Vec2d(PygView.width ,y-125), width = 100, height = 15, color =(0,0,1))
+        self.wall4 = Hwall(pos = v.Vec2d(PygView.width,y+125), width = 100, height = 15, color = (0,0,1))
+        #for a in range(3):
         #    self.wall1 =Wall(pos=v.Vec2d(random.randint(0,1400),random.randint(0,800)),
         #                        width =random.randint(1,700),
         #                        height=10,
@@ -586,7 +603,7 @@ class PygView(object):
         PygView.trollfaceimage = pygame.image.load(os.path.join(
              "data","trollface.png")).convert_alpha()
         PygView.trollfaceimage = pygame.transform.scale(
-                PygView.trollfaceimage, (100,100))
+                PygView.trollfaceimage, (100,500))
                     
     def run(self):
         """The mainloop"""
@@ -616,7 +633,7 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Troll(pos=p, move=m.normalized()*800+self.player1.move, radius=30,color=(1,1,1),mass=5000, max_age=10)
+                        Troll(pos=p, move=m.normalized()*800+self.player1.move, radius= 60,color=(1,1,1),mass=5000, max_age=10)
                         self.player1.move+=m.normalized()*-100
                     #if event.key == pygame.K_b:
                     #    Ball(pos=v.Vec2d(self.player1.pos.x,self.player1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.800, bounce_on_edge=True) # add small balls!
@@ -624,14 +641,14 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*250+self.player1.move, radius=10,color=(255,0,0),mass=300, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player1.move+=m.normalized()*-10 
                     if event.key == pygame.K_m:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon3.angle)
                         p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*250+self.player2.move,mass=300,radius=2, color=(0,0,255), kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*420+self.player2.move,mass=100,radius=2, color=(0,0,255), kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player2.move+=m.normalized()*-10
 
@@ -669,11 +686,11 @@ class PygView(object):
                     vectordiff=c.pos-target.pos
                     c.set_angle(-vectordiff.get_angle()-180)
                     #----auto shoot
-                    #if random.random()<0.1:
-                        #m = v.Vec2d(60,0) # lenght of cannon
-                        #m = m.rotated(-c.angle)
-                        #p = v.Vec2d(c.pos.x, c.pos.y) + m
-                        #Ball(pos=p, move=m.normalized()*200+c.move,mass=500,radius=5, max_distance = c.max_distance-60, color=c.color)
+                    if random.random()<0:
+                        m = v.Vec2d(60,0) # lenght of cannon
+                        m = m.rotated(-c.angle)
+                        p = v.Vec2d(c.pos.x, c.pos.y) + m
+                        Ball(pos=p, move=m.normalized()*200+c.move,mass=500,radius=5, max_distance = c.max_distance-60, color=c.color)
                     
          
           
@@ -722,26 +739,21 @@ class PygView(object):
                 #--reset ball1
                 self.player1.pos = v.Vec2d(self.width//2 - 300, self.height//2)
                 self.player1.move = v.Vec2d(0,0)
-                self.cannon1.set_angle(0)
                 #--reset ball3                
                 self.player2.pos = v.Vec2d(self.width//2 +300, self.height//2)
                 self.player2.move = v.Vec2d(0,0)
-                self.cannon3.set_angle(180)
-            #------------___ collision detection between lazyball and bouncer ___------------------
-            crashgroup = pygame.sprite.spritecollide(self.lazyball1,self.bouncergroup, False, pygame.sprite.collide_circle)
-            
+            # -- - - - - - - - - -- collision detection between lazyball and bouncer- - - - - -- - -
+            #g = pygame.sprite.spritecollideany(self.lazyball1, self.bouncergroup)
+            crashgroup = pygame.sprite.spritecollide(self.lazyball1, self.bouncergroup, False, pygame.sprite.collide_circle)
+            #if g is not None:
             for b in crashgroup:
-                #print(b)
-                elastic_collision(self.lazyball1,b)
-                self.lazyball1.move.x *=2.0
-                self.lazyball1.move.y *=2.0
-                    
-                
-                
-                
-            
-            
-            
+                elastic_collision(self.lazyball1, b)
+                self.lazyball1.move.x *= 4.0
+                self.lazyball1.move.y *= 4.0
+            # - - - - - - - - - - -collision detection between lazyball and hwall- - - - - - - - - 
+            crashgroup = pygame.sprite.spritecollide(self.lazyball1, self.hwallgroup, False, pygame.sprite.collide_mask)
+            for w in crashgroup:
+                elastic_collision(w,self.lazyball1)
             # --------- collision detection between ball and other balls
             for ball in self.ballgroup:
                 crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
@@ -758,7 +770,7 @@ class PygView(object):
                             
             # -------- remove dead -----
             #for sprite in self.ballgroup:
-            #    if sprite.hitp oints < 1:
+            #    if sprite.hitpoints < 1:
             #        sprite.kill()
                     
 
@@ -784,6 +796,6 @@ class PygView(object):
     pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1420,800, 60, tolerance=5).run() # try PygView(800,600).run()
+    PygView(1400,800, 60, tolerance=5).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
-    #menu1.PygView.run()
+#menu1.PygView.run()
