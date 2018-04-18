@@ -289,6 +289,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.rightkey = None
         if "leftkey" not in kwargs:
             self.leftkey = None
+        if "speed" not in kwargs:
+            self.speed = None
         # ---
         self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
@@ -342,7 +344,7 @@ class VectorSprite(pygame.sprite.Sprite):
             self.kill()
         if self.max_age is not None and self.age > self.max_age:
             self.kill()
-        if self.max_distance is not None and self.distance > self.max_distance:
+        if self.max_distance is not None and self.distance_traveled > self.max_distance:
             self.kill()
         # ---- movement with/without boss ----
         if self.bossnumber is not None:
@@ -584,13 +586,24 @@ class City(VectorSprite):
 
 class Rocket(VectorSprite):
     
-   def create_image(self):
-        self.image = pygame.Surface((10,20))
-        pygame.draw.polygon(self.image, (255,156,0), [(5,0),
-            (9, 10), (9,20), (5,15), (0,20), (0,10)])
+    def create_image(self):
+        self.angle = 90
+        self.image = pygame.Surface((20,10))
+        pygame.draw.polygon(self.image, (255,156,0), [(0,0),
+            (15,0), (20,5), (15,10), (0,10), (5,5)])
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
+        self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+        self.set_angle(self.angle)
+        
+    def update(self, seconds):
+        # --- speed limit ---
+        if self.move.get_length() != self.speed:
+            self.move = self.move.normalized() * self.speed
+        if self.move.get_length() > 0:
+            self.set_angle(-self.move.get_angle())
+        VectorSprite.update(self, seconds)
  
 class Tracer(VectorSprite): 
     
@@ -788,6 +801,7 @@ class PygView(object):
         self.cannongroup = pygame.sprite.Group()
         #self.goalgroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
+        self.rocketgroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
@@ -799,6 +813,7 @@ class PygView(object):
         Mouse.groups = self.allgroup, self.mousegroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
+        Rocket.groups = self.allgroup, self.rocketgroup
         VectorSprite.groups = self.allgroup
         GunPlatform.groups = self.allgroup, self.platformgroup
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
@@ -806,7 +821,6 @@ class PygView(object):
         Flytext.groups = self.allgroup
         Mothership.groups = self.allgroup, self.ufogroup
         Explosion.groups=self.allgroup
-        Rocket.groups = self.allgroup
         Tracer.groups = self.allgroup, self.tracergroup
         self.cities = []
         self.platforms = []
@@ -829,6 +843,10 @@ class PygView(object):
             x = PygView.width // nr * c
             self.cities.append(City(
                  pos=v.Vec2d(x+100, PygView.height-50)))
+            for dx in range(-30, 33, 15):
+                Rocket(pos=v.Vec2d(x+100+dx, 
+                       PygView.height-15),
+                       speed = 150)
         # ----- add Cannons ------
         for p in self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
@@ -844,7 +862,28 @@ class PygView(object):
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
         self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
         self.mouse3 = Mouse(control="joystick1", color=(255,0,255))
-        
+    
+    def launchRocket(self, pos ):
+        """launches the closet Rocket (x) from Ground toward target position x,y"""
+        x,y = pos
+        readyRockets = [r for r in self.rocketgroup 
+                        if r.pos.y == PygView.height -15]
+        mindist = None
+        bestRocket = None
+        for r in readyRockets:
+            dist = abs(x - r.pos.x)
+            if mindist is None:
+                mindist = dist
+                bestRocket = r
+            if dist < mindist:
+                mindist = dist
+                bestRocket = r
+        if bestRocket is not None:
+            flightpath = v.Vec2d(x,y) - bestRocket.pos
+            bestRocket.move = flightpath
+            bestRocket.max_distance = flightpath.get_length()
+        else:
+            Flytext(x,y,"out of ammo")
         
     def run(self):
         """The mainloop"""
@@ -929,9 +968,10 @@ class PygView(object):
             
             left,middle,right = pygame.mouse.get_pressed()
             if left:
-                Rocket(random.choice(ground), pos1, ex=8)
-            if right:
-                Rocket(random.choice(ground), pos1, ex=9)
+                #Rocket(random.choice(ground), pos1, ex=8)
+                self.launchRocket(pygame.mouse.get_pos())
+            #if right:
+            #    Rocket(random.choice(ground), pos1, ex=9)
               
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
