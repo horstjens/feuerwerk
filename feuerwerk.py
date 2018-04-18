@@ -463,16 +463,23 @@ class Explosion(VectorSprite):
     def create_image(self):
         self.image=pygame.Surface((self.radius*2, self.radius*2))
         pygame.draw.circle(self.image, (197, 37,  37),(self.radius, self.radius),  self.radius, 0)
-        if self.radius>5:
-            pygame.draw.circle(self.image, (random.randint(200, 255), 0,  0), (self.radius, self.radius), self.radius-5, 0)
-        if self.radius>10:
-            pygame.draw.circle(self.image, (random.randint(150, 200), 0, 0), (self.radius, self.radius), self.radius-10, 0)
-        if self.radius>15:
-            pygame.draw.circle(self.image, (random.randint(100, 150), 0, 0), (self.radius, self.radius), self.radius-15, 0)
-        if self.radius>20:
-            pygame.draw.circle(self.image, (random.randint(50, 100), 0, 0), (self.radius, self.radius), self.radius-20, 0)
-        if self.radius>30:
-            pygame.draw.circle(self.image, (random.randint(1, 51), 0, 0), (self.radius, self.radius), self.radius-30, 0)
+        r, g, b = self.color
+        for rad in range(5,66, 5):
+            if self.radius > rad:
+                if r != 0 and r != 255:
+                   r1 = (random.randint(rad-10,rad) + r) % 255
+                else:
+                    r1 = r
+                if g != 0 and g != 255:
+                    g1 = (random.randint(rad-10,rad) + g) % 255
+                else:
+                    g1 = g
+                if b != 0 and b != 255:
+                    b1 = (random.randint(rad-10,rad) + b) % 255
+                else:
+                    b1 = b
+                pygame.draw.circle(self.image, (r1,g1,b1), (self.radius, self.radius), self.radius-rad, 0)
+        
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
 
@@ -590,7 +597,7 @@ class Rocket(VectorSprite):
         self.angle = 90
         self.image = pygame.Surface((20,10))
         pygame.draw.polygon(self.image, (255,156,0), [(0,0),
-            (15,0), (20,5), (15,10), (0,10), (5,5)])
+            (5,0), (20,5), (5,10), (0,10), (5,5)])
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -604,6 +611,10 @@ class Rocket(VectorSprite):
         if self.move.get_length() > 0:
             self.set_angle(-self.move.get_angle())
         VectorSprite.update(self, seconds)
+        
+    def kill(self):
+        Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255))
+        VectorSprite.kill(self)    
  
 class Tracer(VectorSprite): 
     
@@ -890,14 +901,16 @@ class PygView(object):
         running = True
         pygame.mouse.set_visible(False)
         
-        leftcorner = v.Vec2d(0,self.height)
-        rightcorner = v.Vec2d(self.width,self.height)
-        middle = v.Vec2d(self.width//2,self.height)
-        quarter = v.Vec2d(self.width//4,self.height)
-        quarter3 = v.Vec2d(self.width//4*3,self.height)
-        third = v.Vec2d(self.width//3, self.height)
-        third2 = v.Vec2d(self.width//3*2, self.height)
-        ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
+        #leftcorner = v.Vec2d(0,self.height)
+        #rightcorner = v.Vec2d(self.width,self.height)
+        #middle = v.Vec2d(self.width//2,self.height)
+        #quarter = v.Vec2d(self.width//4,self.height)
+        #quarter3 = v.Vec2d(self.width//4*3,self.height)
+        #third = v.Vec2d(self.width//3, self.height)
+        #third2 = v.Vec2d(self.width//3*2, self.height)
+        #ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
+        
+        oldleft, oldmiddle, oldright  = False, False, False
         
         while running:
             for event in pygame.event.get():
@@ -967,12 +980,12 @@ class PygView(object):
             # ------ mouse handler ------
             
             left,middle,right = pygame.mouse.get_pressed()
-            if left:
+            if oldleft and not left:
                 #Rocket(random.choice(ground), pos1, ex=8)
                 self.launchRocket(pygame.mouse.get_pos())
             #if right:
             #    Rocket(random.choice(ground), pos1, ex=9)
-              
+            oldleft, oldmiddle, oldright = left, middle, right  
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
                 if number == 0:
