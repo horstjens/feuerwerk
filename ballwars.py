@@ -611,8 +611,11 @@ class PygView(object):
         self.wall3 = Hwall(pos = v.Vec2d(PygView.width ,y-125), width = 100, height = 15, color =(0,0,1))
         self.wall4 = Hwall(pos = v.Vec2d(PygView.width,y+125), width = 100, height = 15, color = (0,0,1))
         
-        self.block1 = Block(pos=v.Vec2d(200,200), width=100, height=50,
-                            color=(0,255,0))
+        self.block1= Block(pos = v.Vec2d(0,y-123), width = 100, height = 15, color=(0,255,0))
+        self.block2= Block(pos = v.Vec2d(0,y+123), width = 100, height = 15, color=(0,255,0))
+        self.block3= Block(pos = v.Vec2d(PygView.width ,y-125), width = 100, height = 15, color =(0,255,0))
+        self.block4= Block(pos = v.Vec2d(PygView.width,y+125), width = 100, height = 15, color = (0,255,0))
+        
         
         #for a in range(3):
         #    self.wall1 =Wall(pos=v.Vec2d(random.randint(0,1400),random.randint(0,800)),
