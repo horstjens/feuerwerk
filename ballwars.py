@@ -463,6 +463,26 @@ class Hwall(Wall):
     
 class Vwall(Wall):
     pass
+    
+    
+class Block(VectorSprite):
+    
+    def create_image(self):
+        if self.picture is not None:
+            self.image = self.picture.copy()
+        else:            
+            self.image = pygame.Surface((self.width,self.height))    
+            self.image.fill((self.color))
+        self.image = self.image.convert()
+        self.image0 = self.image.copy()
+        self.rect= self.image.get_rect()
+        self.width = self.rect.width
+        self.height = self.rect.height
+        #self.radius=300
+        self.mask = pygame.mask.from_surface(self.image)
+        self.static = True
+    
+        
 class Goal(VectorSprite):
     
     def create_image(self):
@@ -518,9 +538,11 @@ class PygView(object):
         self.hwallgroup= pygame.sprite.Group()
         self.vwallgroup= pygame.sprite.Group()
         self.bouncergroup = pygame.sprite.Group()
+        self.blockgroup = pygame.sprite.Group()
         self.lazygroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
         Goal.groups = self.allgroup, self.goalgroup
+        Block.groups = self.allgroup, self.blockgroup
         #Bullet.groups = self.allgroup, self.bulletgroup
         Cannon.groups = self.allgroup, self.cannongroup
         Hwall.group = self.allgroup, self.wallgroup, self.wallgroup
@@ -588,6 +610,10 @@ class PygView(object):
         self.wall2 = Hwall(pos = v.Vec2d(0,y+125), width = 100, height = 15, color =(0,0,1))
         self.wall3 = Hwall(pos = v.Vec2d(PygView.width ,y-125), width = 100, height = 15, color =(0,0,1))
         self.wall4 = Hwall(pos = v.Vec2d(PygView.width,y+125), width = 100, height = 15, color = (0,0,1))
+        
+        self.block1 = Block(pos=v.Vec2d(200,200), width=100, height=50,
+                            color=(0,255,0))
+        
         #for a in range(3):
         #    self.wall1 =Wall(pos=v.Vec2d(random.randint(0,1400),random.randint(0,800)),
         #                        width =random.randint(1,700),
@@ -720,9 +746,43 @@ class PygView(object):
             #       elastic_collision(ball, bullet) # change dx and dy of both sprites
             #       ball.hitpoints -= bullet.damage
             
+            # ---- collision detection between balls and blocks
+            for bo in self.blockgroup:
+                crashgroup = pygame.sprite.spritecollide(bo, self.ballgroup,
+                             False, pygame.sprite.collide_rect)
+                for ba in crashgroup:
+                    if ba.move.y < 0 and ((ba.pos.x-ba.radius) > (bo.pos.x-bo.width //2) and
+                                          (ba.pos.x+ba.radius) < (bo.pos.x+bo.width //2)):
+                        # moving up
+                        ba.pos.y = bo.pos.y + bo.height // 2 + ba.radius + 1 
+                        ba.move.y *= -1
+                    elif ba.move.y > 0 and ((ba.pos.x-ba.radius) > (bo.pos.x-bo.width//2) and
+                                          (ba.pos.x+ba.radius) < (bo.pos.x+bo.width //2)):
+                        # moving down
+                        ba.pos.y = bo.pos.y - bo.height // 2 - ba.radius - 1
+                        ba.move.y *= -1
+                    elif ba.move.x < 0 and ((ba.pos.y-ba.radius) > (bo.pos.y - bo.width//2) and
+                                          (ba.pos.y+ba.radius) < (bo.pos.y + bo.width//2)):
+                        # moving left
+                        ba.pos.x = bo.pos.x + bo.width // 2 + ba.radius + 1
+                        ba.move.x *= -1
+                    elif ba.move.x > 0 and ((ba.pos.y-ba.radius) > (bo.pos.y - bo.width//2) and
+                                          (ba.pos.y+ba.radius) < (bo.pos.y + bo.width//2)):
+                        # moving right
+                        ba.pos.x = bo.pos.x - bo.width // 2 - ba.radius - 1
+                        ba.move.x *= -1
+                    
+            
+            
             # ----------- clear, draw , update, flip -----------------  
             self.allgroup.update(seconds) # would also work with ballgroup
             self.allgroup.draw(self.screen)  
+            
+            
+             
+                    
+                    
+                    
             
             # ---- collision detection for lazyball1
             g = pygame.sprite.spritecollideany(self.lazyball1, self.goalgroup)
