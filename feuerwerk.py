@@ -703,6 +703,10 @@ class Bomb(VectorSprite):
                 Explosion(pos=self.pos, max_age=random.random()*10)
         VectorSprite.update(self, seconds)
         self.move += self.gravity
+        if random.random() < 0.25:
+            Smoke(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  max_age=2, gravity=v.Vec2d(0, -2))
+
 
 class GunPlatform(VectorSprite):
 
@@ -801,7 +805,7 @@ class Ball(VectorSprite):
             if pressedkeys[self.rightkey]:
                 self.move.x += 5
         self.move *= PygView.friction
-
+        
     def create_image(self):
         self.image = pygame.Surface((self.width,self.height))
         pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius) # draw blue filled circle on ball surface
