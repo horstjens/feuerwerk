@@ -179,14 +179,20 @@ class Mouse(pygame.sprite.Sprite):
         
         elif self.control == "keyboard":
             pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_RSHIFT]:
+                delta = 2
+            else:
+                delta = 9
             if pressed[pygame.K_UP]:
-                self.y -= 9
+                self.y -= delta
             if pressed[pygame.K_DOWN]:
-                self.y += 9
+                self.y += delta
             if pressed[pygame.K_LEFT]:
-                self.x -= 9
+                self.x -= delta
             if pressed[pygame.K_RIGHT]:
-                self.x += 9
+                self.x += delta
+            
+                
         
         elif self.control == "joystick1":
             pass 
@@ -394,6 +400,49 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.y = PygView.height
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
+
+class Fire(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((10,10))
+        c = ( random.randint(225, 255),
+              random.randint(200, 255),
+              0 )
+        pygame.draw.circle(self.image, c,(5,5), random.randint(2,5))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+        
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        self.create_image()
+        self.rect=self.image.get_rect()
+        self.rect.center=(self.pos.x, self.pos.y)
+        
+
+class Smoke(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        pygame.draw.circle(self.image, self.color, (25,25),
+                           int(self.age*3))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+        
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        if self.gravity is not None:
+            self.move += self.gravity * seconds
+                          
+        self.create_image()
+        self.rect=self.image.get_rect()
+        self.rect.center=(self.pos.x, self.pos.y)
+       
+        c = int(self.age * 100)
+        c = min(255,c)
+        self.color=(c,c,c)
+
 
 class Mothership(VectorSprite):
 
@@ -610,7 +659,12 @@ class Rocket(VectorSprite):
             self.move = self.move.normalized() * self.speed
         if self.move.get_length() > 0:
             self.set_angle(-self.move.get_angle())
+            # --- Smoke ---
+            if random.random() < 0.2:
+                Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
+                   gravity=v.Vec2d(0,4), max_age = 5)
         VectorSprite.update(self, seconds)
+        
         
     def kill(self):
         Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255))
@@ -818,6 +872,7 @@ class PygView(object):
         self.ufogroup = pygame.sprite.Group()
         self.bombgroup = pygame.sprite.Group()
         self.mousegroup = pygame.sprite.Group()
+        self.explosiongroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # self.targetgroup # each Ball object belong to those groups
         #Goal.groups = self.allgroup, self.goalgroup
         #Bullet.groups = self.allgroup, self.bulletgroup
@@ -830,8 +885,8 @@ class PygView(object):
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
         Bomb.groups = self.allgroup, self.targetgroup, self.bombgroup 
         Flytext.groups = self.allgroup
-        Mothership.groups = self.allgroup, self.ufogroup
-        Explosion.groups=self.allgroup
+        Mothership.groups = self.allgroup, self.ufogroup, self.targetgroup
+        Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
         self.cities = []
         self.platforms = []
@@ -1020,6 +1075,17 @@ class PygView(object):
             self.allgroup.update(seconds) # would also work with ballgroup
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
             # the False means the colliding sprite is not killed          
+            
+            # --------- collision detection between target and Explosion -----
+            for e in self.explosiongroup:
+                crashgroup = pygame.sprite.spritecollide(e, self.targetgroup,
+                             False, pygame.sprite.collide_circle)
+                for t in crashgroup:
+                    t.hitpoints -= e.damage
+                    if random.random() < 0.99:
+                        Fire(pos = t.pos, max_age=3, bossnumber=t.number)
+            
+            
             # ---------- collision detection between target and tracer sprites ---------
             for t in self.targetgroup:
                crashgroup = pygame.sprite.spritecollide(t, self.tracergroup, False, pygame.sprite.collide_mask)
@@ -1030,7 +1096,7 @@ class PygView(object):
                        Explosion(pos=v.Vec2d(t.pos.x, t.pos.y),
                                  max_age = 0.3)
                    b.kill()
-            # -------- collision detection betwenn bomb and city -----------
+            # -------- collision detection between bomb and city -----------
             for c in self.citygroup:
                 crashgroup = pygame.sprite.spritecollide(c, self.bombgroup, False, 
                              pygame.sprite.collide_mask)
@@ -1039,6 +1105,9 @@ class PygView(object):
                     c.hitpoints -= b.damage
                     Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
                     b.kill()
+                    Fire(pos=v.Vec2d(c.pos.x + random.randint(-50,50),
+                                     c.pos.y + random.randint(-20,20)),
+                                     max_age= 10)
             # --------- collision detection between ball and other balls
             #for ball in self.ballgroup:
             #    crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
