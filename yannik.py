@@ -600,6 +600,16 @@ class City(VectorSprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect()
 
+
+class Block(VectorSprite):
+    
+   def create_image(self):
+       self.image = pygame.Surface((15, 15))
+       self.image.fill(self.color)
+       self.image.set_colorkey((0,0,0))
+       self.image.convert_alpha()
+       self.rect = self.image.get_rect() 
+
 class Shell(VectorSprite):
     
    def create_image(self):
@@ -824,6 +834,7 @@ class PygView(object):
         self.bombgroup = pygame.sprite.Group()
         self.mousegroup = pygame.sprite.Group()
         self.tankgroup = pygame.sprite.Group()
+        self.blockgroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # self.targetgroup # each Ball object belong to those groups
         #Goal.groups = self.allgroup, self.goalgroup
         #Bullet.groups = self.allgroup, self.bulletgroup
@@ -841,6 +852,7 @@ class PygView(object):
         Rocket.groups = self.allgroup
         Tracer.groups = self.allgroup, self.tracergroup
         Tank.groups = self.allgroup, self.tankgroup
+        Block.groups = self.allgroup, self.blockgroup
         self.cities = []
         self.platforms = []
         self.cannons = []
@@ -881,7 +893,12 @@ class PygView(object):
         self.tank1 = Tank(pos=v.Vec2d(100, 100), picture = Tank.image)
         self.tank2 = Tank(pos=v.Vec2d(200, 100), picture = Tank.image)
         #self.shell1 = Shell(pos = v.Vec2d(300, 300), move = v.Vec2d(10, 0))
-        
+        Block(pos = v.Vec2d(100, 200), color = (5, 5, 5))
+        Block(pos = v.Vec2d(115, 200), color = (5, 5, 5))
+        Block(pos = v.Vec2d(130, 200), color = (5, 5, 5))
+        Block(pos = v.Vec2d(145, 200), color = (5, 5, 5))
+        Block(pos = v.Vec2d(160, 200), color = (5, 5, 5))
+        Block(pos = v.Vec2d(175, 200), color = (5, 5, 5))
     def run(self):
         """The mainloop"""
         running = True
@@ -935,12 +952,12 @@ class PygView(object):
             self.tank1.move= v.Vec2d (0, 0)
             
             if pressed_keys [pygame.K_w]:
-                delta = v.Vec2d(70, 0)
+                delta = v.Vec2d(100, 0)
                 delta.rotate(-self.tank1.angle)
                 self.tank1.move += delta
             
             if pressed_keys [pygame.K_s]:
-                delta = v.Vec2d(-70, 0)
+                delta = v.Vec2d(-100, 0)
                 delta.rotate(-self.tank1.angle)
                 self.tank1.move += delta    
              
@@ -1072,6 +1089,34 @@ class PygView(object):
                     
                     Flytext(p.pos.x, p.pos.y, "{} Damage".format(s.damage))
                     s.kill()
+            #---------- collision detection between shell and block-----------
+            for b in self.blockgroup:
+                crashgroup = pygame.sprite.spritecollide(b, self.shellgroup, False, 
+                             pygame.sprite.collide_rect)
+                for s in crashgroup:
+                    #print(s)
+                    if s.move.y > 0:
+                        # flying down
+                        if s.pos.y < b.pos.y:
+                            s.pos.y = b.pos.y - 15
+                            s.move.y *= -1
+                    elif s.move.y < 0:
+                        # flying up
+                        if s.pos.y > b.pos.y:
+                            s.pos.y = b.pos.y + 15
+                            s.move.y *= -1
+                    if s.move.x > 0:
+                        # flying right
+                        if s.pos.x < b.pos.x:
+                            s.pos.x = b.pos.x -15
+                            s.move.x *= -1
+                    elif s.move.x < 0:
+                        # flying left
+                        if s.pos.x > b.pos.x:
+                            s.pos.x = b.pos.x + 15
+                            s.move.x *= -1
+                            
+                        
             # -------- collision detection betwenn bomb and city -----------
             for c in self.citygroup:
                 crashgroup = pygame.sprite.spritecollide(c, self.bombgroup, False, 
