@@ -912,11 +912,11 @@ class PygView(object):
         for c in range(nr):
             x = PygView.width // nr * c
             self.cities.append(City(
-                 pos=v.Vec2d(x+100, PygView.height-50)))
-            for dx in range(-30, 33, 15):
-                Rocket(pos=v.Vec2d(x+100+dx, 
-                       PygView.height-15),
-                       speed = 150)
+                 pos=v.Vec2d(x+100, PygView.height-50),citynr = c))
+            for dy in range(0, 61, 15):
+                Rocket(pos=v.Vec2d(x+100+0, 
+                       PygView.height-15-dy),
+                       speed = 150, citynr = c)
         # ----- add Cannons ------
         for p in self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
@@ -1040,10 +1040,10 @@ class PygView(object):
             
             left,middle,right = pygame.mouse.get_pressed()
             if oldleft and not left:
-                #Rocket(random.choice(ground), pos1, ex=8)
                 self.launchRocket(pygame.mouse.get_pos())
-            #if right:
-            #    Rocket(random.choice(ground), pos1, ex=9)
+            if right:
+                self.launchRocket(pygame.mouse.get_pos())
+            
             oldleft, oldmiddle, oldright = left, middle, right  
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
