@@ -406,15 +406,14 @@ class Wreck(VectorSprite):
         if self.gravity is not None:
             self.move += self.gravity * seconds
         VectorSprite.update(self, seconds)
-        if random.random() < 0.44:
-           Smoke(pos=v.Vec2d(self.pos.x, self.pos.y), 
+        Smoke(pos=v.Vec2d(self.pos.x, self.pos.y), 
                  color=(200,0,0), gravity=v.Vec2d(0, -3),
                  max_age=0.1+random.random()*2)
         self.rotate(4)
     
     def create_image(self):
         self.image = pygame.Surface((50,50))
-        c = ( 0, 0, random.randint(200,255)) # blue
+        c = ( 0, 0, random.randint(100,155)) # blue
         pointlist = []
         for p in range(random.randint(5, 11)):
             pointlist.append((random.randint(0,50),
@@ -530,6 +529,15 @@ class Mothership(VectorSprite):
         self.images = [ self.image1, self.image2, self.image3, self.image4]
         self.image = self.images[0]
         self.rect= self.image.get_rect()
+        
+    def kill(self):
+        for p in range(50):
+            m = v.Vec2d(random.randint(100,200),0)
+            m.rotate(random.randint(0,360))
+            Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  move = m, gravity = v.Vec2d(0,9.5))
+        VectorSprite.kill(self)
+
 
 class Explosion(VectorSprite):
 
@@ -959,7 +967,7 @@ class PygView(object):
                                 cannonpos="middle", color=(255,0,0)))
         # ----- ufo, mothership ----
         self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
-        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=10000)
+        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50)
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
         self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
