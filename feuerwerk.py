@@ -208,9 +208,7 @@ class Mouse(pygame.sprite.Sprite):
         elif self.y > PygView.height:
             self.y = PygView.height
             
-            
-            
-        
+    
         self.tail.insert(0,(self.x,self.y))
         self.tail = self.tail[:128]
         self.rect.center = self.x, self.y
@@ -401,6 +399,32 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
+class Wreck(VectorSprite):
+    
+    def update(self, seconds):
+        
+        if self.gravity is not None:
+            self.move += self.gravity * seconds
+        VectorSprite.update(self, seconds)
+        if random.random() < 0.44:
+           Smoke(pos=v.Vec2d(self.pos.x, self.pos.y), 
+                 color=(200,0,0), gravity=v.Vec2d(0, -3),
+                 max_age=0.1+random.random()*2)
+        self.rotate(4)
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        c = ( 0, 0, random.randint(200,255)) # blue
+        pointlist = []
+        for p in range(random.randint(5, 11)):
+            pointlist.append((random.randint(0,50),
+                              random.randint(0,50)))
+        pygame.draw.polygon(self.image, c, pointlist)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+
 class Fire(VectorSprite):
     
     def create_image(self):
@@ -543,6 +567,14 @@ class Ufo(VectorSprite):
 
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
+
+    def kill(self):
+        for p in range(5):
+            m = v.Vec2d(random.randint(100,200),0)
+            m.rotate(random.randint(0,360))
+            Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  move = m, gravity = v.Vec2d(0,9.5))
+        VectorSprite.kill(self)
 
     def update(self, seconds):
         # --- animate ---
@@ -937,11 +969,13 @@ class PygView(object):
         """launches the closet Rocket (x) from Ground toward target position x,y"""
         x,y = pos
         readyRockets = [r for r in self.rocketgroup 
-                        if r.pos.y == PygView.height -15]
+                        if r.move.y == 0]
         mindist = None
         bestRocket = None
         for r in readyRockets:
-            dist = abs(x - r.pos.x)
+            distx = (x - r.pos.x)
+            disty = (y - r.pos.y)
+            dist = (distx**2 + disty**2) ** 0.5
             if mindist is None:
                 mindist = dist
                 bestRocket = r
@@ -1122,6 +1156,19 @@ class PygView(object):
             # ----------- clear, draw , update, flip -----------------
             #self.allgroup.clear(screen, background)
             self.allgroup.draw(self.screen)
+            
+            # ---- reproducing rockets -----
+            for c in self.citygroup:
+                nr = c.citynr
+                rockets = [r for r in self.rocketgroup if
+                           r.citynr == nr and r.move.y ==0]
+                if len(rockets) == 0:
+                    Flytext(c.pos.x, c.pos.y, "reloading", 
+                            color=(0,200,0))
+                    for dy in range(0, 61, 15):
+                        Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy),
+                               speed=150, citynr = c.citynr)
+                
             
             # --- Martins verbesserter mousetail -----
             for mouse in self.mousegroup:
