@@ -409,7 +409,13 @@ class VectorSprite(pygame.sprite.Sprite):
         
 class Tank(VectorSprite):
     
-    pass
+    #pass
+     def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+        self.bullets_in_air = 0
+        self.rockets_in_air = 0
+        self.max_bullets_in_air = 5
+        self.max_rockets_in_air = 1
 
 class Mothership(VectorSprite):
 
@@ -498,6 +504,29 @@ class Explosion(VectorSprite):
          self.rect=self.image.get_rect()
          self.rect.center=(self.pos.x, self.pos.y)
          self.radius+=1
+class Smoke(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        pygame.draw.circle(self.image, self.color, (25,25),
+                           int(self.age*3))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+        
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        if self.gravity is not None:
+            self.move += self.gravity * seconds
+                          
+        self.create_image()
+        self.rect=self.image.get_rect()
+        self.rect.center=(self.pos.x, self.pos.y)
+       
+        c = int(self.age * 100)
+        c = min(255,c)
+        self.color=(c,c,c)
+
          
 class Ufo(VectorSprite):
 
@@ -619,15 +648,32 @@ class Shell(VectorSprite):
        self.image.convert_alpha()
        self.rect = self.image.get_rect()
         
+   def kill(self):
+       self.boss.bullets_in_air-=1
+       VectorSprite.kill(self)
+
 class Rocket(VectorSprite):
     
-   def create_image(self):
-        self.image = pygame.Surface((10,20))
+    def create_image(self):
+        self.image = pygame.Surface((20,10))
         pygame.draw.polygon(self.image, (255,156,0), [(5,0),
-            (9, 10), (9,20), (5,15), (0,20), (0,10)])
+            (20, 5), (5,10), (0,10), (5,5), (0,0)])
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
+        self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+        self.set_angle(self.angle)
+        
+    def kill(self):
+       self.boss.rockets_in_air-=1
+       VectorSprite.kill(self)
+        
+    def update(self, seconds):
+        
+        VectorSprite.update(self, seconds)
+        if random.random() < 0.25:
+            Smoke(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  max_age=1 + random.random()*3, gravity=v.Vec2d(0, -2))
  
 class Tracer(VectorSprite): 
     
@@ -785,7 +831,7 @@ class PygView(object):
         PygView.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
         self.background = pygame.Surface(self.screen.get_size()).convert()
-        self.background.fill((255,255,255)) # fill background white
+        self.background.fill((25, 25, 25)) # fill background white
         self.clock = pygame.time.Clock()
         self.fps = fps
         PygView.friction = friction
@@ -811,7 +857,7 @@ class PygView(object):
 
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
-        self.background.fill((255,255,255)) # fill background white
+        self.background.fill((25,25,25)) # fill background white
         #self.background = pygame.image.load(os.path.join("data",
         #     self.backgroundfilenames[self.level %
         #     len(self.backgroundfilenames)]))
@@ -893,12 +939,7 @@ class PygView(object):
         self.tank1 = Tank(pos=v.Vec2d(100, 100), picture = Tank.image)
         self.tank2 = Tank(pos=v.Vec2d(200, 100), picture = Tank.image)
         #self.shell1 = Shell(pos = v.Vec2d(300, 300), move = v.Vec2d(10, 0))
-        Block(pos = v.Vec2d(100, 200), color = (5, 5, 5))
-        Block(pos = v.Vec2d(115, 200), color = (5, 5, 5))
-        Block(pos = v.Vec2d(130, 200), color = (5, 5, 5))
-        Block(pos = v.Vec2d(145, 200), color = (5, 5, 5))
-        Block(pos = v.Vec2d(160, 200), color = (5, 5, 5))
-        Block(pos = v.Vec2d(175, 200), color = (5, 5, 5))
+        
     def run(self):
         """The mainloop"""
         running = True
@@ -935,14 +976,35 @@ class PygView(object):
                         show_tail = not show_tail
                     if event.key == pygame.K_u:
                         Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
-                    if event.key == pygame.K_SPACE:
-                        a = v.Vec2d(100,0)
-                        a.rotate(-self.tank1.angle)
-                        Shell(pos= v.Vec2d(self.tank1.pos.x, self.tank1.pos.y)+a*0.5,  move= a , kill_on_edge = True, color=(5,5,5)) 
+                    if event.key == pygame.K_e:
+                        if self.tank1.bullets_in_air < self.tank1.max_bullets_in_air:
+                            self.tank1.bullets_in_air += 1
+                            a = v.Vec2d(150,0)
+                            a.rotate(-self.tank1.angle)
+                            Shell(pos= v.Vec2d(self.tank1.pos.x, self.tank1.pos.y)+a*0.25,  move= a , 
+                                  bounce_on_edge = True, color=(5,5,5), boss=self.tank1, max_age= 7.0) 
                     if event.key == pygame.K_m:
-                        a = v.Vec2d(100,0)
-                        a.rotate(-self.tank2.angle)
-                        Shell(pos= v.Vec2d(self.tank2.pos.x, self.tank2.pos.y)+a*0.5, move= a , kill_on_edge = True, color=(5,5,5)) 
+                        if self.tank2.bullets_in_air < self.tank2.max_bullets_in_air:
+                            self.tank2.bullets_in_air += 1
+                            a = v.Vec2d(150,0)
+                            a.rotate(-self.tank2.angle)
+                            Shell(pos= v.Vec2d(self.tank2.pos.x, self.tank2.pos.y)+a*0.25, move= a ,
+                                 bounce_on_edge = True, color=(5,5,5), boss=self.tank2, max_age = 7.0) 
+                    if event.key == pygame.K_q:
+                        if self.tank1.rockets_in_air < self.tank1.max_rockets_in_air:
+                            self.tank1.rockets_in_air += 1
+                            a = v.Vec2d(150,0)
+                            a.rotate(-self.tank1.angle)
+                            Rocket(pos= v.Vec2d(self.tank1.pos.x, self.tank1.pos.y)+a*0.25, angle=(self.tank1.angle), move= a ,
+                                     kill_on_edge = True, color=(35,195,155), boss = self.tank1, max_age = 7.0)
+                    if event.key == pygame.K_SPACE:
+                        if self.tank2.rockets_in_air < self.tank2.max_rockets_in_air:
+                            self.tank2.rockets_in_air += 1
+                            a = v.Vec2d(150,0)
+                            a.rotate(-self.tank2.angle)
+                            Rocket(pos= v.Vec2d(self.tank2.pos.x, self.tank2.pos.y)+a*0.25, angle=(self.tank2.angle), move= a ,
+                                     kill_on_edge = True, color=(35,195,155), boss = self.tank2, max_age = 7.0)              
+                                   
 
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
@@ -1030,27 +1092,27 @@ class PygView(object):
             # --------- mouse and joystick ----------
             # ------ mouse handler ------
             
-            left,middle,right = pygame.mouse.get_pressed()
-            if left:
-                Rocket(random.choice(ground), pos1, ex=8)
-            if right:
-                Rocket(random.choice(ground), pos1, ex=9)
+            #left,middle,right = pygame.mouse.get_pressed()
+            #if left:
+            #    Rocket(random.choice(ground), pos1, ex=8)
+            #if right:
+            #    Rocket(random.choice(ground), pos1, ex=9)
               
             # ------ joystick handler -------
-            for number, j in enumerate(self.joysticks):
-                if number == 0:
-                   x = j.get_axis(0)
-                   y = j.get_axis(1)
-                   #print(x,y)
-                   self.mouse3.x += x # *2 
-                   self.mouse3.y += y # *2 
-                   buttons = j.get_numbuttons()
-                   for b in range(buttons):
-                       pushed = j.get_button( b )
-                       if b == 0 and pushed:
-                            Rocket(random.choice(ground), pos3, ex=8)
-                       if b == 1 and pushed:
-                            Rocket(random.choice(ground), pos3, ex=9)
+            #for number, j in enumerate(self.joysticks):
+            #    if number == 0:
+            #       x = j.get_axis(0)
+            #       y = j.get_axis(1)
+            #       #print(x,y)
+            #       self.mouse3.x += x # *2 
+            #       self.mouse3.y += y # *2 
+            #       buttons = j.get_numbuttons()
+            #       for b in range(buttons):
+            #           pushed = j.get_button( b )
+            #           if b == 0 and pushed:
+            #                Rocket(random.choice(ground), pos3, ex=8)
+            #           if b == 1 and pushed:
+            #                Rocket(random.choice(ground), pos3, ex=9)
                        
             
            
@@ -1064,8 +1126,8 @@ class PygView(object):
             self.playtime += seconds
             self.gametime -= seconds
             # write text below sprites
-            write(self.screen, "FPS: {:6.3}  GAMETIME: {:6.4} sec FRICTION: {:6.3}".format(
-                self.clock.get_fps(), round(self.gametime,1), PygView.friction), x=10, y=10)
+            #write(self.screen, "FPS: {:6.3}  GAMETIME: {:6.4} sec FRICTION: {:6.3}".format(
+            #    self.clock.get_fps(), round(self.gametime,1), PygView.friction), x=10, y=10)
 
             self.allgroup.update(seconds) # would also work with ballgroup
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
