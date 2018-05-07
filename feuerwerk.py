@@ -535,7 +535,7 @@ class Mothership(VectorSprite):
             m = v.Vec2d(random.randint(100,200),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-                  move = m, gravity = v.Vec2d(0, 50))
+                  move = m, gravity = v.Vec2d(0,50))
         VectorSprite.kill(self)
 
 
@@ -645,6 +645,8 @@ class City(VectorSprite):
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
         self.hitpoints = 10000
+        self.readyToLaunchTime = 0 # age when rockets are done with reloading
+        
 
     def update(self, seconds):
         # --- animate ---
@@ -682,6 +684,11 @@ class City(VectorSprite):
 
 class Rocket(VectorSprite):
     
+    def __init__(self, **kwargs):
+        self.readyToLaunchTime = 0
+        VectorSprite.__init__(self, **kwargs)
+        
+    
     def create_image(self):
         self.angle = 90
         self.image = pygame.Surface((20,10))
@@ -700,11 +707,13 @@ class Rocket(VectorSprite):
         if self.move.get_length() > 0:
             self.set_angle(-self.move.get_angle())
             # --- Smoke ---
-            if random.random() < 0.2:
+            if random.random() < 0.2 and self.age > 0.1:
                 Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
                    gravity=v.Vec2d(0,4), max_age = 5)
+        self.oldage = self.age
         VectorSprite.update(self, seconds)
-        
+        if self.age > self.readyToLaunchTime and self.oldage < self.readyToLaunchTime:
+            self.pos.y -= 500
         
     def kill(self):
         Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255))
@@ -977,7 +986,7 @@ class PygView(object):
         """launches the closet Rocket (x) from Ground toward target position x,y"""
         x,y = pos
         readyRockets = [r for r in self.rocketgroup 
-                        if r.move.y == 0]
+                        if r.move.y == 0 and r.readyToLaunchTime < r.age]
         mindist = None
         bestRocket = None
         for r in readyRockets:
@@ -1170,12 +1179,14 @@ class PygView(object):
                 nr = c.citynr
                 rockets = [r for r in self.rocketgroup if
                            r.citynr == nr and r.move.y ==0]
-                if len(rockets) == 0:
+                if len(rockets) == 0 and c.age > c.readyToLaunchTime :
+                    c.readyToLaunchtime = c.age + 5
                     Flytext(c.pos.x, c.pos.y, "reloading", 
-                            color=(0,200,0))
+                            color=(0,200,0), duration = 5)
                     for dy in range(0, 61, 15):
-                        Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy),
-                               speed=150, citynr = c.citynr)
+                        Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy+500),
+                               speed=150, citynr = c.citynr, 
+                               readyToLaunchTime = 5)
                 
             
             # --- Martins verbesserter mousetail -----
