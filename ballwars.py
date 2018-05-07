@@ -309,6 +309,7 @@ class Ball(VectorSprite):
         
     def __init__(self, layer=4, **kwargs):
         VectorSprite.__init__(self, layer, **kwargs)
+        self.readyToFire = 0
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -647,6 +648,11 @@ class PygView(object):
         #     "data","trollface.png")).convert_alpha()
         #PygView.trollfaceimage = pygame.transform.scale(
         #        PygView.trollfaceimage, (10,10))
+        # ------ joysticks ----
+        pygame.joystick.init()
+        self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        for j in self.joysticks:
+            j.init()
                     
     def run(self):
         """The mainloop"""
@@ -696,8 +702,84 @@ class PygView(object):
                         self.player2.move+=m.normalized()*-10
 
                     if event.key == pygame.K_LEFT:
-                        self.player1.rotate(1) # 
-                    
+                        self.player1.rotate(1) #
+                        
+                       
+                         
+            # ------ joystick 0 , player1 -------
+            for number, j in enumerate(self.joysticks):
+                if number == 0:
+                   x = j.get_axis(0)
+                   y = j.get_axis(1)
+                   #x1= j.get_axis(2)
+                   #y1= j.get_axis(1)
+                   #print(x,y)
+                   self.player1.move.x += x  *6
+                   self.player1.move.y += y  *6
+                   #if x1 > 0:
+                   #    self.cannon1.rotate(5)
+                   #elif x1<0:
+                   #    self.cannon1.rotate(-5)
+                   buttons = j.get_numbuttons()
+                   for b in range(buttons):
+                       #old_pushed = j.get_button( b ) 
+
+                       pushed = j.get_button( b )
+                       if b == 4 and pushed:
+                           self.cannon1.rotate(5)
+                            #Rocket(random.choice(ground), pos3, ex=8)
+                       if b == 5 and pushed:
+                           self.cannon1.rotate(-5)
+                            #Rocket(random.choice(ground), pos3, ex=9)
+                       if b == 1 and pushed:
+                           if self.player1.age < self.player1.readyToFire:
+                               print("wait for reload")
+                           else:
+                               m = v.Vec2d(60,0) # lenght of cannon
+                               m = m.rotated(-self.cannon1.angle)
+                               p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
+                               Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                               #knockbackeffect
+                               self.player1.move+=m.normalized()*-10
+                               self.player1.readyToFire = self.player1.age + 0.3
+            
+            ########----- joystick 2, player 2 -----------
+            for number, j in enumerate(self.joysticks):
+                if number == 1:
+                   x = j.get_axis(0)
+                   y = j.get_axis(1)
+                   #x1= j.get_axis(2)
+                   #y1= j.get_axis(1)
+                   #print(x,y)
+                   self.player2.move.x += x  *6
+                   self.player2.move.y += y  *6
+                   #if x1 > 0:
+                   #    self.cannon1.rotate(5)
+                   #elif x1<0:
+                   #    self.cannon1.rotate(-5)
+                   buttons = j.get_numbuttons()
+                   for b in range(buttons):
+                       #old_pushed = j.get_button( b ) 
+
+                       pushed = j.get_button( b )
+                       if b == 4 and pushed:
+                           self.cannon3.rotate(5)
+                            #Rocket(random.choice(ground), pos3, ex=8)
+                       if b == 5 and pushed:
+                           self.cannon3.rotate(-5)
+                            #Rocket(random.choice(ground), pos3, ex=9)
+                       if b == 1 and pushed:
+                           if self.player2.age < self.player2.readyToFire:
+                               print("wait for reload")
+                           else:
+                               m = v.Vec2d(60,0) # lenght of cannon
+                               m = m.rotated(-self.cannon3.angle)
+                               p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
+                               Ball(pos=p, move=m.normalized()*420+self.player2.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                               #knockbackeffect
+                               self.player2.move+=m.normalized()*-10
+                               self.player2.readyToFire = self.player2.age + 0.3
+                        
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             if pressed_keys[pygame.K_x]:
@@ -876,3 +958,4 @@ if __name__ == '__main__':
     PygView(1400,800, 60, tolerance=5).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
 #menu1.PygView.run()
+
