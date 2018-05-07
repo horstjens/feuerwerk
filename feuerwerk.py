@@ -620,6 +620,8 @@ class Ufo(VectorSprite):
         pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
         pygame.draw.line(tmp, color, (10, 80), (25, 73),  2)
         pygame.draw.line(tmp, color, (85, 80), (70, 73),  2)
+        pygame.draw.ellipse(tmp, (41, 154, 54), (25, 23, 50, 50), 0)
+        pygame.draw.ellipse(tmp, color, (0, 50, 100, 30), 0)
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
         return tmp
