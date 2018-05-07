@@ -535,7 +535,7 @@ class Mothership(VectorSprite):
             m = v.Vec2d(random.randint(100,200),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-                  move = m, gravity = v.Vec2d(0,9.5))
+                  move = m, gravity = v.Vec2d(0, 50))
         VectorSprite.kill(self)
 
 
@@ -581,7 +581,7 @@ class Ufo(VectorSprite):
             m = v.Vec2d(random.randint(100,200),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-                  move = m, gravity = v.Vec2d(0,9.5))
+                  move = m, gravity = v.Vec2d(0,50))
         VectorSprite.kill(self)
 
     def update(self, seconds):
