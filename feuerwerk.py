@@ -106,9 +106,9 @@ class Flytext(pygame.sprite.Sprite):
 
 class Mouse(pygame.sprite.Sprite):
     def __init__(self, radius = 50, color=(255,0,0), x=320, y=240,
-                    startx=100,starty=100, control="mouse"):
+                    startx=100,starty=100, control="mouse", ):
         """create a (black) surface and paint a blue Mouse on it"""
-        self._layer=1
+        self._layer=10
         pygame.sprite.Sprite.__init__(self,self.groups)
         self.radius = radius
         self.color = color
@@ -235,6 +235,8 @@ class VectorSprite(pygame.sprite.Sprite):
             setattr(self, key, arg)
         if "layer" not in kwargs:
             self._layer = 4
+        else:
+            self._layer = self.layer
         #self._layer = layer   # pygame Sprite layer
         pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
         self.number = VectorSprite.number # unique number for each sprite
@@ -413,7 +415,7 @@ class Wreck(VectorSprite):
     
     def create_image(self):
         self.image = pygame.Surface((50,50))
-        c = ( 0, 0, random.randint(100,155)) # blue
+        c = ( 0, 0, random.randint(50,155)) # blue
         pointlist = []
         for p in range(random.randint(5, 11)):
             pointlist.append((random.randint(0,50),
@@ -484,7 +486,7 @@ class Mothership(VectorSprite):
         #         gravity = v.Vec2d(0,0.7))
         #------------------chance to spawn Ufo-------------------
         if random.random()<0.009:
-            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50))
+            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8)
 
         # --- chance to change move vector ---
         if random.random() < 0.05:
@@ -532,7 +534,7 @@ class Mothership(VectorSprite):
         
     def kill(self):
         for p in range(50):
-            m = v.Vec2d(random.randint(100,200),0)
+            m = v.Vec2d(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
                   move = m, gravity = v.Vec2d(0,50))
@@ -578,7 +580,7 @@ class Ufo(VectorSprite):
 
     def kill(self):
         for p in range(5):
-            m = v.Vec2d(random.randint(100,200),0)
+            m = v.Vec2d(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
                   move = m, gravity = v.Vec2d(0,50))
@@ -977,8 +979,8 @@ class PygView(object):
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
                                 cannonpos="middle", color=(255,0,0)))
         # ----- ufo, mothership ----
-        self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255))
-        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50)
+        #self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), layer=1)
+        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50, layer=7)
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
         self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
@@ -1041,8 +1043,8 @@ class PygView(object):
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
-                    if event.key == pygame.K_u:
-                        Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
+                    #if event.key == pygame.K_u:
+                    #    Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
