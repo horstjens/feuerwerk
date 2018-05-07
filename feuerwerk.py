@@ -415,7 +415,7 @@ class Wreck(VectorSprite):
     
     def create_image(self):
         self.image = pygame.Surface((50,50))
-        c = ( 0, 0, random.randint(50,155)) # blue
+        c = ( random.randint(50,155),0, 0 ) # blue
         pointlist = []
         for p in range(random.randint(5, 11)):
             pointlist.append((random.randint(0,50),
@@ -486,7 +486,7 @@ class Mothership(VectorSprite):
         #         gravity = v.Vec2d(0,0.7))
         #------------------chance to spawn Ufo-------------------
         if random.random()<0.009:
-            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8)
+            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8, hitpoints= 50)
 
         # --- chance to change move vector ---
         if random.random() < 0.05:
@@ -537,7 +537,7 @@ class Mothership(VectorSprite):
             m = v.Vec2d(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-                  move = m, gravity = v.Vec2d(0,50))
+                  move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
         VectorSprite.kill(self)
 
 
@@ -583,7 +583,7 @@ class Ufo(VectorSprite):
             m = v.Vec2d(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
             Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-                  move = m, gravity = v.Vec2d(0,50))
+                  move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
         VectorSprite.kill(self)
 
     def update(self, seconds):
@@ -595,7 +595,7 @@ class Ufo(VectorSprite):
             m = v.Vec2d(0, -random.random()*75)
             m.rotate(random.randint(-90,90))
             Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
-                 gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=200 )
+                 gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         # --- chance to change move vector ---
         if random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
@@ -691,7 +691,7 @@ class Rocket(VectorSprite):
     def __init__(self, **kwargs):
         self.readyToLaunchTime = 0
         VectorSprite.__init__(self, **kwargs)
-        
+        self.damage = 100
     
     def create_image(self):
         self.angle = 90
@@ -720,7 +720,7 @@ class Rocket(VectorSprite):
             self.pos.y -= 500
         
     def kill(self):
-        Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255))
+        Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255), damage = self.damage)
         VectorSprite.kill(self)    
  
 class Tracer(VectorSprite): 
@@ -969,7 +969,7 @@ class PygView(object):
             for dy in range(0, 61, 15):
                 Rocket(pos=v.Vec2d(x+100+0, 
                        PygView.height-15-dy),
-                       speed = 150, citynr = c)
+                       speed = 150, citynr = c, damage = 100)
         # ----- add Cannons ------
         for p in self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
@@ -1087,7 +1087,7 @@ class PygView(object):
                             m2.rotate(-c.angle)
                             start = v.Vec2d(c.pos.x, c.pos.y) + m
                             Tracer(pos=start, move=m2.normalized()*200, radius=5, mass=5, color=(255,0,0),
-                                   kill_on_edge=True, max_age=1.5, damage=15, angle=c.angle)
+                                   kill_on_edge=True, max_age=1.5, damage=1, angle=c.angle)
                             c.readytofire = c.age + c.recoiltime
                             break
             # --------- mouse and joystick ----------
@@ -1141,6 +1141,7 @@ class PygView(object):
                              False, pygame.sprite.collide_circle)
                 for t in crashgroup:
                     t.hitpoints -= e.damage
+                    print(e.damage)
                     if random.random() < 0.99:
                         Fire(pos = t.pos, max_age=3, bossnumber=t.number)
             
@@ -1190,7 +1191,7 @@ class PygView(object):
                     for dy in range(0, 61, 15):
                         Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy+500),
                                speed=150, citynr = c.citynr, 
-                               readyToLaunchTime = 5)
+                               readyToLaunchTime = 5, damage = 100)
                 
             
             # --- Martins verbesserter mousetail -----
