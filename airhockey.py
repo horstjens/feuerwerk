@@ -16,6 +16,7 @@ import random
 import operator
 import math
 import vectorclass2d as v
+import os
 
 def write(background, text, x=50, y=150, color=(0,0,0),
           fontsize=None, center=False):
@@ -374,26 +375,32 @@ class Lowercannon(VectorSprite):
 class Ball(VectorSprite):
     """it's a pygame Sprite!"""
         
-    #def __init__(self, **kwargs):
-    #    VectorSprite.__init__(self, **kwargs)
-        
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+        self.readyToFire = 0
+        self.endOfBonusSpeed = 0
+        self.speedBonus = 2
     
         
     def update(self, seconds):
         VectorSprite.update(self, seconds)
         pressedkeys = pygame.key.get_pressed()
+        if self.age > self.endOfBonusSpeed:
+            speedfactor = 1
+        else:
+            speedfactor = self.speedBonus
         if self.upkey is not None:
             if pressedkeys[self.upkey]:
-                self.move.y -= 5
+                self.move.y -= 5 * speedfactor
         if self.downkey is not None:
             if pressedkeys[self.downkey]:
-                self.move.y += 5
+                self.move.y += 5  * speedfactor
         if self.leftkey is not None:
             if pressedkeys[self.leftkey]:
-                self.move.x -= 5
+                self.move.x -= 5 * speedfactor
         if self.rightkey is not None:
             if pressedkeys[self.rightkey]:
-                self.move.x += 5
+                self.move.x += 5 * speedfactor
         #----------seeking target------------
         if self.target is not None:
             
@@ -433,7 +440,25 @@ class Bonus(VectorSprite):
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
         
-        
+class SpeedBonus(VectorSprite):
+    
+    
+    
+     def create_image(self):
+        self.image = pygame.Surface((self.width,self.height))
+        #pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+        if self.radius >= 10 :
+            dicke = self.radius // 10 * 2
+            pygame.draw.circle (self.image, (159,29,113), (self.radius, self.radius ), self.radius // 1)
+            pygame.draw.circle (self.image, (78,187,0), (self.radius , self.radius), self.radius // 2)
+            pygame.draw.circle (self.image, (255,74,22), (self.radius, self.radius ) ,self.radius // 3)
+            pygame.draw.rect (self.image, (0,0,255), (0, self.radius-dicke, self.radius*2, dicke*2))
+            pygame.draw.rect (self.image, (0,0,255), (self.radius-dicke, 0,  dicke*2, self.radius*2 ))
+            pygame.draw.circle(self.image, (255,0,0), (self.radius, self.radius), self.radius //self.radius+4)
+        self.image.set_colorkey((0,0,0))
+        self.image = self.image.convert_alpha() # faster blitting with transparent color
+        self.rect= self.image.get_rect()
+        self.image0 = self.image.copy()
 
 class Fragment(VectorSprite):
     
@@ -469,6 +494,8 @@ class PygView(object):
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
            default arguments """
+        pygame.mixer.pre_init(44100, -16, 2, 2048) # setup mixer to avoid sound lag
+        
         pygame.init()
         PygView.width = width    # make global readable
         PygView.height = height
@@ -479,6 +506,25 @@ class PygView(object):
         self.fps = fps
         self.playtime = 0.0
         self.paint() 
+        #pygame.init()                              #initialize pygame
+
+        # look for sound & music files in subfolder 'data'
+        self.musicnames = ["caravan.ogg", "wastedland.mp3", "enchanted tiki 86.mp3"]
+        self.musicnumber = 0
+        pygame.mixer.music.load(os.path.join('data', 'caravan.ogg'))#load music
+        #pygame.mixer.music.load(os.path.join('data', 'wastedland.mp3'))
+        #pygame.mixer.music.load(os.path.join('data', 'enchanted tiki 86.mp3'))
+        self.powerupsound = pygame.mixer.Sound(os.path.join('data','powerup.wav'))  #load sound
+        self.torblausound = pygame.mixer.Sound(os.path.join('data', 'torblau.wav'))
+        self.torrotsound = pygame.mixer.Sound(os.path.join('data', 'torrot.wav'))
+        
+        pygame.mixer.music.play(-1)
+        
+        
+        pygame.joystick.init()
+        self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        for j in self.joysticks:
+            j.init()
         
     def paint(self):
         """painting on the surface and create sprites"""
@@ -506,10 +552,12 @@ class PygView(object):
         self.bulletgroup = pygame.sprite.Group()
         self.cannongroup = pygame.sprite.Group()
         self.bonusgroup = pygame.sprite.Group()
+        self.speedbonusgroup = pygame.sprite.Group()
         self.goalgroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
         Goal.groups = self.allgroup, self.goalgroup
         Bonus.groups = self.allgroup, self.bonusgroup
+        SpeedBonus.groups = self.allgroup, self.speedbonusgroup
         #Cannon.groups = self.allgroup, self.cannongroup
         VectorSprite.groups = self.allgroup
         
@@ -581,7 +629,55 @@ class PygView(object):
                         self.ball1.rotate(1) # 
                         #print(self.ball1.angle)
                     #    #self.cannon1.readytofire = self.cannon1.age + 1
+                    
+                    #-----------music switch----------------
+                    if event.key == pygame.K_p:
+                        self.musicnumber += 1
+                        if self.musicnumber > len(self.musicnames) - 1:
+                            self.musicnumber = 0
+                   
+                        pygame.mixer.music.stop()
+                        pygame.mixer.music.load(os.path.join("data", self.musicnames[self.musicnumber]))
+                        pygame.mixer.music.play(-1)
+                    
+            #---------------------joystick------------------------------
+            for number, j in enumerate(self.joysticks):
+                        if number == 0:
+                            x = j.get_axis(0)
+                            y = j.get_axis(1)
+                            
+                            print("joystick nummer, x, y", j,x,y)
+                            self.ball1.move.x += x*3 
+                            self.ball1.move.y += y*3 
+                            buttons = j.get_numbuttons()
+                            for b in range(buttons):
+                                pushed = j.get_button( b )
+                                if b == 0 and pushed and self.ball1.age > self.ball1.readyToFire:
+                                    self.ball1.readyToFire = self.ball1.age + 0.3
+                                    #Rocket(random.choice(ground), pos3, ex=8)
+                                    m = v.Vec2d(60,0)
+                                    m.rotate(self.ball1.move.get_angle())
+                                    p = v.Vec2d (self.ball1.pos.x, self.ball1.pos.y) + m
+                                    Ball(pos = p, move = m.normalized()*30, radius = 10, color = self.ball2.color, max_age = 4)
                         
+                        if number == 1:
+                                    
+                            x = j.get_axis(0)
+                            y = j.get_axis(1)
+                            
+                            print("joystick nummer, x, y", j,x,y)
+                            self.ball2.move.x += x*3 
+                            self.ball2.move.y += y*3 
+                            buttons = j.get_numbuttons()
+                            for b in range(buttons):
+                                pushed = j.get_button( b )
+                                if b == 0 and pushed and self.ball2.age > self.ball2.readyToFire:
+                                    self.ball2.readyToFire = self.ball2.age + 0.3 
+                                    #Rocket(random.choice(ground), pos3, ex=8)
+                                    m = v.Vec2d(60,0)
+                                    m.rotate(self.ball2.move.get_angle())
+                                    p = v.Vec2d (self.ball2.pos.x, self.ball2.pos.y) + m
+                                    Ball(pos = p, move = m.normalized()*30, radius = 10, color = self.ball2.color, max_age = 4)
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
                         
@@ -598,11 +694,27 @@ class PygView(object):
             
             self.allgroup.update(seconds) # would also work with ballgroup
             
-            # ---------- collision detection between ball1 and bonusgroup ------
+            # ---------- collision detection between balls and speedbonusgroup ---
+            for ball in [self.ball1, self.ball2]:
+                
+                crashgroup = pygame.sprite.spritecollide(ball, self.speedbonusgroup, False, pygame.sprite.collide_circle)
+                for speedbonus in crashgroup:
+                   
+    
+                    
+                    if ball == self.ball1:
+                        self.ball1.endOfBonusgroup = self.ball1.age + 2
+                        c = (random.randint(100,255),0,0)
+                    elif ball == self.ball2:
+                        self.ball2.endOfBonusgroup = self.ball2.age + 2
+                        c = (0,0,random.randint(100,255))
+            
+            # ---------- collision detection between balls and bonusgroup ------
             for ball in [self.ball1, self.ball2]:
         
                 crashgroup = pygame.sprite.spritecollide(ball, self.bonusgroup, False, pygame.sprite.collide_circle)
                 for bonus in crashgroup:
+                    self.powerupsound.play()
                     
                     if ball == self.ball1:
                         self.score2 -= 1
@@ -639,9 +751,11 @@ class PygView(object):
                 if crash.side == "left":
                     self.score2 += 1
                     c = (0,0,random.randint(100,255))
+                    self.torblausound.play() 
                 elif crash.side == "right":
                     self.score1 += 1
                     c = (random.randint(100,255),0,0)
+                    self.torrotsound.play()
                     
                 for w in range (0,360,1):
                     
@@ -666,11 +780,16 @@ class PygView(object):
                         elastic_collision(ball, otherball) # change dx and dy of both sprites
             
             ##-------- bonus
-            if random.random() < 0.01:
+            if random.random() < 0.001:
                 Bonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
-            
+            self.allgroup.draw(self.screen)
+            #---------speedbonus------------
+            if random.random() < 0.01:
+                SpeedBonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
+                                                 random.randint(0,self.height)),
+                                max_age = random.randint(2,9))
             self.allgroup.draw(self.screen)           
             # write text over everything 
             
