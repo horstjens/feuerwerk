@@ -75,7 +75,7 @@ def elastic_collision(sprite1, sprite2):
 
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
-                 dx=0, dy=-50, duration=2, acceleration_factor = 0.96, delay = 0):
+                 dx=0, dy=-50, duration=2, acceleration_factor = 0.96, delay = 0, fontsize=22):
         """a text flying upward and for a short time and disappearing"""
         self._layer = 7  # order of sprite layers (before / behind other sprites)
         pygame.sprite.Sprite.__init__(self, self.groups)  # THIS LINE IS IMPORTANT !!
@@ -86,7 +86,7 @@ class Flytext(pygame.sprite.Sprite):
         self.x, self.y = x, y
         self.duration = duration  # duration of flight in seconds
         self.acc = acceleration_factor  # if < 1, Text moves slower. if > 1, text moves faster.
-        self.image = make_text(self.text, (self.r, self.g, self.b), 22)  # font 22
+        self.image = make_text(self.text, (self.r, self.g, self.b), fontsize)  # font 22
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
         self.time = 0 - delay
@@ -247,7 +247,7 @@ class VectorSprite(pygame.sprite.Sprite):
         if "static" not in kwargs:
             self.static = False
         if "pos" not in kwargs:
-            self.pos = v.Vec2d(50,50)
+            self.pos = v.Vec2d(random.randint(0, PygView.width),50)
         if "move" not in kwargs:
             self.move = v.Vec2d(0,0)
         if "radius" not in kwargs:
@@ -297,8 +297,9 @@ class VectorSprite(pygame.sprite.Sprite):
             self.leftkey = None
         if "speed" not in kwargs:
             self.speed = None
+        if "age" not in kwargs:
+            self.age = 0 # age in seconds
         # ---
-        self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
         self.create_image()
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
@@ -472,9 +473,17 @@ class Smoke(VectorSprite):
 class Mothership(VectorSprite):
 
     def __init__(self, **kwargs):
+        self.ufo_spawn_rate = 0.009
+        self.radius = 100
+        self.hitpoints=1000
         VectorSprite.__init__(self, **kwargs)
-
+        
     def update(self, seconds):
+        if self.age < 0:
+           self.age += seconds
+           self.rect.y = self.pos.y - PygView.height
+           return
+        
         # --- animate ---
         i = self.age *3 % len(self.images)
         self.image = self.images[int(i)]
@@ -485,8 +494,8 @@ class Mothership(VectorSprite):
         #    Bomb(pos=self.pos, move=m,
         #         gravity = v.Vec2d(0,0.7))
         #------------------chance to spawn Ufo-------------------
-        if random.random()<0.009:
-            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8, hitpoints= 50)
+        if random.random()<  self.ufo_spawn_rate:
+            Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
 
         # --- chance to change move vector ---
         if random.random() < 0.05:
@@ -576,8 +585,10 @@ class Explosion(VectorSprite):
 class Ufo(VectorSprite):
 
     def __init__(self, **kwargs):
+        self.radius = 50
+        self.hitpoints=50
         VectorSprite.__init__(self, **kwargs)
-
+        
     def kill(self):
         for p in range(5):
             m = v.Vec2d(random.randint(50,100),0)
@@ -616,7 +627,7 @@ class Ufo(VectorSprite):
         VectorSprite.update(self, seconds)
 
     def paint(self, color):
-        tmp=pygame.Surface((200, 100))
+        tmp=pygame.Surface((100, 100))
         pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
         pygame.draw.arc(tmp, color, (0, -20, 100, 100), (math.pi*1.5)-(math.pi/4),(math.pi*1.5)+(math.pi/4), 2 )
         pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
@@ -690,8 +701,9 @@ class Rocket(VectorSprite):
     
     def __init__(self, **kwargs):
         self.readyToLaunchTime = 0
+        self.damage = 3
         VectorSprite.__init__(self, **kwargs)
-        self.damage = 100
+        
     
     def create_image(self):
         self.angle = 90
@@ -901,9 +913,17 @@ class PygView(object):
             pygame.quit
             sys.exit()
         self.level = 1
+        self.wave = 0
+        self.age = 0
         self.loadbackground()
+        # ------ joysticks ----
+        pygame.joystick.init()
+        self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        for j in self.joysticks:
+            j.init()
         # ------------------------------------
         self.paint()
+        self.new_wave()
 
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
@@ -950,12 +970,7 @@ class PygView(object):
         self.cannons = []
         nr = PygView.width // 200
         
-        # ------ joysticks ----
-        pygame.joystick.init()
-        self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
-        for j in self.joysticks:
-            j.init()
-        
+       
         # ----- add Gun Platforms -----
         for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
@@ -980,11 +995,20 @@ class PygView(object):
                                 cannonpos="middle", color=(255,0,0)))
         # ----- ufo, mothership ----
         #self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), layer=1)
-        self.mothership = Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50, layer=7)
+        #Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50, layer=7)
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
         self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
         self.mouse3 = Mouse(control="joystick1", color=(255,0,255))
+        
+        
+    def new_wave(self):
+        self.wave += 1
+        t = "Prepare for wave {}!".format(self.wave)
+        Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
+        
+        for m in range(self.wave):
+            Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
     
     def launchRocket(self, pos ):
         """launches the closet Rocket (x) from Ground toward target position x,y"""
@@ -1034,12 +1058,12 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    if event.key == pygame.K_h:
-                        Explosion()
-                    if event.key == pygame.K_1:
-                        Flytext(500,300, text="Hallo Alex", delay=0, duration=4, dy=-200)
-                    if event.key == pygame.K_2:
-                        Rocket()
+                    #if event.key == pygame.K_h:
+                    #    Explosion()
+                    #if event.key == pygame.K_1:
+                    #    Flytext(500,300, text="Hallo Alex", delay=0, duration=4, dy=-200)
+                    #if event.key == pygame.K_2:
+                    #    Rocket()
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
@@ -1202,7 +1226,9 @@ class PygView(object):
                         pygame.draw.line(self.screen,(r-a,g,b),
                                      mouse.tail[a-1],
                                      mouse.tail[a],10-a*10//10)
-            
+            # -------- new wave ? ------
+            if len(self.targetgroup) == 0:
+                self.new_wave()
             # -------- next frame -------------
             pygame.display.flip()
         pygame.mouse.set_visible(True)    
