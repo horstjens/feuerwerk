@@ -176,13 +176,26 @@ class Mouse(pygame.sprite.Sprite):
         
         if self.control == "mouse":
             self.x, self.y = pygame.mouse.get_pos()
-        
-        elif self.control == "keyboard":
+        elif self.control == "keyboard1":
+            pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_LSHIFT]:
+                delta = 9
+            else:
+                delta = 28
+            if pressed[pygame.K_w]:
+                self.y -= delta
+            if pressed[pygame.K_s]:
+                self.y += delta
+            if pressed[pygame.K_a]:
+                self.x -= delta
+            if pressed[pygame.K_d]:
+                self.x += delta
+        elif self.control == "keyboard2":
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_RSHIFT]:
-                delta = 2
-            else:
                 delta = 9
+            else:
+                delta = 28
             if pressed[pygame.K_UP]:
                 self.y -= delta
             if pressed[pygame.K_DOWN]:
@@ -998,9 +1011,8 @@ class PygView(object):
         #Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50, layer=7)
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
-        self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
-        self.mouse3 = Mouse(control="joystick1", color=(255,0,255))
-        
+        self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
+        self.mouse3 = Mouse(control="keyboardd2", color=(255,0,255))
         
     def new_wave(self):
         self.wave += 1
@@ -1049,7 +1061,7 @@ class PygView(object):
         #ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
         
         oldleft, oldmiddle, oldright  = False, False, False
-        
+        self.tet = 0
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -1058,6 +1070,40 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    if event.key == pygame.K_j and self.tet == 0:
+                        self.tet += 1
+                    if event.key == pygame.K_o and self.tet == 1:
+                        self.tet +=1
+                    if event.key == pygame.K_e and self.tet == 2:
+                        self.tet +=1
+                    if event.key == pygame.K_SPACE and self.tet == 3:
+                        self.tet +=1
+                    if event.key == pygame.K_i and self.tet == 4:
+                        self.tet += 1
+                    if event.key == pygame.K_s and self.tet == 5:
+                        self.tet +=1
+                    if event.key == pygame.K_SPACE and self.tet == 6:
+                        self.tet +=1
+                    if event.key == pygame.K_t and self.tet == 7:
+                        self.tet +=1
+                    if event.key == pygame.K_h and self.tet == 8:
+                        self.tet += 1
+                    if event.key == pygame.K_e and self.tet == 9:
+                        self.tet +=1
+                    if event.key == pygame.K_SPACE and self.tet == 10:
+                        self.tet +=1
+                    if event.key == pygame.K_b and self.tet == 11:
+                        self.tet +=1
+                    if event.key == pygame.K_e and self.tet == 12:
+                        self.tet += 1
+                    if event.key == pygame.K_s and self.tet == 13:
+                        self.tet +=1
+                    if event.key == pygame.K_t and self.tet == 14:
+                        self.tet +=1
+                    if self.tet == 15 :
+                        for r in range(1000):
+                            Explosion(pos = v.Vec2d(random.randint(0,1430),random.randint(0,800)),max_age = 6)
+                            self.tet = 0
                     #if event.key == pygame.K_h:
                     #    Explosion()
                     #if event.key == pygame.K_1:
@@ -1067,6 +1113,10 @@ class PygView(object):
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
+                    if event.key == pygame.K_c:
+                        self.launchRocket((self.mouse2.x, self.mouse2.y))
+                    if event.key == pygame.K_RCTRL:
+                        self.launchRocket((self.mouse3.x,self.mouse3.y))
                     #if event.key == pygame.K_u:
                     #    Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
@@ -1074,7 +1124,7 @@ class PygView(object):
             self.screen.blit(self.background, (0, 0))
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
-            if pressed_keys[pygame.K_LSHIFT]:
+            if pressed_keys[pygame.K_SPACE]:
                 # paint range circles for cannons
                 for p in self.platformgroup:
                     pygame.draw.circle(self.screen, (50,50,50),
