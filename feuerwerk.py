@@ -128,7 +128,7 @@ class Mouse(pygame.sprite.Sprite):
         self.tail=[]
         self.create_image()
         self.rect = self.image.get_rect()
-        self.control = control # "mouse" "keyboard"
+        self.control = control # "mouse" "keyboard1" "keyboard2"
         
         
         
@@ -177,7 +177,23 @@ class Mouse(pygame.sprite.Sprite):
         if self.control == "mouse":
             self.x, self.y = pygame.mouse.get_pos()
         
-        elif self.control == "keyboard":
+        elif self.control == "keyboard1":
+            pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_LSHIFT]:
+                delta = 2
+            else:
+                delta = 9
+            if pressed[pygame.K_w]:
+                self.y -= delta
+            if pressed[pygame.K_s]:
+                self.y += delta
+            if pressed[pygame.K_a]:
+                self.x -= delta
+            if pressed[pygame.K_d]:
+                self.x += delta
+            
+        
+        elif self.control == "keyboard2":
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_RSHIFT]:
                 delta = 2
@@ -998,9 +1014,10 @@ class PygView(object):
         #Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50, layer=7)
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
-        self.mouse2 = Mouse(control='keyboard', color=(255,255,0))
-        self.mouse3 = Mouse(control="joystick1", color=(255,0,255))
-        
+        self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
+        self.mouse3 = Mouse(control="keyboard2", color=(255,0,255))
+        self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
+        self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
         
     def new_wave(self):
         self.wave += 1
@@ -1067,6 +1084,10 @@ class PygView(object):
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
+                    if event.key == pygame.K_LCTRL:
+                        self.launchRocket((self.mouse2.x, self.mouse2.y))
+                    if event.key == pygame.K_RCTRL:
+                        self.launchRocket((self.mouse3.x, self.mouse3.y))
                     #if event.key == pygame.K_u:
                     #    Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
@@ -1074,12 +1095,18 @@ class PygView(object):
             self.screen.blit(self.background, (0, 0))
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
-            if pressed_keys[pygame.K_LSHIFT]:
+            if pressed_keys[pygame.K_SPACE]:
                 # paint range circles for cannons
                 for p in self.platformgroup:
                     pygame.draw.circle(self.screen, (50,50,50),
                            (int(p.pos.x), int(p.pos.y)),
                             p.maxrange,1)
+            
+            if pressed_keys[pygame.K_TAB]:
+                self.launchRocket((self.mouse2.x, self.mouse2.y))
+            if pressed_keys[pygame.K_RETURN]:
+                self.launchRocket((self.mouse3.x, self.mouse3.y))
+            
             # --- auto aim for cannons  ----
             for p in self.platformgroup:
             #for c in self.cannongroup:
@@ -1118,27 +1145,37 @@ class PygView(object):
             # ------ mouse handler ------
             
             left,middle,right = pygame.mouse.get_pressed()
+            
             if oldleft and not left:
                 self.launchRocket(pygame.mouse.get_pos())
             if right:
                 self.launchRocket(pygame.mouse.get_pos())
             
             oldleft, oldmiddle, oldright = left, middle, right  
+        
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
                 if number == 0:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
-                   #print(x,y)
-                   self.mouse3.x += x # *2 
-                   self.mouse3.y += y # *2 
+                   self.mouse4.x += x # *2 
+                   self.mouse4.y += y # *2 
                    buttons = j.get_numbuttons()
                    for b in range(buttons):
                        pushed = j.get_button( b )
                        if b == 0 and pushed:
-                            Rocket(random.choice(ground), pos3, ex=8)
-                       if b == 1 and pushed:
-                            Rocket(random.choice(ground), pos3, ex=9)
+                            launchRocket((self.mouse4.x, self.mouse4.y))
+                
+                if number == 1:
+                   x = j.get_axis(0)
+                   y = j.get_axis(1)
+                   self.mouse5.x += x # *2 
+                   self.mouse5.y += y # *2 
+                   buttons = j.get_numbuttons()
+                   for b in range(buttons):
+                       pushed = j.get_button( b )
+                       if b == 0 and pushed:
+                            launchRocket((self.mouse5.x, self.mouse5.y))
                        
             
            
