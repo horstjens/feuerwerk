@@ -1008,7 +1008,7 @@ class PygView(object):
         Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
         
         for m in range(self.wave):
-            Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
+            Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
     
     def launchRocket(self, pos ):
         """launches the closet Rocket (x) from Ground toward target position x,y"""
