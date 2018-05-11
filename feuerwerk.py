@@ -597,6 +597,7 @@ class Explosion(VectorSprite):
          self.rect=self.image.get_rect()
          self.rect.center=(self.pos.x, self.pos.y)
          self.radius+=1
+         #self.radius = 1+ int(self.age )
          
 class Ufo(VectorSprite):
 
@@ -744,6 +745,7 @@ class Rocket(VectorSprite):
                    gravity=v.Vec2d(0,4), max_age = 5)
         self.oldage = self.age
         VectorSprite.update(self, seconds)
+        # new rockets are stored offscreen 500 pixel below PygView.height
         if self.age > self.readyToLaunchTime and self.oldage < self.readyToLaunchTime:
             self.pos.y -= 500
         
@@ -997,9 +999,12 @@ class PygView(object):
             x = PygView.width // nr * c
             self.cities.append(City(
                  pos=v.Vec2d(x+100, PygView.height-50),citynr = c))
-            for dy in range(0, 61, 15):
-                Rocket(pos=v.Vec2d(x+100+0, 
-                       PygView.height-15-dy),
+            #for dy in range(0, 61, 15):
+            #    Rocket(pos=v.Vec2d(x+100+0, 
+            #           PygView.height-15-dy),
+            #           speed = 150, citynr = c, damage = 100)
+            for dx in range(50, 151, 20):
+                 Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
                        speed = 150, citynr = c, damage = 100)
         # ----- add Cannons ------
         for p in self.platforms:
@@ -1249,11 +1254,14 @@ class PygView(object):
                     c.readyToLaunchtime = c.age + 5
                     Flytext(c.pos.x, c.pos.y, "reloading", 
                             color=(0,200,0), duration = 5)
-                    for dy in range(0, 61, 15):
-                        Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy+500),
-                               speed=150, citynr = c.citynr, 
-                               readyToLaunchTime = 5, damage = 100)
-                
+                    #for dy in range(0, 61, 15):
+                    #    Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy+500),
+                    #           speed=150, citynr = c.citynr, 
+                    #           readyToLaunchTime = 5, damage = 100)
+                    for dx in range(50, 151, 20):
+                        Rocket(pos=v.Vec2d(c.pos.x-100+dx, c.pos.y+30+500),
+                               speed = 150, citynr = c.citynr, damage = 100,
+                               readyToLaunchTime = 5)
             
             # --- Martins verbesserter mousetail -----
             for mouse in self.mousegroup:
