@@ -25,6 +25,14 @@ import vectorclass2d as v  # vectorclass2d.py must be in same directory as this 
 import textscroller_vertical as ts
 
 
+def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
+    """returns pygame surface with text. You still need to blit the surface."""
+    myfont = pygame.font.SysFont(font, fontsize)
+    mytext = myfont.render(msg, True, fontcolor)
+    mytext = mytext.convert_alpha()
+    return mytext
+
+
 
 def draw_examples(background):
     """painting on the background surface"""
@@ -279,6 +287,37 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.move.y *= -1
         # update sprite position 
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
+
+class Flytext(pygame.sprite.Sprite):
+    def __init__(self, x, y, text="hallo", color=(255, 0, 0),
+                 dx=0, dy=-50, duration=2, acceleration_factor = 0.96, delay = 0, fontsize=22):
+        """a text flying upward and for a short time and disappearing"""
+        self._layer = 7  # order of sprite layers (before / behind other sprites)
+        pygame.sprite.Sprite.__init__(self, self.groups)  # THIS LINE IS IMPORTANT !!
+        self.text = text
+        self.r, self.g, self.b = color[0], color[1], color[2]
+        self.dx = dx
+        self.dy = dy
+        self.x, self.y = x, y
+        self.duration = duration  # duration of flight in seconds
+        self.acc = acceleration_factor  # if < 1, Text moves slower. if > 1, text moves faster.
+        self.image = make_text(self.text, (self.r, self.g, self.b), fontsize)  # font 22
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        self.time = 0 - delay
+
+    def update(self, seconds):
+        self.time += seconds
+        if self.time < 0:
+            self.rect.center = (-100,-100)
+        else:
+            self.y += self.dy * seconds
+            self.x += self.dx * seconds
+            self.dy *= self.acc  # slower and slower
+            self.dx *= self.acc
+            self.rect.center = (self.x, self.y)
+            if self.time > self.duration:
+                self.kill()      # remove Sprite from screen and from groups
         
 
 class Cannon(VectorSprite):
@@ -343,6 +382,30 @@ class Ball(VectorSprite):
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
         self.mask = pygame.mask.from_surface(self.image)
+class Wreck(VectorSprite):
+    
+    def update(self, seconds):
+        
+        if self.gravity is not None:
+            self.move += self.gravity * seconds
+        VectorSprite.update(self, seconds)
+        #Smoke(pos=v.Vec2d(self.pos.x, self.pos.y), 
+        #         color=(200,0,0), gravity=v.Vec2d(0, -3),
+        #         max_age=0.1+random.random()*2)
+        self.rotate(4)
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        c = ( random.randint(0,255),random.randint(0,255),random.randint(1,255) ) # blue
+        pointlist = []
+        for p in range(random.randint(5, 11)):
+            pointlist.append((random.randint(0,50),
+                              random.randint(0,50)))
+        pygame.draw.polygon(self.image, c, pointlist)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
 
 
 class Bouncer(VectorSprite):
@@ -558,6 +621,7 @@ class PygView(object):
         Block.groups = self.allgroup, self.blockgroup
         #Bullet.groups = self.allgroup, self.bulletgroup
         Cannon.groups = self.allgroup, self.cannongroup
+        Flytext.groups = self.allgroup
         Hwall.group = self.allgroup, self.wallgroup, self.wallgroup
         Vwallgroup = self.allgroup, self.wallgroup, self.vwallgroup
         VectorSprite.groups = self.allgroup
@@ -613,8 +677,8 @@ class PygView(object):
                               
         self.goal1 = Goal(layer=2, pos=v.Vec2d(0,y))
         self.goal2 = Goal(layer=2, pos=v.Vec2d(PygView.width,y))
-        self.bouncer1 = Bouncer(pos = v.Vec2d(800,50),move = v.Vec2d(5,0),color=(0,0,1), bounce_on_edge = True ,radius = 50, mass = 10000, static = True)
-        self.bouncer2 = Bouncer(pos = v.Vec2d(60,PygView.height),move = v.Vec2d(5,0),color=(0,0,1), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
+        self.bouncer1 = Bouncer(pos = v.Vec2d(800,0),move = v.Vec2d(5,0),color=(0,0,1), bounce_on_edge = True ,radius = 50, mass = 10000, static = True)
+        self.bouncer2 = Bouncer(pos = v.Vec2d(60,PygView.height),move = v.Vec2d(5,0),color=(0,0,1), bounce_on_edge = True ,radius = 50, mass = 10000, static = True)
         self.goalkeeper1 = Bouncer(pos = v.Vec2d(80, y), move = v.Vec2d(0,40), radius = 18, mass = 999999, static = True, color = (150,0,0))
         self.goalkeeper2 = Bouncer(pos = v.Vec2d(PygView.width-80, y), move = v.Vec2d(0,40), radius = 18, mass = 999999, static = True, color = (150,150,150))
         #self.bouncer3 = Bouncer(pos = v.Vec2d(1000,800),move = v.Vec2d(5,0), bounce_on_edge = True ,radius = 40, mass = 10000, static = True)
@@ -676,6 +740,15 @@ class PygView(object):
                     running = False 
                 # ------- pressed and released key ------
                 elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_9:
+                        self.player1.pos = v.Vec2d(self.width//2 - 300, self.height//2)
+                        self.player1.move = v.Vec2d(0,0)
+                    if event.key == pygame.K_8:
+                        self.player2.pos = v.Vec2d(self.width//2 +300, self.height//2)
+                        self.player2.move = v.Vec2d(0,0)
+                    if event.key == pygame.K_0:
+                        self.lazyball1.pos = v.Vec2d(self.width//2, self.height//2)
+                        self.lazyball1.move = v.Vec2d(0,0)
                     if event.key == pygame.K_ESCAPE:
                         running = False
                   #  if event.key == pygame.K_1:
@@ -685,7 +758,9 @@ class PygView(object):
                       #  Troll(pos=p, move=m.normalized()*800+self.player1.move, radius=10,color=(1,1,1),mass=5000, max_age=10)
                        # self.player1.move+=m.normalized()*-100
                     #if event.key == pygame.K_b:
-                    #    Ball(pos=v.Vec2d(self.player1.pos.x,self.player1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.800, bounce_on_edge=True) # add small balls!
+                    #    Ball(pos=v.Vec2d(self.player1.pos.x,self.player1.pos.y), move=v.Vec2d(0,0), radius=5, friction=0.800, bounce_on_edge=True) # add small ball
+                        
+                        
                     if event.key == pygame.K_c:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
@@ -714,8 +789,8 @@ class PygView(object):
                    #x1= j.get_axis(2)
                    #y1= j.get_axis(1)
                    #print(x,y)
-                   self.player1.move.x += x  *6
-                   self.player1.move.y += y  *6
+                   self.player1.move.x += x  *10
+                   self.player1.move.y += y  *10
                    #if x1 > 0:
                    #    self.cannon1.rotate(5)
                    #elif x1<0:
@@ -733,12 +808,12 @@ class PygView(object):
                             #Rocket(random.choice(ground), pos3, ex=9)
                        if b == 1 and pushed:
                            if self.player1.age < self.player1.readyToFire:
-                               print("wait for reload")
+                               Flytext(50, 150, "Realoding", color = (0,0,1), fontsize = 30)
                            else:
                                m = v.Vec2d(60,0) # lenght of cannon
                                m = m.rotated(-self.cannon1.angle)
                                p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                               Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                               Ball(pos=p, move=m.normalized()*500+self.player1.move, radius=10,color=(255,0,0),mass=200, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
                                #knockbackeffect
                                self.player1.move+=m.normalized()*-10
                                self.player1.readyToFire = self.player1.age + 0.3
@@ -770,7 +845,7 @@ class PygView(object):
                             #Rocket(random.choice(ground), pos3, ex=9)
                        if b == 1 and pushed:
                            if self.player2.age < self.player2.readyToFire:
-                               print("wait for reload")
+                               Flytext(PygView.width-50,150, "Realoding", color = (0,0,1), fontsize = 30)
                            else:
                                m = v.Vec2d(60,0) # lenght of cannon
                                m = m.rotated(-self.cannon3.angle)
@@ -811,11 +886,11 @@ class PygView(object):
                     vectordiff=c.pos-target.pos
                     c.set_angle(-vectordiff.get_angle()-180)
                     #----auto shoot
-                    if random.random()<0.0005:
+                    if random.random()<0.02:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-c.angle)
                         p = v.Vec2d(c.pos.x, c.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*200+c.move,mass=500,radius=5, max_distance = c.max_distance-60, color=c.color)
+                        Ball(pos=p, move=m.normalized()*150+c.move,mass=200,radius=5, max_distance = c.max_distance-60, color=c.color)
                     
          
           
@@ -887,11 +962,23 @@ class PygView(object):
             g = pygame.sprite.spritecollideany(self.lazyball1, self.goalgroup)
             if g is not None:
                 if g.number == self.goal1.number:
+                    for p in range(50):
+                        m = v.Vec2d(random.randint(50,100),0)
+                        m.rotate(random.randint(0,360))
+                        Wreck(pos=v.Vec2d(self.lazyball1.pos.x,self.lazyball1.pos.y),
+                        move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
                     self.p2score += 1
+                    Flytext(PygView.width// 2, PygView.height// 2, "Goaaaaaal!!!", color = (100,100,100), fontsize = 99)
                     #print(g)
                     #print("collision! x {}     y {}".format(self.lazyball1.pos.x, self.lazyball1.pos.y))
                 else:
+                    for p in range(1000):
+                        m = v.Vec2d(random.randint(50,100),0)
+                        m.rotate(random.randint(0,360))
+                        Wreck(pos=v.Vec2d(self.lazyball1.pos.x,self.lazyball1.pos.y),
+                        move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
                     self.p1score += 1
+                    Flytext(PygView.width// 2, PygView.height// 2, "Goaaaaaal!!!", color = (100,0,0), fontsize = 99)
                 #--reset lazyball ---
                 self.lazyball1.pos = v.Vec2d(self.width//2, self.height//2)
                 self.lazyball1.move = v.Vec2d(0,0)
@@ -958,4 +1045,3 @@ if __name__ == '__main__':
     PygView(1400,800, 60, tolerance=5).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
 #menu1.PygView.run()
-
