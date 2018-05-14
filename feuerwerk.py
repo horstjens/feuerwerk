@@ -1080,6 +1080,27 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    if event.key == pygame.K_h:
+                        tet = 1
+                        h = 1
+                    if event.key == pygame.K_o:
+                        tet += 1
+                        o = True
+                    if event.key == pygame.K_p:
+                        tet += 1
+                        p = True
+                    if event.key == pygame.K_u:
+                        tet += 1
+                        u = True
+                    if event.key == pygame.K_i:
+                        tet += 1
+                        i = True
+                    if event.key == pygame.K_y:
+                        tet += 1
+                        y = True
+                    if tet > 7 and h == 1 and o and p and u and i and y:
+                        for r in range(1000):
+                            Explosion(pos = v.Vec2d(random.randint(0,1430),random.randint(0,800)),max_age = 6)
                     #if event.key == pygame.K_h:
                     #    Explosion()
                     #if event.key == pygame.K_1:
