@@ -1231,25 +1231,35 @@ class PygView(object):
                 if number == 0:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
-                   self.mouse4.x += x # *2 
-                   self.mouse4.y += y # *2 
+                   self.mouse4.x += x * 20 # *2 
+                   self.mouse4.y += y * 20 # *2 
                    buttons = j.get_numbuttons()
+                   oldpushed = False
                    for b in range(buttons):
                        pushed = j.get_button( b )
-                       if b == 0 and pushed:
-                            launchRocket((self.mouse4.x, self.mouse4.y))
-                
+                       if b == 0:
+                          if oldpushed and not pushed:
+                              self.launchRocket((self.mouse4.x, self.mouse4.y))
+                          oldpushed = pushed
+                       elif b==1 and pushed:
+                           self.launchRocket((self.mouse4.x, self.mouse4.y))
+                        
                 if number == 1:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
-                   self.mouse5.x += x # *2 
-                   self.mouse5.y += y # *2 
+                   self.mouse5.x += x *20 # *2 
+                   self.mouse5.y += y *20 # *2 
                    buttons = j.get_numbuttons()
+                   oldpushed = False
                    for b in range(buttons):
                        pushed = j.get_button( b )
-                       if b == 0 and pushed:
-                            launchRocket((self.mouse5.x, self.mouse5.y))
-                       
+                       if b == 0:
+                          if oldpushed and not pushed:
+                              self.launchRocket((self.mouse5.x, self.mouse5.y))
+                          oldpushed = pushed
+                       elif b==1 and pushed:
+                           self.launchRocket((self.mouse5.x, self.mouse5.y))
+                        
             
            
             pos1 = v.Vec2d(pygame.mouse.get_pos())
