@@ -509,6 +509,7 @@ class Mothership(VectorSprite):
         #    m.rotate(random.randint(-90,90))
         #    Bomb(pos=self.pos, move=m,
         #         gravity = v.Vec2d(0,0.7))
+        
         #------------------chance to spawn Ufo-------------------
         if random.random()<  self.ufo_spawn_rate:
             Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
@@ -598,6 +599,46 @@ class Explosion(VectorSprite):
          self.rect.center=(self.pos.x, self.pos.y)
          self.radius+=1
          #self.radius = 1+ int(self.age )
+
+class Kamikaze(VectorSprite):
+    
+    def __init__(self, **kwargs):
+        self.radius = 50
+        self.hitpoints=250
+        VectorSprite.__init__(self, **kwargs)
+    
+    def paint(self, color):
+        tmp=pygame.Surface((100, 100))
+        pygame.draw.polygon(tmp, color, 
+          [(40,20), (50,20), ()], 0)
+        #pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
+        #pygame.draw.arc(tmp, color, (0, -20, 100, 100), (math.pi*1.5)-(math.pi/4),(math.pi*1.5)+(math.pi/4), 2 )
+        #pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
+        #pygame.draw.line(tmp, color, (10, 80), (25, 73),  2)
+        #pygame.draw.line(tmp, color, (85, 80), (70, 73),  2)
+        #pygame.draw.ellipse(tmp, (41, 154, 54), (25, 23, 50, 50), 0)
+        #pygame.draw.ellipse(tmp, color, (0, 50, 100, 30), 0)
+        tmp.set_colorkey((0,0,0))
+        tmp.convert_alpha()
+        
+        return tmp
+
+    def create_image(self):
+        #---------image1------
+        self.image1=self.paint((210, 51, 177))
+        #--------image2
+        self.image2 = self.paint((180, 80, 157))
+        #-------image3
+        self.image3 = self.paint((160, 100, 137))
+        #---------------image4
+        self.image4=self.paint((140, 140, 117))
+        #--------------image5
+        self.image5=self.paint((166, 0, 255))
+        #------------------
+        self.images = [ self.image1, self.image2, self.image3, self.image4]
+        self.image = self.images[0]
+        self.rect= self.image.get_rect()
+
          
 class Ufo(VectorSprite):
 
@@ -624,6 +665,14 @@ class Ufo(VectorSprite):
             m.rotate(random.randint(-90,90))
             Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
                  gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
+        # --- chance to fire Rocket ---
+        if random.random() < 0.01:
+            m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
+            distance = m.get_length()
+            m = m.normalized() 
+            Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 50, 
+                   citynr = None, max_distance = distance,  color=(0,128,0))
+        
         # --- chance to change move vector ---
         if random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
@@ -725,7 +774,9 @@ class Rocket(VectorSprite):
     def create_image(self):
         self.angle = 90
         self.image = pygame.Surface((20,10))
-        pygame.draw.polygon(self.image, (255,156,0), [(0,0),
+        #pygame.draw.polygon(self.image, (255,156,0), [(0,0),
+        #    (5,0), (20,5), (5,10), (0,10), (5,5)])
+        pygame.draw.polygon(self.image, self.color, [(0,0),
             (5,0), (20,5), (5,10), (0,10), (5,5)])
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
@@ -740,9 +791,13 @@ class Rocket(VectorSprite):
         if self.move.get_length() > 0:
             self.set_angle(-self.move.get_angle())
             # --- Smoke ---
+            mage = 5 
+            if self.color !=  (255,156,0):
+                mage = 1.5 # rocket from ufo
+                #print("green rocket", self.color)
             if random.random() < 0.2 and self.age > 0.1:
                 Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
-                   gravity=v.Vec2d(0,4), max_age = 5)
+                   gravity=v.Vec2d(0,4), max_age = mage)
         self.oldage = self.age
         VectorSprite.update(self, seconds)
         # new rockets are stored offscreen 500 pixel below PygView.height
@@ -1005,7 +1060,7 @@ class PygView(object):
             #           speed = 150, citynr = c, damage = 100)
             for dx in range(50, 151, 20):
                  Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
-                       speed = 150, citynr = c, damage = 100)
+                       speed = 150, citynr = c, damage = 100, color=(255,156,0))
         # ----- add Cannons ------
         for p in self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
@@ -1071,7 +1126,7 @@ class PygView(object):
         #ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
         
         oldleft, oldmiddle, oldright  = False, False, False
-        
+        self.snipertarget = None
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -1086,6 +1141,10 @@ class PygView(object):
                     #    Flytext(500,300, text="Hallo Alex", delay=0, duration=4, dy=-200)
                     #if event.key == pygame.K_2:
                     #    Rocket()
+                    if event.key == pygame.K_1:
+                        if len(self.ufogroup)>0:
+                            self.snipertarget = random.choice(self.ufogroup.sprites())
+                            
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
@@ -1098,6 +1157,15 @@ class PygView(object):
 
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
+            # -------- sniper beam --------
+            if self.snipertarget is not None:
+                if self.snipertarget.hitpoints > 0:
+                    pygame.draw.line(self.screen, (0,0, random.randint(200,250)),
+                          (100, PygView.height-50), (self.snipertarget.pos.x, 
+                           self.snipertarget.pos.y), random.randint(1,4))
+                    self.snipertarget.hitpoints -= 1
+                else:
+                    self.snipertarget is None
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             if pressed_keys[pygame.K_SPACE]:
@@ -1261,7 +1329,7 @@ class PygView(object):
                     for dx in range(50, 151, 20):
                         Rocket(pos=v.Vec2d(c.pos.x-100+dx, c.pos.y+30+500),
                                speed = 150, citynr = c.citynr, damage = 100,
-                               readyToLaunchTime = 5)
+                               readyToLaunchTime = 5, color=(255,156,0))
             
             # --- Martins verbesserter mousetail -----
             for mouse in self.mousegroup:
