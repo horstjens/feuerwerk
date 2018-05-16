@@ -273,6 +273,7 @@ class VectorSprite(pygame.sprite.Sprite):
         if "height" not in kwargs:
             self.height = self.radius * 2
         if "color" not in kwargs:
+            #self.color = None
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         if "hitpoints" not in kwargs:
             self.hitpoints = 100
@@ -660,18 +661,18 @@ class Ufo(VectorSprite):
         i = self.age *3 % len(self.images)
         self.image = self.images[int(i)]
         # --- chance to throw bomb ---
-        if random.random() < 0.015:
+        if random.random() < PygView.bombchance: #0.015:
             m = v.Vec2d(0, -random.random()*75)
             m.rotate(random.randint(-90,90))
             Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
                  gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         # --- chance to fire Rocket ---
-        if random.random() < 0.01:
+        if random.random() < PygView.rocketchance: #0.01:
             m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
             distance = m.get_length()
             m = m.normalized() 
-            Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 50, 
-                   citynr = None, max_distance = distance,  color=(0,128,0))
+            Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
+                   citynr = None, max_distance = distance, mass=500, hitpoints=20)
         
         # --- chance to change move vector ---
         if random.random() < 0.05:
@@ -767,8 +768,12 @@ class Rocket(VectorSprite):
     
     def __init__(self, **kwargs):
         self.readyToLaunchTime = 0
-        self.damage = 3
         VectorSprite.__init__(self, **kwargs)
+        
+        self.damage = 3
+        self.color = (255,156,0)
+        self.create_image()
+        
         
     
     def create_image(self):
@@ -791,22 +796,43 @@ class Rocket(VectorSprite):
         if self.move.get_length() > 0:
             self.set_angle(-self.move.get_angle())
             # --- Smoke ---
-            mage = 5 
-            if self.color !=  (255,156,0):
-                mage = 1.5 # rocket from ufo
-                #print("green rocket", self.color)
             if random.random() < 0.2 and self.age > 0.1:
                 Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
-                   gravity=v.Vec2d(0,4), max_age = mage)
+                   gravity=v.Vec2d(0,4), max_age = 4)
         self.oldage = self.age
         VectorSprite.update(self, seconds)
         # new rockets are stored offscreen 500 pixel below PygView.height
+        #print("age, ready, old",self.age, self.readyToLaunchTime, self.oldage)
         if self.age > self.readyToLaunchTime and self.oldage < self.readyToLaunchTime:
             self.pos.y -= 500
         
     def kill(self):
         Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255), damage = self.damage)
         VectorSprite.kill(self)    
+
+class Evil_Rocket(Rocket):
+    
+    def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+        self.readyToLaunchTime = 0
+        self.damage = 1
+        self.color = (0,128,0)
+        self.create_image()
+        
+        
+    def update(self, seconds):
+        # --- speed limit ---
+        if self.move.get_length() != self.speed:
+            self.move = self.move.normalized() * self.speed
+        if self.move.get_length() > 0:
+            self.set_angle(-self.move.get_angle())
+            # --- Smoke ---
+            if random.random() < 0.4 and self.age > 0.05:
+                Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
+                   gravity=v.Vec2d(0,0), max_age = 1.5)
+        self.oldage = self.age
+        VectorSprite.update(self, seconds)
+        
  
 class Tracer(VectorSprite): 
     
@@ -986,6 +1012,8 @@ class PygView(object):
             pygame.quit
             sys.exit()
         self.level = 1
+        PygView.bombchance = 0.015
+        PygView.rocketchance = 0.001
         self.wave = 0
         self.age = 0
         self.loadbackground()
@@ -1015,8 +1043,10 @@ class PygView(object):
         self.tracergroup = pygame.sprite.Group()
         self.cannongroup = pygame.sprite.Group()
         #self.goalgroup = pygame.sprite.Group()
+        self.dangergroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
+        self.evilrocketgroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
@@ -1030,10 +1060,11 @@ class PygView(object):
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup
         Rocket.groups = self.allgroup, self.rocketgroup
+        Evil_Rocket.groups = self.allgroup, self.targetgroup, self.evilrocketgroup, self.dangergroup
         VectorSprite.groups = self.allgroup
         GunPlatform.groups = self.allgroup, self.platformgroup
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
-        Bomb.groups = self.allgroup, self.targetgroup, self.bombgroup 
+        Bomb.groups = self.allgroup, self.targetgroup, self.bombgroup , self.dangergroup
         Flytext.groups = self.allgroup
         Mothership.groups = self.allgroup, self.ufogroup, self.targetgroup
         Explosion.groups= self.allgroup, self.explosiongroup
@@ -1060,7 +1091,7 @@ class PygView(object):
             #           speed = 150, citynr = c, damage = 100)
             for dx in range(50, 151, 20):
                  Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
-                       speed = 150, citynr = c, damage = 100, color=(255,156,0))
+                       speed = 150, citynr = c, damage = 100 )
         # ----- add Cannons ------
         for p in self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
@@ -1081,6 +1112,11 @@ class PygView(object):
         
     def new_wave(self):
         self.wave += 1
+        #print("------new level...-------")
+        #print("bombchance, rocketchance", PygView.bombchance, PygView.rocketchance)
+        PygView.bombchance *= 1.5
+        PygView.rocketchance *= 1.5
+        #print("bombchance, rocketchance", PygView.bombchance, PygView.rocketchance)
         t = "Prepare for wave {}!".format(self.wave)
         Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
         
@@ -1142,8 +1178,8 @@ class PygView(object):
                     #if event.key == pygame.K_2:
                     #    Rocket()
                     if event.key == pygame.K_1:
-                        if len(self.ufogroup)>0:
-                            self.snipertarget = random.choice(self.ufogroup.sprites())
+                        if len(self.dangergroup)>0:
+                            self.snipertarget = random.choice(self.dangergroup.sprites())
                             
                     if event.key == pygame.K_b:
                         self.level += 1
@@ -1285,7 +1321,7 @@ class PygView(object):
                              False, pygame.sprite.collide_circle)
                 for t in crashgroup:
                     t.hitpoints -= e.damage
-                    print(e.damage)
+                    #print(e.damage)
                     if random.random() < 0.99:
                         Fire(pos = t.pos, max_age=3, bossnumber=t.number)
             
@@ -1301,17 +1337,22 @@ class PygView(object):
                                  max_age = 0.3)
                    b.kill()
             # -------- collision detection between bomb and city -----------
-            for c in self.citygroup:
-                crashgroup = pygame.sprite.spritecollide(c, self.bombgroup, False, 
-                             pygame.sprite.collide_mask)
-                for b in crashgroup:
-                    c.pos.y += 5 # city sink into ground
-                    c.hitpoints -= b.damage
-                    Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
-                    b.kill()
-                    Fire(pos=v.Vec2d(c.pos.x + random.randint(-50,50),
-                                     c.pos.y + random.randint(-20,20)),
-                                     max_age= 10)
+            for g in [self.bombgroup, self.evilrocketgroup]:
+                for c in self.citygroup:
+                    crashgroup = pygame.sprite.spritecollide(c, g, False, 
+                                 pygame.sprite.collide_mask)
+                    for b in crashgroup:
+                        c.pos.y += 5 # city sink into ground
+                        c.hitpoints -= b.damage
+                        Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
+                        b.kill()
+                        Fire(pos=v.Vec2d(c.pos.x + random.randint(-50,50),
+                                         c.pos.y + random.randint(-20,20)),
+                                         max_age= 10)
+                
+            
+            
+            
             # --------- collision detection between ball and other balls
             #for ball in self.ballgroup:
             #    crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
@@ -1339,7 +1380,7 @@ class PygView(object):
                     for dx in range(50, 151, 20):
                         Rocket(pos=v.Vec2d(c.pos.x-100+dx, c.pos.y+30+500),
                                speed = 150, citynr = c.citynr, damage = 100,
-                               readyToLaunchTime = 5, color=(255,156,0))
+                               readyToLaunchTime = 5)
             
             # --- Martins verbesserter mousetail -----
             for mouse in self.mousegroup:
