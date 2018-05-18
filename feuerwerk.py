@@ -246,20 +246,32 @@ class VectorSprite(pygame.sprite.Sprite):
     numbers = {} # { number, Sprite }
 
     def __init__(self, **kwargs):
-        """create a (black) surface and paint a blue ball on it"""
+        self._default_parameters(**kwargs)
+        self._overwrite_parameters()
+        pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
+        self.number = VectorSprite.number # unique number for each sprite
+        VectorSprite.number += 1
+        VectorSprite.numbers[self.number] = self
+        self.create_image()
+        self.distance_traveled = 0 # in pixel
+        self.rect.center = (-300,-300) # avoid blinking image in topleft corner
+        if self.angle != 0:
+            self.set_angle(self.angle)
+
+    def _overwrite_parameters(self):
+        """change parameters before create_image is called""" 
+        pass
+        
+    def _default_parameters(self, **kwargs):    
+        """get unlimited named arguments and turn them into attributes
+           default values for missing keywords"""
+           
         for key, arg in kwargs.items():
             setattr(self, key, arg)
         if "layer" not in kwargs:
             self._layer = 4
         else:
             self._layer = self.layer
-        #self._layer = layer   # pygame Sprite layer
-        pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
-        self.number = VectorSprite.number # unique number for each sprite
-        VectorSprite.number += 1
-        VectorSprite.numbers[self.number] = self
-        # get unlimited named arguments and turn them into attributes
-        # --- default values for missing keywords ----
         if "static" not in kwargs:
             self.static = False
         if "pos" not in kwargs:
@@ -316,20 +328,13 @@ class VectorSprite(pygame.sprite.Sprite):
             self.speed = None
         if "age" not in kwargs:
             self.age = 0 # age in seconds
-        # ---
-        self.distance_traveled = 0 # in pixel
-        self.create_image()
-        self.rect.center = (-300,-300) # avoid blinking image in topleft corner
-        if self.angle != 0:
-            self.set_angle(self.angle)
+       
 
     def kill(self):
         if self.number in self.numbers:
            del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
         pygame.sprite.Sprite.kill(self)
 
-    def init2(self):
-        pass # for subclasses
 
     def create_image(self):
         if self.picture is not None:
@@ -446,6 +451,9 @@ class Wreck(VectorSprite):
 
 class Fire(VectorSprite):
     
+    def _overwrite_parameters(self):
+        self._layer = 8
+    
     def create_image(self):
         self.image = pygame.Surface((10,10))
         c = ( random.randint(225, 255),
@@ -494,6 +502,9 @@ class Mothership(VectorSprite):
         self.radius = 100
         self.hitpoints=1000
         VectorSprite.__init__(self, **kwargs)
+        
+    def _overwrite_parameters(self):
+        self._layer =  0
         
     def update(self, seconds):
         if self.age < 0:
@@ -569,6 +580,9 @@ class Mothership(VectorSprite):
 
 
 class Explosion(VectorSprite):
+
+    def _overwrite_parameters(self):
+        self._layer = 2
 
     def create_image(self):
         self.image=pygame.Surface((self.radius*2, self.radius*2))
@@ -647,6 +661,10 @@ class Ufo(VectorSprite):
         self.radius = 50
         self.hitpoints=50
         VectorSprite.__init__(self, **kwargs)
+
+    def _overwrite_parameters(self):
+        self._layer =  1
+        #print("ufo hat layer 1")
         
     def kill(self):
         for p in range(5):
@@ -726,9 +744,11 @@ class City(VectorSprite):
 
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
-        self.hitpoints = 10000
+        self.hitpoints = 100 #10000
         self.readyToLaunchTime = 0 # age when rockets are done with reloading
-        
+    
+    def _overwrite_parameters(self):
+        self._layer = 0         
 
     def update(self, seconds):
         # --- animate ---
@@ -774,7 +794,8 @@ class Rocket(VectorSprite):
         self.color = (255,156,0)
         self.create_image()
         
-        
+    def _overwrite_parameters(self):
+        self._layer = 1    
     
     def create_image(self):
         self.angle = 90
@@ -805,9 +826,10 @@ class Rocket(VectorSprite):
         #print("age, ready, old",self.age, self.readyToLaunchTime, self.oldage)
         if self.age > self.readyToLaunchTime and self.oldage < self.readyToLaunchTime:
             self.pos.y -= 500
+           
         
     def kill(self):
-        Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=0.6, color=(200,255,255), damage = self.damage)
+        Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=2.1, color=(200,255,255), damage = self.damage)
         VectorSprite.kill(self)    
 
 class Evil_Rocket(Rocket):
@@ -878,6 +900,9 @@ class GunPlatform(VectorSprite):
         VectorSprite.__init__(self, **kwargs)
         if "maxrange" not in kwargs:
             self.maxrange = 400
+
+    def _overwrite_parameters(self):
+        self._layer = -1
 
     def create_image(self):
         self.image = pygame.Surface((100,200))
@@ -1043,8 +1068,9 @@ class PygView(object):
         self.tracergroup = pygame.sprite.Group()
         self.cannongroup = pygame.sprite.Group()
         #self.goalgroup = pygame.sprite.Group()
-        self.dangergroup = pygame.sprite.Group()
+        self.dangergroup = pygame.sprite.Group() # rockets and bombs
         self.citygroup = pygame.sprite.Group()
+        self.protectorgroup = pygame.sprite.Group() # cities and gunplatforms
         self.rocketgroup = pygame.sprite.Group()
         self.evilrocketgroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
@@ -1058,11 +1084,11 @@ class PygView(object):
         #Bullet.groups = self.allgroup, self.bulletgroup
         Mouse.groups = self.allgroup, self.mousegroup
         Cannon.groups = self.allgroup, self.cannongroup
-        City.groups = self.allgroup, self.citygroup
+        City.groups = self.allgroup, self.citygroup, self.protectorgroup
         Rocket.groups = self.allgroup, self.rocketgroup
         Evil_Rocket.groups = self.allgroup, self.targetgroup, self.evilrocketgroup, self.dangergroup
         VectorSprite.groups = self.allgroup
-        GunPlatform.groups = self.allgroup, self.platformgroup
+        GunPlatform.groups = self.allgroup, self.platformgroup, self.protectorgroup
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
         Bomb.groups = self.allgroup, self.targetgroup, self.bombgroup , self.dangergroup
         Flytext.groups = self.allgroup
@@ -1070,7 +1096,7 @@ class PygView(object):
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
         self.cities = []
-        self.platforms = []
+        #self.platforms = []
         self.cannons = []
         nr = PygView.width // 200
         
@@ -1078,8 +1104,8 @@ class PygView(object):
         # ----- add Gun Platforms -----
         for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
-            self.platforms.append(GunPlatform(
-                 pos=v.Vec2d(x, PygView.height-100)))
+            #self.platforms.append(
+            GunPlatform(pos=v.Vec2d(x, PygView.height-100)) # +random.randint(0,50))))
         # ------ add Cities -------
         for c in range(nr):
             x = PygView.width // nr * c
@@ -1093,7 +1119,7 @@ class PygView(object):
                  Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
                        speed = 150, citynr = c, damage = 100 )
         # ----- add Cannons ------
-        for p in self.platforms:
+        for p in self.platformgroup: #self.platforms:
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
                                 cannonpos="upper", color=(255,0,0)))
             self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
@@ -1321,8 +1347,8 @@ class PygView(object):
                              False, pygame.sprite.collide_circle)
                 for t in crashgroup:
                     t.hitpoints -= e.damage
-                    #print(e.damage)
-                    if random.random() < 0.99:
+                    print("target {} took {} damage, has {} hp left".format(t, e.damage, t.hitpoints))
+                    if random.random() < 0.5:
                         Fire(pos = t.pos, max_age=3, bossnumber=t.number)
             
             
@@ -1336,21 +1362,36 @@ class PygView(object):
                        Explosion(pos=v.Vec2d(t.pos.x, t.pos.y),
                                  max_age = 0.3)
                    b.kill()
-            # -------- collision detection between bomb and city -----------
-            for g in [self.bombgroup, self.evilrocketgroup]:
-                for c in self.citygroup:
-                    crashgroup = pygame.sprite.spritecollide(c, g, False, 
-                                 pygame.sprite.collide_mask)
-                    for b in crashgroup:
-                        c.pos.y += 5 # city sink into ground
-                        c.hitpoints -= b.damage
+            # ---- collision detection between bomb+rocket (danger) and city+platform (protector) ------- 
+            for c in self.protectorgroup: # city and platform
+                crashgroup = pygame.sprite.spritecollide(c, self.dangergroup, False, 
+                             pygame.sprite.collide_mask)
+                for b in crashgroup:
+                    if c in self.citygroup:
+                        sink = 1
+                    elif c in self.platformgroup:
+                        sink = 10
+                        # sink also cannons
+                        #print("gunplatform hit!")
+                        for cannon in self.cannongroup:
+                            if cannon.platform == c:
+                                cannon.pos.y-= sink
+                    c.pos.y += sink # city/platform sink into ground
+                    c.hitpoints -= b.damage
+                    # --- city dead ? ----
+                    if c.hitpoints < 1:
+                    #if c.pos.y < PygView.height + 50:
+                        # supernova
+                        Explosion(pos=v.Vec2d(c.pos.x, c.pos.y), max_age = 10)
+                        c.kill()
+                    else:
                         Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
-                        b.kill()
                         Fire(pos=v.Vec2d(c.pos.x + random.randint(-50,50),
-                                         c.pos.y + random.randint(-20,20)),
-                                         max_age= 10)
-                
-            
+                                     c.pos.y + random.randint(-20,20)),
+                                     max_age= 10)
+                    b.kill()
+        
+
             
             
             # --------- collision detection between ball and other balls
@@ -1378,7 +1419,7 @@ class PygView(object):
                     #           speed=150, citynr = c.citynr, 
                     #           readyToLaunchTime = 5, damage = 100)
                     for dx in range(50, 151, 20):
-                        Rocket(pos=v.Vec2d(c.pos.x-100+dx, c.pos.y+30+500),
+                        Rocket(pos=v.Vec2d(c.pos.x-100+dx, PygView.height-15 + 500),
                                speed = 150, citynr = c.citynr, damage = 100,
                                readyToLaunchTime = 5)
             
