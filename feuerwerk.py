@@ -300,8 +300,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.sticky_with_boss = False
         if "mass" not in kwargs:
             self.mass = 15
-        if "friction" not in kwargs:
-            self.friction = None
+        #if "friction" not in kwargs:
+        #    self.friction = None
         if "upkey" not in kwargs:
             self.upkey = None
         if "downkey" not in kwargs:
@@ -370,8 +370,8 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos = v.Vec2d(boss.pos.x, boss.pos.y)
                 #print("cannon move")
         self.pos += self.move * seconds
-        if self.friction is not None:
-            self.move *= self.friction # friction between 1.0 and 0.1
+        #if self.friction is not None:
+        #    self.move *= self.friction # friction between 1.0 and 0.1
         self.distance_traveled += self.move.length * seconds
         self.age += seconds
         # ---- bounce / kill on screen edge ----
@@ -968,7 +968,7 @@ class Ball(VectorSprite):
         if self.rightkey is not None:
             if pressedkeys[self.rightkey]:
                 self.move.x += 5
-        self.move *= PygView.friction
+        #self.move *= PygView.friction
         
     def create_image(self):
         self.image = pygame.Surface((self.width,self.height))
@@ -986,7 +986,7 @@ class PygView(object):
     width = 0
     height = 0
 
-    def __init__(self, width=640, height=400, fps=30, friction=0.995, gametime=120):
+    def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
@@ -997,9 +997,9 @@ class PygView(object):
         self.background.fill((255,255,255)) # fill background white
         self.clock = pygame.time.Clock()
         self.fps = fps
-        PygView.friction = friction
+        #PygView.friction = friction
         self.playtime = 0.0
-        self.gametime = gametime
+        #self.gametime = gametime
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
         for root, dirs, files in os.walk("data"):
@@ -1286,10 +1286,10 @@ class PygView(object):
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
-            self.gametime -= seconds
+            #self.gametime -= seconds
             # write text below sprites
-            write(self.screen, "FPS: {:6.3}  GAMETIME: {:6.4} sec FRICTION: {:6.3}".format(
-                self.clock.get_fps(), round(self.gametime,1), PygView.friction), x=10, y=10)
+            write(self.screen, "FPS: {:8.3}".format(
+                self.clock.get_fps() ), x=10, y=10)
 
             self.allgroup.update(seconds) # would also work with ballgroup
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
@@ -1388,4 +1388,4 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1430,800, friction=0.99, gametime=90).run() # try PygView(800,600).run()
+    PygView(1430,800).run() # try PygView(800,600).run()
