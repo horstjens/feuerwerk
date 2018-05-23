@@ -4,9 +4,8 @@ author: Horst JENS
 email: horstjens@gmail.com
 contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
-idea: template to show how to move pygames Sprites, simple physic and
-collision detection between sprite groups. Also Subclassing and super.
-this example is tested using python 3.4 and pygame
+download: 
+idea: defend cities against aliens
 """
 import pygame
 import math
@@ -130,13 +129,9 @@ class Mouse(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.control = control # "mouse" "keyboard1" "keyboard2"
         
-        
-        
     def create_image(self):
         
-        self.image = pygame.surface.Surface((self.radius*2,
-                                             self.radius*2))
-
+        self.image = pygame.surface.Surface((self.radius*2, self.radius*2))
         delta1 = 12.5
         delta2 = 25
         w = self.radius*2 / 100.0
@@ -173,10 +168,8 @@ class Mouse(pygame.sprite.Sprite):
         self.rect.center = self.x, self.y
         
     def update(self, seconds):
-        
         if self.control == "mouse":
             self.x, self.y = pygame.mouse.get_pos()
-        
         elif self.control == "keyboard1":
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_LSHIFT]:
@@ -191,8 +184,6 @@ class Mouse(pygame.sprite.Sprite):
                 self.x -= delta
             if pressed[pygame.K_d]:
                 self.x += delta
-            
-        
         elif self.control == "keyboard2":
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_RSHIFT]:
@@ -207,14 +198,10 @@ class Mouse(pygame.sprite.Sprite):
                 self.x -= delta
             if pressed[pygame.K_RIGHT]:
                 self.x += delta
-            
-                
-        
         elif self.control == "joystick1":
             pass 
         elif self.control == "joystick2":
             pass
-            
         if self.x < 0:
             self.x = 0
         elif self.x > PygView.width:
@@ -224,7 +211,6 @@ class Mouse(pygame.sprite.Sprite):
         elif self.y > PygView.height:
             self.y = PygView.height
             
-    
         self.tail.insert(0,(self.x,self.y))
         self.tail = self.tail[:128]
         self.rect.center = self.x, self.y
@@ -329,12 +315,10 @@ class VectorSprite(pygame.sprite.Sprite):
         if "age" not in kwargs:
             self.age = 0 # age in seconds
        
-
     def kill(self):
         if self.number in self.numbers:
            del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
         pygame.sprite.Sprite.kill(self)
-
 
     def create_image(self):
         if self.picture is not None:
@@ -384,7 +368,7 @@ class VectorSprite(pygame.sprite.Sprite):
             if self.sticky_with_boss:
                 boss = VectorSprite.numbers[self.bossnumber]
                 self.pos = v.Vec2d(boss.pos.x, boss.pos.y)
-
+                #print("cannon move")
         self.pos += self.move * seconds
         if self.friction is not None:
             self.move *= self.friction # friction between 1.0 and 0.1
@@ -626,13 +610,6 @@ class Kamikaze(VectorSprite):
         tmp=pygame.Surface((100, 100))
         pygame.draw.polygon(tmp, color, 
           [(40,20), (50,20), ()], 0)
-        #pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
-        #pygame.draw.arc(tmp, color, (0, -20, 100, 100), (math.pi*1.5)-(math.pi/4),(math.pi*1.5)+(math.pi/4), 2 )
-        #pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
-        #pygame.draw.line(tmp, color, (10, 80), (25, 73),  2)
-        #pygame.draw.line(tmp, color, (85, 80), (70, 73),  2)
-        #pygame.draw.ellipse(tmp, (41, 154, 54), (25, 23, 50, 50), 0)
-        #pygame.draw.ellipse(tmp, color, (0, 50, 100, 30), 0)
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
         
@@ -664,7 +641,6 @@ class Ufo(VectorSprite):
 
     def _overwrite_parameters(self):
         self._layer =  1
-        #print("ufo hat layer 1")
         
     def kill(self):
         for p in range(5):
@@ -800,8 +776,6 @@ class Rocket(VectorSprite):
     def create_image(self):
         self.angle = 90
         self.image = pygame.Surface((20,10))
-        #pygame.draw.polygon(self.image, (255,156,0), [(0,0),
-        #    (5,0), (20,5), (5,10), (0,10), (5,5)])
         pygame.draw.polygon(self.image, self.color, [(0,0),
             (5,0), (20,5), (5,10), (0,10), (5,5)])
         self.image.set_colorkey((0,0,0))
@@ -965,6 +939,7 @@ class Cannon(VectorSprite):
 
     def update(self,seconds):
         VectorSprite.update(self, seconds)
+        self.pos = v.Vec2d(self.boss.pos.x -30, self.boss.pos.y -80)
         if self.age < self.readytofire:
             timeleft = self.readytofire - self.age
             i = int(timeleft / self.recoildelta) % len(self.recoil)
@@ -1080,8 +1055,6 @@ class PygView(object):
         self.mousegroup = pygame.sprite.Group()
         self.explosiongroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # self.targetgroup # each Ball object belong to those groups
-        #Goal.groups = self.allgroup, self.goalgroup
-        #Bullet.groups = self.allgroup, self.bulletgroup
         Mouse.groups = self.allgroup, self.mousegroup
         Cannon.groups = self.allgroup, self.cannongroup
         City.groups = self.allgroup, self.citygroup, self.protectorgroup
@@ -1096,7 +1069,6 @@ class PygView(object):
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
         self.cities = []
-        #self.platforms = []
         self.cannons = []
         nr = PygView.width // 200
         
@@ -1104,31 +1076,25 @@ class PygView(object):
         # ----- add Gun Platforms -----
         for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
-            #self.platforms.append(
             GunPlatform(pos=v.Vec2d(x, PygView.height-100)) # +random.randint(0,50))))
         # ------ add Cities -------
         for c in range(nr):
             x = PygView.width // nr * c
             self.cities.append(City(
                  pos=v.Vec2d(x+100, PygView.height-50),citynr = c))
-            #for dy in range(0, 61, 15):
-            #    Rocket(pos=v.Vec2d(x+100+0, 
-            #           PygView.height-15-dy),
-            #           speed = 150, citynr = c, damage = 100)
             for dx in range(50, 151, 20):
                  Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
                        speed = 150, citynr = c, damage = 100 )
         # ----- add Cannons ------
         for p in self.platformgroup: #self.platforms:
-            self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
+            self.cannons.append(Cannon(platform = p, boss=p, 
                                 cannonpos="upper", color=(255,0,0)))
-            self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
+            self.cannons.append(Cannon(platform = p, boss=p, 
                                 cannonpos="lower", color=(255,0,0)))
-            self.cannons.append(Cannon(platform = p, pos=v.Vec2d(p.pos.x-30, p.pos.y-80),
+            self.cannons.append(Cannon(platform = p, boss=p, 
                                 cannonpos="middle", color=(255,0,0)))
+            
         # ----- ufo, mothership ----
-        #self.ufo1 = Ufo(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), layer=1)
-        #Mothership(pos=v.Vec2d(PygView.width, 50), move=v.Vec2d(50,0), color=(0,0,255), hitpoints=50, layer=7)
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
         self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
@@ -1139,10 +1105,7 @@ class PygView(object):
     def new_wave(self):
         self.wave += 1
         #print("------new level...-------")
-        #print("bombchance, rocketchance", PygView.bombchance, PygView.rocketchance)
         PygView.bombchance *= 1.5
-        PygView.rocketchance *= 1.5
-        #print("bombchance, rocketchance", PygView.bombchance, PygView.rocketchance)
         t = "Prepare for wave {}!".format(self.wave)
         Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
         
@@ -1177,16 +1140,6 @@ class PygView(object):
         """The mainloop"""
         running = True
         pygame.mouse.set_visible(False)
-        
-        #leftcorner = v.Vec2d(0,self.height)
-        #rightcorner = v.Vec2d(self.width,self.height)
-        #middle = v.Vec2d(self.width//2,self.height)
-        #quarter = v.Vec2d(self.width//4,self.height)
-        #quarter3 = v.Vec2d(self.width//4*3,self.height)
-        #third = v.Vec2d(self.width//3, self.height)
-        #third2 = v.Vec2d(self.width//3*2, self.height)
-        #ground = (leftcorner,quarter,third,middle,third2, quarter3,rightcorner)
-        
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
         while running:
@@ -1258,7 +1211,8 @@ class PygView(object):
                 #if len(targets) > 0:
                 #    e = random.choice(targets)
                 if distance < p.maxrange:
-                    cannons = [c for c in self.cannongroup if c.platform == p]
+                    #cannons = [c for c in self.cannongroup if c.platform == p]
+                    cannons = [c for c in self.cannongroup if c.boss == p]
                     # ------ aiming -------
                     for c in cannons:
                         d = c.pos - e.pos
@@ -1347,7 +1301,7 @@ class PygView(object):
                              False, pygame.sprite.collide_circle)
                 for t in crashgroup:
                     t.hitpoints -= e.damage
-                    print("target {} took {} damage, has {} hp left".format(t, e.damage, t.hitpoints))
+                    #print("target {} took {} damage, has {} hp left".format(t, e.damage, t.hitpoints))
                     if random.random() < 0.5:
                         Fire(pos = t.pos, max_age=3, bossnumber=t.number)
             
@@ -1391,9 +1345,7 @@ class PygView(object):
                                      max_age= 10)
                     b.kill()
         
-
-            
-            
+ 
             # --------- collision detection between ball and other balls
             #for ball in self.ballgroup:
             #    crashgroup = pygame.sprite.spritecollide(ball, self.ballgroup, False, pygame.sprite.collide_circle)
@@ -1414,10 +1366,6 @@ class PygView(object):
                     c.readyToLaunchtime = c.age + 5
                     Flytext(c.pos.x, c.pos.y, "reloading", 
                             color=(0,200,0), duration = 5)
-                    #for dy in range(0, 61, 15):
-                    #    Rocket(pos=v.Vec2d(c.pos.x,c.pos.y+30-dy+500),
-                    #           speed=150, citynr = c.citynr, 
-                    #           readyToLaunchTime = 5, damage = 100)
                     for dx in range(50, 151, 20):
                         Rocket(pos=v.Vec2d(c.pos.x-100+dx, PygView.height-15 + 500),
                                speed = 150, citynr = c.citynr, damage = 100,
