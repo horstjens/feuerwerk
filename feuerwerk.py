@@ -609,7 +609,7 @@ class Kamikaze(VectorSprite):
     def paint(self, color):
         tmp=pygame.Surface((100, 100))
         pygame.draw.polygon(tmp, color, 
-          [(40,20), (50,20), ()], 0)
+          [(40,20), (50,50), (80,80)], 0)
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
         
