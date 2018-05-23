@@ -1068,6 +1068,7 @@ class PygView(object):
         Mothership.groups = self.allgroup, self.ufogroup, self.targetgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
+        Kamikaze.groups = self.allgroup, self.targetgroup
         self.cities = []
         self.cannons = []
         nr = PygView.width // 200
@@ -1159,7 +1160,8 @@ class PygView(object):
                     if event.key == pygame.K_1:
                         if len(self.dangergroup)>0:
                             self.snipertarget = random.choice(self.dangergroup.sprites())
-                            
+                    if event.key == pygame.K_k:
+                        Kamikaze(pos=v.Vec2d(100,100))
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
