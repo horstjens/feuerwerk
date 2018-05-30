@@ -688,13 +688,15 @@ class Kamikaze(VectorSprite):
             self.move.y *= -1
         VectorSprite.update(self, seconds)
 
-class Farbenbomber(VectorSprite):
+class Colorbomber(VectorSprite):
     
     def __init__(self, **kwargs):
         self.radius = 50
         self.hitpoints=250
         VectorSprite.__init__(self, **kwargs)
-    
+        self.dive = False
+        self.mass = 5000
+        
     def paint(self, color):
         tmp=pygame.Surface((100, 100))
         pygame.draw.polygon(tmp, color, [(1,1), (100,50), (1,100)], 0)
@@ -738,15 +740,18 @@ class Farbenbomber(VectorSprite):
         #    Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
         #         gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         # --- chance to fire Rocket ---
-        if random.random() < 0.03: #PygView.rocketchance: #0.01:
+        if not self.dive and random.random() < 0.01: #PygView.rocketchance: #0.01:
             m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
             distance = m.get_length()
             m = m.normalized() 
-            Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
-                   citynr = None, max_distance = distance, mass=500, hitpoints=20)
+            #Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
+            #       citynr = None, max_distance = distance, mass=500, hitpoints=20)
+            self.dive = True
+            self.move = m * 100 # divespeed
+            self.set_angle(-m.get_angle()-0)
         
         # --- chance to change move vector ---
-        if random.random() < 0.05:
+        if not self.dive and random.random() < 0.05:
              m = v.Vec2d(0, random.randint(-10, 10))
              m.rotate(random.randint(-120, 120))
              self.move += m
@@ -759,7 +764,7 @@ class Farbenbomber(VectorSprite):
         if self.pos.y < 0:
             self.pos.y = 0
             self.move.y *= -1
-        elif self.pos.y > PygView.height // 2:
+        elif not self.dive and self.pos.y > PygView.height // 2:
             self.pos.y = PygView.height // 2
             self.move.y *= -1
         VectorSprite.update(self, seconds)
@@ -1208,6 +1213,7 @@ class PygView(object):
         Tracer.groups = self.allgroup, self.tracergroup
         Sniper.groups = self.allgroup, self.snipergroup
         Kamikaze.groups = self.allgroup, self.targetgroup
+        Colorbomber.groups = self.allgroup, self.targetgroup, self.dangergroup
         self.cities = []
         self.cannons = []
         nr = PygView.width // 200
@@ -1294,7 +1300,7 @@ class PygView(object):
                     if event.key == pygame.K_k:
                         Kamikaze(pos=v.Vec2d(100,100))
                     if event.key == pygame.K_f:
-                        Farbenbomber(pos=v.Vec2d(200,100))
+                        Colorbomber(pos=v.Vec2d(200,100))
                     if event.key == pygame.K_b:
                         self.level += 1
                         self.loadbackground()
