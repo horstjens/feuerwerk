@@ -483,6 +483,8 @@ class Mothership(VectorSprite):
 
     def __init__(self, **kwargs):
         self.ufo_spawn_rate = 0.009
+        self.kamikaze_spawn_rate = 0.001
+        self.colorbomber_spawn_rate = 0.001
         self.radius = 100
         self.hitpoints=1000
         VectorSprite.__init__(self, **kwargs)
@@ -499,16 +501,16 @@ class Mothership(VectorSprite):
         # --- animate ---
         i = self.age *3 % len(self.images)
         self.image = self.images[int(i)]
-        # --- chance to throw bomb ---
-        #if random.random() < 0.015:
-        #    m = v.Vec2d(0, -random.random()*75)
-        #    m.rotate(random.randint(-90,90))
-        #    Bomb(pos=self.pos, move=m,
-        #         gravity = v.Vec2d(0,0.7))
         
         #------------------chance to spawn Ufo-------------------
         if random.random()<  self.ufo_spawn_rate:
             Ufo(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
+        #------------------chance to spawn Kamikaze-------------------
+        if random.random()<  self.kamikaze_spawn_rate:
+            Kamikaze(pos=v.Vec2d(self.pos.x,self.pos.y+50))
+        #------------------chance to spawn Colorbomber-------------------
+        if random.random()<  self.colorbomber_spawn_rate:
+            Colorbomber(pos=v.Vec2d(self.pos.x,self.pos.y+50))
 
         # --- chance to change move vector ---
         if random.random() < 0.05:
@@ -661,8 +663,8 @@ class Kamikaze(VectorSprite):
            # Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
             #     gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         # --- chance to fire Rocket ---
-        if random.random() < 0.001: #PygView.rocketchance: #0.01:
-            for r in range(50):
+        if random.random() < 0.0009: #PygView.rocketchance: #0.01:
+            for r in range(random.randint(10,50)):
                 m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
                 distance = m.get_length()
                 m = m.normalized() 
