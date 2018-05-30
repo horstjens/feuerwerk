@@ -607,9 +607,26 @@ class Kamikaze(VectorSprite):
         VectorSprite.__init__(self, **kwargs)
     
     def paint(self, color):
+        # --- Hülle = 111,111,27, Fülle = 59,59,13
+        
+        
         tmp=pygame.Surface((100, 100))
-        pygame.draw.polygon(tmp, color, 
-          [(40,20), (50,50), (80,80)], 0)
+        pygame.draw.line(tmp,(111,111,27),(40,80),(75,80),7) # kanone unten
+        pygame.draw.line(tmp,(111,111,27),(40,20),(75,20),7)# oben
+        pygame.draw.polygon(tmp, (111,111,27),              
+          [(0,0), (100,50), (0,100),(27,50)], 4)            #hülle
+        pygame.draw.polygon(tmp, (59,59,13), 
+          [(0,0), (100,50), (0,100),(27,50)], 0)            #fülle
+        pygame.draw.circle(tmp, (111,111,27), (50,50), (20),1) #Umkreis atomzeichen
+        pygame.draw.polygon(tmp, (255,255,0),               
+          [(50,50), (44,33), (56,33)], )                    #atomzeichen
+        pygame.draw.polygon(tmp, (255,255,0), 
+          [(50,50), (32,55), (39,64)],0 )                   # --
+        pygame.draw.polygon(tmp, (255,255,0), 
+          [(50,50), (67,55), (60,64)], )                    # --      
+        pygame.draw.circle(tmp, (59,59,13), (50,50), 9,0)   # 2 kreise atomzeichen
+        pygame.draw.circle(tmp, (1,1,1), (50,50), 5,0)      #--
+        
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
         
@@ -629,9 +646,47 @@ class Kamikaze(VectorSprite):
         #------------------
         self.images = [ self.image1, self.image2, self.image3, self.image4]
         self.image = self.images[0]
+        self.image0 = self.image.copy()
         self.rect= self.image.get_rect()
+        self.set_angle(270)
+    
+    def update(self, seconds):
+        # --- animate ---
+        #i = self.age *3 % len(self.images)
+        #self.image = self.images[int(i)]
+        # --- chance to throw bomb ---
+        #if random.random() < PygView.bombchance: #0.015:
+         #   m = v.Vec2d(0, -random.random()*75)
+          #  m.rotate(random.randint(-90,90))
+           # Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
+            #     gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
+        # --- chance to fire Rocket ---
+        if random.random() < 0.05: #PygView.rocketchance: #0.01:
+            m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
+            distance = m.get_length()
+            m = m.normalized() 
+            Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
+                   citynr = None, max_distance = distance, mass=500, hitpoints=20)
+        
+        # --- chance to change move vector ---
+        if random.random() < 0.3:
+             m = v.Vec2d(0, random.randint(-10, 10))
+             m.rotate(random.randint(-120, 120))
+             self.move += m
+        if self.pos.x < 0:
+            self.pos.x = 0
+            self.move.x *= -1
+        elif self.pos.x > PygView.width:
+            self.pos.x = PygView.width
+            self.move.x *= -1
+        if self.pos.y < 0:
+            self.pos.y = 0
+            self.move.y *= -1
+        elif self.pos.y > PygView.height // 2:
+            self.pos.y = PygView.height // 2
+            self.move.y *= -1
+        VectorSprite.update(self, seconds)
 
-         
 class Ufo(VectorSprite):
 
     def __init__(self, **kwargs):
@@ -760,20 +815,6 @@ class City(VectorSprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect()
 
-class Sniper(VectorSprite):
-
-   def __init__(self, **kwargs):
-        VectorSprite.__init__(self, **kwargs)
-        if "maxrange" not in kwargs:
-            self.maxrange = 300
-
-   def create_image(self):
-        self.image = pygame.Surface((20,20))
-        pygame.draw.line(self.image, (255,255,0), (0,20),(20,0), 2)
-        self.image.convert_alpha()
-        self.image.set_colorkey((0,0,0))
-        self.rect = self.image.get_rect() 
- 
 class Rocket(VectorSprite):
     
     def __init__(self, **kwargs):
@@ -854,7 +895,7 @@ class Tracer(VectorSprite):
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
-        
+    
 class Bomb(VectorSprite):
 
    def __init__(self, **kwargs):
@@ -1061,7 +1102,6 @@ class PygView(object):
         self.citygroup = pygame.sprite.Group()
         self.protectorgroup = pygame.sprite.Group() # cities and gunplatforms
         self.rocketgroup = pygame.sprite.Group()
-        self.snipergroup = pygame.sprite.Group()
         self.evilrocketgroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
@@ -1083,14 +1123,12 @@ class PygView(object):
         Mothership.groups = self.allgroup, self.ufogroup, self.targetgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
-        Sniper.groups = self.allgroup, self.snipergroup
         Kamikaze.groups = self.allgroup, self.targetgroup
         self.cities = []
         self.cannons = []
         nr = PygView.width // 200
         
-        # ----- add Sniper -------
-        Sniper(pos=v.Vec2d(100, PygView.height-50))
+       
         # ----- add Gun Platforms -----
         for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
@@ -1173,10 +1211,10 @@ class PygView(object):
                     #if event.key == pygame.K_1:
                     #    Flytext(500,300, text="Hallo Alex", delay=0, duration=4, dy=-200)
                     #if event.key == pygame.K_2:
-                    #    Rocket()
-                    #if event.key == pygame.K_1:
-                    #    if len(self.dangergroup)>0:
-                    #        self.snipertarget = random.choice(self.dangergroup.sprites())
+                    #    Rocket()b
+                    if event.key == pygame.K_1:
+                        if len(self.dangergroup)>0:
+                            self.snipertarget = random.choice(self.dangergroup.sprites())
                     if event.key == pygame.K_k:
                         Kamikaze(pos=v.Vec2d(100,100))
                     if event.key == pygame.K_b:
@@ -1191,7 +1229,15 @@ class PygView(object):
 
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
-           
+            # -------- sniper beam --------
+            if self.snipertarget is not None:
+                if self.snipertarget.hitpoints > 0:
+                    pygame.draw.line(self.screen, (0,0, random.randint(200,250)),
+                          (100, PygView.height-50), (self.snipertarget.pos.x, 
+                           self.snipertarget.pos.y), random.randint(1,4))
+                    self.snipertarget.hitpoints -= 1
+                else:
+                    self.snipertarget is None
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             if pressed_keys[pygame.K_SPACE]:
@@ -1200,34 +1246,7 @@ class PygView(object):
                     pygame.draw.circle(self.screen, (50,50,50),
                            (int(p.pos.x), int(p.pos.y)),
                             p.maxrange,1)
-            if pressed_keys[pygame.K_SPACE]:
-                for s in self.snipergroup:
-                    pygame.draw.circle(self.screen, (100,100,100),
-                           (int(s.pos.x), int(s.pos.y)),
-                            s.maxrange,1)
-            # -------- sniper beam --------
-            if pressed_keys[pygame.K_1]:
-                for s in self.snipergroup:
-                            snipertargets = []
-                            for d in self.dangergroup:
-                                if s.pos.get_distance(d.pos) < s.maxrange:
-                                    snipertargets.append(d)
-                            distance = 2 * s.maxrange
-                            for t in snipertargets:
-                                dd = s.pos.get_distance(t.pos)
-                                if dd < distance:
-                                    distance = dd
-                                    e = t
-                            if len(snipertargets) > 0:
-                            #if self.snipertarget is not None:
-                                self.snipertarget = random.choice(snipertargets)
-                                if self.snipertarget.hitpoints > 0:
-                                    pygame.draw.line(self.screen, (0,0, random.randint(180,255)),
-                                          (100, PygView.height-50), (self.snipertarget.pos.x, 
-                                           self.snipertarget.pos.y), random.randint(1,7))
-                                    self.snipertarget.hitpoints -= 1
-                            #else:
-                            #    self.snipertarget is None
+            
             if pressed_keys[pygame.K_TAB]:
                 self.launchRocket((self.mouse2.x, self.mouse2.y))
             if pressed_keys[pygame.K_RETURN]:
