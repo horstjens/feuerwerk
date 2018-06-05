@@ -1256,10 +1256,11 @@ class PygView(object):
         self.wave += 1
         #print("------new level...-------")
         PygView.bombchance *= 1.5
-        t = "Prepare for wave {}!\nDefend the cities!".format(self.wave)
-        Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
-        #ts.PygView(text=t, width = PygView.width, height = PygView.height, 
-        #           new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
+        self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
+        t = "{}\nAliens are invading our cities!\nPrepare for wave {}!\nDefend the cities!".format(random.choice(self.texts), self.wave)
+        #Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
+        ts.PygView(text=t, width = PygView.width, height = PygView.height, 
+                   new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
         for m in range(self.wave):
             Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
     
@@ -1559,4 +1560,4 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1430,800).run() # try PygView(800,600).run()
+	PygView(1430,800).run() # try PygView(800,600).run()
