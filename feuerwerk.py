@@ -15,6 +15,7 @@ import time
 import operator
 import math
 import vectorclass2d as v
+import textscroller_vertical as ts
 
 
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
@@ -1255,9 +1256,10 @@ class PygView(object):
         self.wave += 1
         #print("------new level...-------")
         PygView.bombchance *= 1.5
-        t = "Prepare for wave {}!".format(self.wave)
+        t = "Prepare for wave {}!\nDefend the cities!".format(self.wave)
         Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
-        
+        #ts.PygView(text=t, width = PygView.width, height = PygView.height, 
+        #           new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
         for m in range(self.wave):
             Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
     
@@ -1310,6 +1312,12 @@ class PygView(object):
                         self.launchRocket((self.mouse2.x, self.mouse2.y))
                     if event.key == pygame.K_RCTRL:
                         self.launchRocket((self.mouse3.x, self.mouse3.y))
+                    if event.key == pygame.K_t:
+                        lines= "This is Firework.... \nAre you ready? \nDefend the cities!"
+                        ts.PygView(text=lines, width = PygView.width,
+                                   height = PygView.height, new_init = False,
+                                   bg_object= self.background,
+                                   font=('mono', 48, True)).run()
                     #if event.key == pygame.K_u:
                     #    Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
@@ -1329,6 +1337,7 @@ class PygView(object):
                     pygame.draw.circle(self.screen, (100,100,100),
                            (int(s.pos.x), int(s.pos.y)),
                             s.maxrange,1)
+            
             # -------- sniper beam --------
             if pressed_keys[pygame.K_1]:
                 for s in self.snipergroup:
