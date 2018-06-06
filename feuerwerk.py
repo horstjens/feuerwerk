@@ -75,7 +75,7 @@ def elastic_collision(sprite1, sprite2):
 
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
-                 dx=0, dy=-50, duration=2, acceleration_factor = 0.96, delay = 0, fontsize=22):
+                 dx=0, dy=-50, duration=2, acceleration_factor = 1.0, delay = 0, fontsize=22):
         """a text flying upward and for a short time and disappearing"""
         self._layer = 7  # order of sprite layers (before / behind other sprites)
         pygame.sprite.Sprite.__init__(self, self.groups)  # THIS LINE IS IMPORTANT !!
@@ -417,13 +417,13 @@ class Wreck(VectorSprite):
             self.move += self.gravity * seconds
         VectorSprite.update(self, seconds)
         Smoke(pos=v.Vec2d(self.pos.x, self.pos.y), 
-                 color=(200,0,0), gravity=v.Vec2d(0, -3),
+                 color=(random.randint(1,255),random.randint(1,255),random.randint(1,255)), gravity=v.Vec2d(0, -3),
                  max_age=0.1+random.random()*2)
         self.rotate(4)
     
     def create_image(self):
         self.image = pygame.Surface((50,50))
-        c = ( random.randint(50,155),0, 0 ) # blue
+        c = ( random.randint(1,255),random.randint(1,255), random.randint(1,255) ) # blue
         pointlist = []
         for p in range(random.randint(5, 11)):
             pointlist.append((random.randint(0,50),
@@ -543,15 +543,15 @@ class Mothership(VectorSprite):
 
     def create_image(self):
         #---------image1------
-        self.image1=self.paint((10, 1, 17), (255, 255, 255), (100, 100, 100))
+        self.image1 = self.paint((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))                
         #--------image2
-        self.image2 = self.paint((80, 80, 15), (50, 50, 50), (0, 0, 255))
+        self.image2 = self.paint((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
         #-------image3
-        self.image3 = self.paint((60, 100, 17), (150, 0, 245), (85, 85, 135))
+        self.image3 = self.paint((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
         #---------------image4
-        self.image4=self.paint((14, 140, 11), (45, 12, 0), (0, 0, 1))
+        self.image4 = self.paint((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
         #--------------image5
-        self.image5=self.paint((166, 110, 255), (67, 200, 145), (128, 76, 128))
+        self.image5 = self.paint((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
         #------------------
         self.images = [ self.image1, self.image2, self.image3, self.image4]
         self.image = self.images[0]
@@ -1305,8 +1305,8 @@ class PygView(object):
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
         Sniper.groups = self.allgroup, self.snipergroup
-        Kamikaze.groups = self.allgroup, self.targetgroup
-        Colorbomber.groups = self.allgroup, self.targetgroup, self.dangergroup
+        Kamikaze.groups = self.allgroup, self.targetgroup, self.ufogroup
+        Colorbomber.groups = self.allgroup, self.targetgroup, self.dangergroup, self.ufogroup
         self.cities = []
         self.cannons = []
         nr = PygView.width // 200
@@ -1405,12 +1405,23 @@ class PygView(object):
                         self.launchRocket((self.mouse2.x, self.mouse2.y))
                     if event.key == pygame.K_RCTRL:
                         self.launchRocket((self.mouse3.x, self.mouse3.y))
+
+                    if event.key == pygame.K_3:
+                        for x in self.dangergroup:
+                            x.kill()
+                    if event.key == pygame.K_4:
+                        for x in self.ufogroup:
+                            x.kill()
+                    if event.key == pygame.K_q:
+                        Flytext(1800, 400, "Halte die Taste 5 gedrückt um ein Special-Item zu bekommen!", fontsize = 70, duration = 10, dy=0, dx=-150)
+
                     if event.key == pygame.K_t:
                         lines= "This is Firework.... \nAre you ready? \nDefend the cities!"
                         ts.PygView(text=lines, width = PygView.width,
                                    height = PygView.height, new_init = False,
                                    bg_object= self.background,
                                    font=('mono', 48, True)).run()
+
                     #if event.key == pygame.K_u:
                     #    Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
@@ -1419,18 +1430,25 @@ class PygView(object):
            
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
-            if pressed_keys[pygame.K_SPACE]:
+            if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
+                c1 = self.playtime*100 % 255
+                ci = self.playtime*200 % 255
                 for p in self.platformgroup:
-                    pygame.draw.circle(self.screen, (50,50,50),
+                    pygame.draw.circle(self.screen, (c1, c1, c1),
                            (int(p.pos.x), int(p.pos.y)),
                             p.maxrange,1)
             if pressed_keys[pygame.K_SPACE]:
                 for s in self.snipergroup:
-                    pygame.draw.circle(self.screen, (100,100,100),
+                    pygame.draw.circle(self.screen, (c2, c2, c2),
                            (int(s.pos.x), int(s.pos.y)),
                             s.maxrange,1)
+
+            #if pressed_keys[pygame.K_5]:
+            #    self.new_wave()
+
             
+
             # -------- sniper beam --------
             if pressed_keys[pygame.K_1]:
                 for s in self.snipergroup:
@@ -1454,6 +1472,27 @@ class PygView(object):
                                     self.snipertarget.hitpoints -= 1
                             #else:
                             #    self.snipertarget is None
+            for x in range(100):
+                if pressed_keys[pygame.K_2]:
+                    for s in self.snipergroup:
+                                snipertargets = []
+                                for u in self.ufogroup:
+                                    if s.pos.get_distance(u.pos) < 10000:
+                                        snipertargets.append(u)
+                                distance = 2 * s.maxrange
+                                for t in snipertargets:
+                                    dd = s.pos.get_distance(t.pos)
+                                    if dd < distance:
+                                        distance = dd
+                                        e = t
+                                if len(snipertargets) > 0:
+                                #if self.snipertarget is not None:
+                                    self.snipertarget = random.choice(snipertargets)
+                                    if self.snipertarget.hitpoints > 0:
+                                        pygame.draw.line(self.screen, (0,0, random.randint(180,255)),
+                                              (100, PygView.height-50), (self.snipertarget.pos.x, 
+                                               self.snipertarget.pos.y), random.randint(1,7))
+                                        self.snipertarget.hitpoints -= 1
             if pressed_keys[pygame.K_TAB]:
                 self.launchRocket((self.mouse2.x, self.mouse2.y))
             if pressed_keys[pygame.K_RETURN]:
