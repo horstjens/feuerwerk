@@ -18,6 +18,15 @@ import math
 import vectorclass2d as v
 import os
 
+def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
+    """returns pygame surface with text. You still need to blit the surface."""
+    myfont = pygame.font.SysFont(font, fontsize)
+    mytext = myfont.render(msg, True, fontcolor)
+    mytext = mytext.convert_alpha()
+    return mytext
+
+
+
 def write(background, text, x=50, y=150, color=(0,0,0),
           fontsize=None, center=False):
         """write text on pygame surface. """
@@ -149,6 +158,7 @@ class VectorSprite(pygame.sprite.Sprite):
             self.leftkey = None
         if "target" not in kwargs:
             self.target = None
+        self.endOfSpeedBonusTime = 0
         # ---
         self.age = 0 # in seconds
         self.distance_traveled = 0 # in pixel
@@ -223,34 +233,69 @@ class VectorSprite(pygame.sprite.Sprite):
         if self.pos.x - self.width //2 < 0:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill x < 0")
+                #print("Wallkill x < 0")
             elif self.bounce_on_edge:
                 self.pos.x = self.width // 2
                 self.move.x *= -1 
         if self.pos.y - self.height // 2 < 0:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill y < 0")
+                #print("Wallkill y < 0")
             elif self.bounce_on_edge:   
                 self.y = self.height // 2
-                self.move.y *= -1
+                if self.move.y < 0:
+                    self.move.y *= -1
+                #print(self.y)
+                
                 
         if self.pos.x + self.width //2 > PygView.width:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill x > w")
+                #print("Wallkill x > w")
             elif self.bounce_on_edge:
                 self.pos.x = PygView.width - self.width //2
                 self.move.x *= -1
         if self.pos.y + self.height //2 > PygView.height:
             if self.kill_on_edge:
                 self.kill()
-                print("Wallkill y > w")
+                #print("Wallkill y > w")
             elif self.bounce_on_edge:
                 self.pos.y = PygView.height - self.height //2
+                #if self.move.y > 0:
                 self.move.y *= -1
         self.rect.center = ( round(self.pos.x, 0), round(self.pos.y, 0) )
 
+
+class Flytext(pygame.sprite.Sprite):
+    def __init__(self, x, y, text="hallo", color=(255, 0, 0),
+                 dx=0, dy=-50, duration=2, acceleration_factor = 0.96, delay = 0, fontsize=22):
+        """a text flying upward and for a short time and disappearing"""
+        self._layer = 7  # order of sprite layers (before / behind other sprites)
+        pygame.sprite.Sprite.__init__(self, self.groups)  # THIS LINE IS IMPORTANT !!
+        self.text = text
+        self.r, self.g, self.b = color[0], color[1], color[2]
+        self.dx = dx
+        self.dy = dy
+        self.x, self.y = x, y
+        self.duration = duration  # duration of flight in seconds
+        self.acc = acceleration_factor  # if < 1, Text moves slower. if > 1, text moves faster.
+        self.image = make_text(self.text, (self.r, self.g, self.b), fontsize)  # font 22
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        self.time = 0 - delay
+
+    def update(self, seconds):
+        self.time += seconds
+        if self.time < 0:
+            self.rect.center = (-100,-100)
+        else:
+            self.y += self.dy * seconds
+            self.x += self.dx * seconds
+            self.dy *= self.acc  # slower and slower
+            self.dx *= self.acc
+            self.rect.center = (self.x, self.y)
+            if self.time > self.duration:
+                self.kill()      # remove Sprite from screen and from groups
 
 class Goal(VectorSprite):
     
@@ -378,17 +423,26 @@ class Ball(VectorSprite):
     def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
         self.readyToFire = 0
-        self.endOfBonusSpeed = 0
-        self.speedBonus = 2
-    
+        #self.endOfBonusSpeed = 0
+        self.speedBonus = 20
+        self.seekspeed = random.randint(20,60)
         
     def update(self, seconds):
         VectorSprite.update(self, seconds)
         pressedkeys = pygame.key.get_pressed()
-        if self.age > self.endOfBonusSpeed:
+        if self.age > self.endOfSpeedBonusTime:
             speedfactor = 1
         else:
             speedfactor = self.speedBonus
+            if random.random() < 0.3:
+                m = v.Vec2d (random.randint(150,250),0)
+                w=random.randint(0,360)
+                m.rotate(w)
+                Fragment(radius = 5, pos = v.Vec2d(self.pos.x, self.pos.y),
+                                              move = v.Vec2d(m.x, m.y),
+                                              max_age=random.random()+0.5, 
+                                              color = self.color)
+                       
         if self.upkey is not None:
             if pressedkeys[self.upkey]:
                 self.move.y -= 5 * speedfactor
@@ -401,12 +455,22 @@ class Ball(VectorSprite):
         if self.rightkey is not None:
             if pressedkeys[self.rightkey]:
                 self.move.x += 5 * speedfactor
+
         #----------seeking target------------
         if self.target is not None:
             
             m =self.target.pos - self.pos
-            m = m.normalized() * random.randint(42,80)
+            m = m.normalized() * self.seekspeed
             self.move = m
+            if random.random() < 0.01:
+                self.seekspeed = random.randint(20,60)
+        
+        # ------ speedlimit -----
+        if self.move.length > PygView.speedlimit:
+            if self.age < self.endOfSpeedBonusTime:
+                self.move = self.move.normalized() * PygView.speedlimit * 2
+            else:
+                self.move = self.move.normalized() * PygView.speedlimit
                 
     def create_image(self):
         self.image = pygame.Surface((self.width,self.height))    
@@ -449,12 +513,14 @@ class SpeedBonus(VectorSprite):
         #pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
         if self.radius >= 10 :
             dicke = self.radius // 10 * 2
+           
             pygame.draw.circle (self.image, (159,29,113), (self.radius, self.radius ), self.radius // 1)
             pygame.draw.circle (self.image, (78,187,0), (self.radius , self.radius), self.radius // 2)
             pygame.draw.circle (self.image, (255,74,22), (self.radius, self.radius ) ,self.radius // 3)
             pygame.draw.rect (self.image, (0,0,255), (0, self.radius-dicke, self.radius*2, dicke*2))
             pygame.draw.rect (self.image, (0,0,255), (self.radius-dicke, 0,  dicke*2, self.radius*2 ))
             pygame.draw.circle(self.image, (255,0,0), (self.radius, self.radius), self.radius //self.radius+4)
+            pygame.draw.polygon (self.image, (random.randint(10,255),random.randint(10,255),random.randint(10,255)), [(0,0),(5,25),(10,0),(15,25),(20,0),(25,25),(30,0),(35,25),(40,0),(45,25),(50,0),(45,50),(40,25),(35,50),(30,25),(25,50),(20,25),(15,50),(10,25),(5,50),(0,0)])
         self.image.set_colorkey((0,0,0))
         self.image = self.image.convert_alpha() # faster blitting with transparent color
         self.rect= self.image.get_rect()
@@ -485,7 +551,7 @@ class Bullet(Ball):
         Ball(**kwargs)
         self.kill_on_edge = True
         
-        print("i am a bullet. my killedge: ", self.kill_on_edge)
+        #print("i am a bullet. my killedge: ", self.kill_on_edge)
         
 class PygView(object):
     width = 0
@@ -506,6 +572,7 @@ class PygView(object):
         self.fps = fps
         self.playtime = 0.0
         self.paint() 
+        PygView.speedlimit = 100
         #pygame.init()                              #initialize pygame
 
         # look for sound & music files in subfolder 'data'
@@ -556,6 +623,7 @@ class PygView(object):
         self.goalgroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
         Goal.groups = self.allgroup, self.goalgroup
+        Flytext.groups = self.allgroup
         Bonus.groups = self.allgroup, self.bonusgroup
         SpeedBonus.groups = self.allgroup, self.speedbonusgroup
         #Cannon.groups = self.allgroup, self.cannongroup
@@ -574,10 +642,10 @@ class PygView(object):
         #self.cannond = Upercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         #self.cannond2 = Lowercannon(pos=v.Vec2d(PygView.width-20,PygView.height-20), color=(0,0,255))
         self.ball3 = Ball(pos=v.Vec2d(PygView.width/2,PygView.height/2), move=v.Vec2d(0,0), bounce_on_edge=True, radius=30)
-        self.seeker1 = Ball(pos = v.Vec2d(PygView.width/2,0), target = self.ball3, mass = 2000,
+        self.seeker1 = Ball(pos = v.Vec2d(0,0), target = self.ball3, mass = 2000,
                             color = (0,200,0), radius = 15)
-        self.seeker2 = Ball(pos = v.Vec2d(PygView.width/2, PygView.height),target = self.ball3, mass = 2000,
-                            color = (0,200,0), radius = 15)
+        self.seeker2 = Ball(pos = v.Vec2d(PygView.width, PygView.height),target = self.ball3, mass = 2000,
+                            color = (0,100,0), radius = 15)
         
 
 
@@ -621,7 +689,8 @@ class PygView(object):
                         Ball(pos = p, move = m.normalized()*30, radius = 10, color = self.ball2.color, max_age = 4)
                         
                                
-                    
+                    #if event.key == pygame.K_p:
+                    #   Flytext(100,100,"Janosch war da",(0,200,200)) 
                     
                     
                     # -----------
@@ -646,7 +715,7 @@ class PygView(object):
                             x = j.get_axis(0)
                             y = j.get_axis(1)
                             
-                            print("joystick nummer, x, y", j,x,y)
+                            #print("joystick nummer, x, y", j,x,y)
                             self.ball1.move.x += x*3 
                             self.ball1.move.y += y*3 
                             buttons = j.get_numbuttons()
@@ -665,7 +734,7 @@ class PygView(object):
                             x = j.get_axis(0)
                             y = j.get_axis(1)
                             
-                            print("joystick nummer, x, y", j,x,y)
+                            #print("joystick nummer, x, y", j,x,y)
                             self.ball2.move.x += x*3 
                             self.ball2.move.y += y*3 
                             buttons = j.get_numbuttons()
@@ -699,15 +768,32 @@ class PygView(object):
                 
                 crashgroup = pygame.sprite.spritecollide(ball, self.speedbonusgroup, False, pygame.sprite.collide_circle)
                 for speedbonus in crashgroup:
+                    
                    
     
                     
                     if ball == self.ball1:
-                        self.ball1.endOfBonusgroup = self.ball1.age + 2
+                        self.ball1.endOfSpeedBonusTime = self.ball1.age + 15
                         c = (random.randint(100,255),0,0)
                     elif ball == self.ball2:
-                        self.ball2.endOfBonusgroup = self.ball2.age + 2
+                        self.ball2.endOfSpeedBonusTime = self.ball2.age + 15
                         c = (0,0,random.randint(100,255))
+                        
+                        self.powerupsound.play()
+                        
+                    for w in range (0,360,1):
+                        m = v.Vec2d (random.randint(50,250),0)
+                        m.rotate(w)
+                        Fragment(radius = 5, pos = v.Vec2d(speedbonus.pos.x, speedbonus.pos.y),
+                                              move = v.Vec2d(m.x, m.y),
+                                              max_age=random.random()+0.5, 
+                                              color = c)
+                        
+                    Flytext(ball.pos.x, ball.pos.y, '!!!SPEEDBONUS!!!', ball.color, fontsize = 20, duration = 3 )
+                    
+                    #-----------------------------------
+                    speedbonus.kill()
+                       
             
             # ---------- collision detection between balls and bonusgroup ------
             for ball in [self.ball1, self.ball2]:
@@ -726,7 +812,7 @@ class PygView(object):
                         c = (0,0,random.randint(100,255))
                     
                     
-                     #--------grafphical effect----------
+                    #--------grafphical effect----------
                      
                    
                     for w in range (0,360,1):
@@ -736,9 +822,10 @@ class PygView(object):
                                               move = v.Vec2d(m.x, m.y),
                                               max_age=random.random()+0.5, 
                                               color = c)
+                    Flytext(ball.pos.x,ball.pos.y,'!!!BONUS!!!', ball.color, fontsize = 25, duration = 3 )
                        
                      
-                     #-----------------------------------
+                    #-----------------------------------
                     bonus.kill()
                    
                     
@@ -779,14 +866,14 @@ class PygView(object):
                     if ball.number > otherball.number:     # make sure no self-collision or calculating collision twice
                         elastic_collision(ball, otherball) # change dx and dy of both sprites
             
-            ##-------- bonus
+            #-------- bonus-------------------
             if random.random() < 0.001:
                 Bonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
             self.allgroup.draw(self.screen)
             #---------speedbonus------------
-            if random.random() < 0.01:
+            if random.random() < 0.1:
                 SpeedBonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
