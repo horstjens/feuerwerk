@@ -1260,6 +1260,7 @@ class PygView(object):
         for j in self.joysticks:
             j.init()
         self.paint()
+        self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
         self.new_wave()
 
     def loadbackground(self):
@@ -1346,7 +1347,7 @@ class PygView(object):
         self.wave += 1
         #print("------new level...-------")
         PygView.bombchance *= 1.5
-        self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
+        #self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
         t = "{}\nAliens are invading our cities!\nPrepare for wave {}!\nDefend the cities!".format(random.choice(self.texts), self.wave)
         #Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
         ts.PygView(text=t, width = PygView.width, height = PygView.height, 
