@@ -1261,6 +1261,35 @@ class PygView(object):
             j.init()
         self.paint()
         self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
+        self.txt1 = '''Hello.
+We have bad news.
+Aliens are attacking our cities.
+You must stop them. Else they stop our lives.
+Chapter 1: UFOs'''
+        self.txt2 = '''Not bad.
+But the aliens will come again.
+And now, they are more clever.
+Chapter 2: Kamikaze'''
+        self.txt3 = '''These new ships are bad...
+So many Rockets...
+I think every time we defend them,
+they go better and better.
+Now they know that many rockets can 
+hurt us.
+I'm scared of what come now.
+Chapter 3: Minigun'''
+        self.txt4 = '''You defend well.
+But wait whats that,
+look to the sky!
+Looks like our colored tomb!
+Chapter 4: Colorbomber'''
+        self.txt5 = '''You defend 4 waves.
+But we can't win.
+There to good.
+Fight as long as you can,
+but in the end we'll lose.
+Chapter 5: It is all about the honor.'''
+        
         self.new_wave()
         self.loadbackground()
 
