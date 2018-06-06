@@ -484,8 +484,8 @@ class Mothership(VectorSprite):
 
     def __init__(self, **kwargs):
         self.ufo_spawn_rate = 0.009
-        self.kamikaze_spawn_rate = 0.001
-        self.colorbomber_spawn_rate = 0.001
+        self.kamikaze_spawn_rate = 0.0015
+        self.colorbomber_spawn_rate = 0.0015
         self.radius = 100
         self.hitpoints=1000
         VectorSprite.__init__(self, **kwargs)
@@ -866,7 +866,7 @@ class Ufo(VectorSprite):
 
     def __init__(self, **kwargs):
         self.radius = 50
-        self.hitpoints=50
+        self.hitpoints = 100 
         VectorSprite.__init__(self, **kwargs)
 
     def _overwrite_parameters(self):
@@ -1248,27 +1248,55 @@ class PygView(object):
             print("Error: no .jpg files found")
             pygame.quit
             sys.exit()
-        #self.level = 1
-        PygView.bombchance = 0.015
+        self.level = 1
+        PygView.bombchance = 0.005
         PygView.rocketchance = 0.001
         self.wave = 0
         self.age = 0
-        
+        self.loadbackground()
         # ------ joysticks ----
         pygame.joystick.init()
         self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         for j in self.joysticks:
             j.init()
         self.paint()
-        self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
+        self.txt1 = '''Hello.
+                       We have bad news.
+                       Aliens are attacking our cities.
+                       You must stop them. Else they stop
+                       our lives.
+                       Chapter 1: UFOs'''
+        self.txt2 = '''Not bad.
+                       But the aliens will come again.
+                       And now, they are more clever.
+                       Chapter 2: Kamikaze'''
+        self.txt3 = '''These new ships are bad...
+                       So many Rockets...
+                       I think every time we defend them,
+                       they go better and better.
+                       Now they know that many rockets can 
+                       hurt us.
+                       I'm scared of what come now.
+                       Chapter 3: Minigun'''
+        self.txt4 = '''You defend well.
+                       But wait whats that,
+                       look to the sky!
+                       
+                       Looks like our colored tomb!
+                       Chapter 4: Colorbomber'''
+        self.txt5 = '''You defend 4 waves.
+                       But we can't win.
+                       There to good.
+                       Fight as long as you can,
+                       but in the end we'll lose.
+                       Chapter 5: It is all about the honor.'''
         self.new_wave()
-        self.loadbackground()
 
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
         self.background.fill((255,255,255)) # fill background white
         self.background = pygame.image.load(os.path.join("data",
-             self.backgroundfilenames[self.wave %
+             self.backgroundfilenames[self.level %
              len(self.backgroundfilenames)]))
         self.background = pygame.transform.scale(self.background,
              (PygView.width,PygView.height))
@@ -1346,11 +1374,9 @@ class PygView(object):
         
     def new_wave(self):
         self.wave += 1
-        #self.level += 1
-        self.loadbackground()
         #print("------new level...-------")
         PygView.bombchance *= 1.5
-        #self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
+        self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
         t = "{}\nAliens are invading our cities!\nPrepare for wave {}!\nDefend the cities!".format(random.choice(self.texts), self.wave)
         #Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
         ts.PygView(text=t, width = PygView.width, height = PygView.height, 
@@ -1403,9 +1429,8 @@ class PygView(object):
                     if event.key == pygame.K_f:
                         Colorbomber(pos=v.Vec2d(200,100))
                     if event.key == pygame.K_b:
-                        self.new_wave()
-                        #self.level += 1
-                        #self.loadbackground()
+                        self.level += 1
+                        self.loadbackground()
                     if event.key == pygame.K_LCTRL:
                         self.launchRocket((self.mouse2.x, self.mouse2.y))
                     if event.key == pygame.K_RCTRL:
