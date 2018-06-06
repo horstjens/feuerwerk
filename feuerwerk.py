@@ -15,6 +15,7 @@ import time
 import operator
 import math
 import vectorclass2d as v
+import textscroller_vertical as ts
 
 
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
@@ -600,7 +601,97 @@ class Explosion(VectorSprite):
          self.rect.center=(self.pos.x, self.pos.y)
          self.radius+=1
          #self.radius = 1+ int(self.age )
+class Minigun(VectorSprite):
+    def __init__(self, **kwargs):
+        self.radius = 50
+        self.hitpoints=50
+        VectorSprite.__init__(self, **kwargs)
+        self.firemode = False
+    
+    def paint(self, color):
+        # --- Hülle = 111,111,27, Fülle = 59,59,13
+        
+        
+        tmp=pygame.Surface((100, 100))
+        pygame.draw.line(tmp,(128,0,128),(40,80),(75,80),7) # kanone unten
+        pygame.draw.line(tmp,(128,0,128),(40,20),(75,20),7)# oben
+        pygame.draw.polygon(tmp, (128,0,128),              
+          [(0,0), (100,50), (0,100),(27,50)], 4)            #hülle
+        pygame.draw.polygon(tmp, (255,0,255), 
+          [(0,0), (100,50), (0,100),(27,50)], 0)            #fülle
+        pygame.draw.circle(tmp, (128,0,128), (50,50), (20),1) #Umkreis atomzeichen
+        pygame.draw.polygon(tmp, (255,255,0),               
+          [(50,50), (44,33), (56,33)], )                    #atomzeichen
+        pygame.draw.polygon(tmp, (255,255,0), 
+          [(50,50), (32,55), (39,64)],0 )                   # --
+        pygame.draw.polygon(tmp, (255,255,0), 
+          [(50,50), (67,55), (60,64)], )                    # --      
+        pygame.draw.circle(tmp, (255,0,255), (50,50), 9,0)   # 2 kreise atomzeichen
+        pygame.draw.circle(tmp, (1,1,1), (50,50), 5,0)      #--
+        
+        tmp.set_colorkey((0,0,0))
+        tmp.convert_alpha()
+        
+        return tmp
 
+    def create_image(self):
+        #---------image1------
+        self.image1=self.paint((210, 51, 177))
+        #--------image2
+        self.image2 = self.paint((180, 80, 157))
+        #-------image3
+        self.image3 = self.paint((160, 100, 137))
+        #---------------image4
+        self.image4=self.paint((140, 140, 117))
+        #--------------image5
+        self.image5=self.paint((166, 0, 255))
+        #------------------
+        self.images = [ self.image1, self.image2, self.image3, self.image4]
+        self.image = self.images[0]
+        self.image0 = self.image.copy()
+        self.rect= self.image.get_rect()
+        self.set_angle(270)
+    
+    def update(self, seconds):
+        # --- animate ---
+        #i = self.age *3 % len(self.images)
+        #self.image = self.images[int(i)]
+        # --- chance to throw bomb ---
+        #if random.random() < PygView.bombchance: #0.015:
+         #   m = v.Vec2d(0, -random.random()*75)
+          #  m.rotate(random.randint(-90,90))
+           # Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
+            #     gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
+        if random.random() < 0.005:
+            #Flytext(self.pos.x, self.pos.y, "firemode {}".format(self.firemode))
+            self.firemode = not self.firemode 
+        # --- chance to fire Rocket ---
+        if self.firemode and random.random() < 0.6: #PygView.rocketchance: #0.01:
+            for r in range(random.randint(1,1)):
+            
+                m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
+                distance = m.get_length()
+                m = m.normalized() 
+                Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 100, 
+                            citynr = None, max_distance = distance, mass=500, hitpoints=0.01, color = (255,0,0))
+        # --- chance to change move vector ---
+        if random.random() < 0.15:
+             m = v.Vec2d(0, random.randint(-10, 10))
+             m.rotate(random.randint(-120, 120))
+             self.move += m
+        if self.pos.x < 0:
+            self.pos.x = 0
+            self.move.x *= -1
+        elif self.pos.x > PygView.width:
+            self.pos.x = PygView.width
+            self.move.x *= -1
+        if self.pos.y < 0:
+            self.pos.y = 0
+            self.move.y *= -1
+        elif self.pos.y > PygView.height // 4:
+            self.pos.y = PygView.height // 4
+            self.move.y *= -1
+        VectorSprite.update(self, seconds)
 class Kamikaze(VectorSprite):
     
     def __init__(self, **kwargs):
@@ -1255,9 +1346,11 @@ class PygView(object):
         self.wave += 1
         #print("------new level...-------")
         PygView.bombchance *= 1.5
-        t = "Prepare for wave {}!".format(self.wave)
-        Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
-        
+        self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
+        t = "{}\nAliens are invading our cities!\nPrepare for wave {}!\nDefend the cities!".format(random.choice(self.texts), self.wave)
+        #Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
+        ts.PygView(text=t, width = PygView.width, height = PygView.height, 
+                   new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
         for m in range(self.wave):
             Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
     
@@ -1301,6 +1394,8 @@ class PygView(object):
                         running = False
                     if event.key == pygame.K_k:
                         Kamikaze(pos=v.Vec2d(100,100))
+                    if event.key == pygame.K_m:
+                        Minigun(pos=v.Vec2d(1000,50))
                     if event.key == pygame.K_f:
                         Colorbomber(pos=v.Vec2d(200,100))
                     if event.key == pygame.K_b:
@@ -1310,6 +1405,7 @@ class PygView(object):
                         self.launchRocket((self.mouse2.x, self.mouse2.y))
                     if event.key == pygame.K_RCTRL:
                         self.launchRocket((self.mouse3.x, self.mouse3.y))
+
                     if event.key == pygame.K_3:
                         for x in self.dangergroup:
                             x.kill()
@@ -1318,6 +1414,14 @@ class PygView(object):
                             x.kill()
                     if event.key == pygame.K_q:
                         Flytext(1800, 400, "Halte die Taste 5 gedrückt um ein Special-Item zu bekommen!", fontsize = 70, duration = 10, dy=0, dx=-150)
+
+                    if event.key == pygame.K_t:
+                        lines= "This is Firework.... \nAre you ready? \nDefend the cities!"
+                        ts.PygView(text=lines, width = PygView.width,
+                                   height = PygView.height, new_init = False,
+                                   bg_object= self.background,
+                                   font=('mono', 48, True)).run()
+
                     #if event.key == pygame.K_u:
                     #    Ufo(pos=v.Vec2d(random.randint(0,PygView.width), 50), move=v.Vec2d(50,0),color=(0,0,255))
 
@@ -1339,8 +1443,12 @@ class PygView(object):
                     pygame.draw.circle(self.screen, (c2, c2, c2),
                            (int(s.pos.x), int(s.pos.y)),
                             s.maxrange,1)
-            if pressed_keys[pygame.K_5]:
-                self.new_wave()
+
+            #if pressed_keys[pygame.K_5]:
+            #    self.new_wave()
+
+            
+
             # -------- sniper beam --------
             if pressed_keys[pygame.K_1]:
                 for s in self.snipergroup:
@@ -1583,4 +1691,4 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1430,800).run() # try PygView(800,600).run()
+	PygView(1430,800).run() # try PygView(800,600).run()
