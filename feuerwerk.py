@@ -1248,12 +1248,12 @@ class PygView(object):
             print("Error: no .jpg files found")
             pygame.quit
             sys.exit()
-        self.level = 1
+        #self.level = 1
         PygView.bombchance = 0.015
         PygView.rocketchance = 0.001
         self.wave = 0
         self.age = 0
-        self.loadbackground()
+        
         # ------ joysticks ----
         pygame.joystick.init()
         self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
@@ -1262,12 +1262,13 @@ class PygView(object):
         self.paint()
         self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
         self.new_wave()
+        self.loadbackground()
 
     def loadbackground(self):
         self.background = pygame.Surface(self.screen.get_size()).convert()
         self.background.fill((255,255,255)) # fill background white
         self.background = pygame.image.load(os.path.join("data",
-             self.backgroundfilenames[self.level %
+             self.backgroundfilenames[self.wave %
              len(self.backgroundfilenames)]))
         self.background = pygame.transform.scale(self.background,
              (PygView.width,PygView.height))
@@ -1345,6 +1346,8 @@ class PygView(object):
         
     def new_wave(self):
         self.wave += 1
+        #self.level += 1
+        self.loadbackground()
         #print("------new level...-------")
         PygView.bombchance *= 1.5
         #self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
@@ -1400,8 +1403,9 @@ class PygView(object):
                     if event.key == pygame.K_f:
                         Colorbomber(pos=v.Vec2d(200,100))
                     if event.key == pygame.K_b:
-                        self.level += 1
-                        self.loadbackground()
+                        self.new_wave()
+                        #self.level += 1
+                        #self.loadbackground()
                     if event.key == pygame.K_LCTRL:
                         self.launchRocket((self.mouse2.x, self.mouse2.y))
                     if event.key == pygame.K_RCTRL:
