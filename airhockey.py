@@ -107,6 +107,10 @@ class VectorSprite(pygame.sprite.Sprite):
         
 
         # --- default values for missing keywords ----
+        if "leftside" not in kwargs:
+            self.leftside = False
+        if "rightside" not in kwargs:
+            self.rightside = False
         if "pos" not in kwargs:
             self.pos = v.Vec2d(50,50)
         if "move" not in kwargs:
@@ -230,6 +234,15 @@ class VectorSprite(pygame.sprite.Sprite):
         self.age += seconds
   
         # ---- bounce / kill on screen edge ----
+        x = PygView.width * PygView.leftlimitpercent
+        if self.rightside and not self.leftside and self.pos.x - self.width//2 < x:
+            self.move.x = 0
+            self.pos.x = x + self.width // 2 
+        x = PygView.width * PygView.rightlimitpercent
+        if self.leftside and not self.rightside and self.pos.x + self.width//2 > x:
+            self.move.x = 0
+            self.pos.x = x - self.width // 2
+        # -----
         if self.pos.x - self.width //2 < 0:
             if self.kill_on_edge:
                 self.kill()
@@ -587,7 +600,8 @@ class PygView(object):
         self.torrotsound = pygame.mixer.Sound(os.path.join('data', 'torrot.wav'))
         
         pygame.mixer.music.play(-1)
-        
+        PygView.leftlimitpercent = 0.45
+        PygView.rightlimitpercent = 0.55
         
         pygame.joystick.init()
         self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
@@ -630,9 +644,9 @@ class PygView(object):
         #Cannon.groups = self.allgroup, self.cannongroup
         VectorSprite.groups = self.allgroup
         
-        self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100)) # creating a Ball Sprite
+        self.ball1 = Ball(pos=v.Vec2d(PygView.width//2-200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_w, downkey=pygame.K_s, leftkey=pygame.K_a, rightkey=pygame.K_d, mass=500, color=(255,100,100), leftside=True, rightside = False) # creating a Ball Sprite
         #self.cannon1 = Cannon(bossnumber = self.ball1.number)
-        self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255))
+        self.ball2 = Ball(pos=v.Vec2d(PygView.width//2+200,PygView.height//2), move=v.Vec2d(0,0), bounce_on_edge=True, upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=333, color=(100,100,255),  leftside=False, rightside = True)
         #self.cannon2 = Cannon(bossnumber = self.ball2.number)
         #self.cannona = Upercannon(pos=v.Vec2d(20,20), color=(255,0,0))
         #self.cannona2 = Lowercannon(pos=v.Vec2d(20,20), color=(255,0,0))
@@ -758,6 +772,13 @@ class PygView(object):
             self.playtime += seconds
             # delete everything on screen
             self.screen.blit(self.background, (0, 0)) 
+            # draw limit lines:
+            # for right player
+            x = PygView.width * PygView.rightlimitpercent 
+            pygame.draw.line(self.screen, (0,0,255), (x, 0), (x, PygView.height), 2)
+            x = PygView.width * PygView.leftlimitpercent 
+            pygame.draw.line(self.screen, (255,0,0), (x, 0), (x, PygView.height), 2)
+            
             # write text below sprites
             write(self.screen, "FPS: {:6.3}  PLAYTIME: {:6.3} SECONDS".format(
                            self.clock.get_fps(), self.playtime))
