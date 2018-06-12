@@ -540,6 +540,29 @@ class SpeedBonus(VectorSprite):
         self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
 
+class Expander(VectorSprite):
+    
+    
+    
+     def create_image(self):
+        self.image = pygame.Surface((self.radius*2,self.radius*2))
+        
+        if self.radius >= 10 :
+            dicke = self.radius // 10 * 2
+           
+            pygame.draw.circle (self.image, (159,29,113), (self.radius, self.radius ), self.radius // 1)
+            pygame.draw.circle (self.image, (78,187,0), (self.radius , self.radius), self.radius // 2)
+            pygame.draw.circle (self.image, (255,74,22), (self.radius, self.radius ) ,self.radius // 3)
+            pygame.draw.rect (self.image, (0,0,255), (0, self.radius-dicke, self.radius*2, dicke*2))
+            pygame.draw.rect (self.image, (0,0,255), (self.radius-dicke, 0,  dicke*2, self.radius*2 ))
+            pygame.draw.circle(self.image, (255,0,0), (self.radius, self.radius), self.radius //self.radius+4)
+            pygame.draw.polygon (self.image, (0,100,255), [(0,0),(5,25),(10,0),(15,25),(20,0),(25,25),(30,0),(35,25),(40,0),(45,25),(50,0),(45,25),(40,50),(35,25),(30,50),(25,25),(20,50),(15,25),(10,50),(5,25),(0,0)])
+        self.image.set_colorkey((0,0,0))
+        self.image = self.image.convert_alpha() # faster blitting with transparent color
+        self.rect= self.image.get_rect()
+        self.image0 = self.image.copy()
+        
+        
 class Fragment(VectorSprite):
     
     def create_image(self):
@@ -675,6 +698,11 @@ class PygView(object):
         self.score2 = 0
         running = True
         while running:
+            if PygView.rightlimitpercent > 0.55:
+                PygView.rightlimitpercent -= (0.01 / 30)
+            
+            if PygView.leftlimitpercent < 0.45:
+                PygView.leftlimitpercent += (0.01 / 30 )
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False 
@@ -723,7 +751,9 @@ class PygView(object):
                         pygame.mixer.music.stop()
                         pygame.mixer.music.load(os.path.join("data", self.musicnames[self.musicnumber]))
                         pygame.mixer.music.play(-1)
-                    
+                    #------------expander------------------------
+                    if event.key == pygame.K_h:
+                        PygView.rightlimitpercent +=0.1
             #---------------------joystick------------------------------
             for number, j in enumerate(self.joysticks):
                         if number == 0:
@@ -784,7 +814,20 @@ class PygView(object):
                            self.clock.get_fps(), self.playtime))
             
             self.allgroup.update(seconds) # would also work with ballgroup
+            #----------- collision detection between balls and expanderbonusgroup ---
             
+            for ball in [self.ball1, self.ball2]:
+                
+                crashgroup = pygame.sprite.spritecollide(ball, self.speedbonusgroup, False, pygame.sprite.collide_circle)
+                for speedbonus in crashgroup:
+                    
+                   if ball == self.ball1:
+                       self.rightlimitpercent -=10
+                       
+                       
+    
+                    
+                    
             # ---------- collision detection between balls and speedbonusgroup ---
             for ball in [self.ball1, self.ball2]:
                 
@@ -896,11 +939,17 @@ class PygView(object):
                                 max_age = random.randint(2,9))
             self.allgroup.draw(self.screen)
             #---------speedbonus------------
-            if random.random() < 0.1:
+            if random.random() < 0.001:
                 SpeedBonus(radius = 25,pos = v.Vec2d(random.randint(0,self.width),
                            random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
-            self.allgroup.draw(self.screen)           
+            self.allgroup.draw(self.screen) 
+            
+            #-------------expander-------------
+            #if random.random()<0.5:
+            #    expander
+                
+                      
             # write text over everything 
             
             # left score
