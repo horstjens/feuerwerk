@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-author: Horst JENS
-email: horstjens@gmail.com
+author: Janosch HÖFLER
+email: janosch.hoefler@gmail.com
 contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 idea: template to show how to move pygames Sprites, simple physic and
@@ -493,6 +493,7 @@ class Bonus(VectorSprite):
         #pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
         if self.radius >= 10 :
             dicke = self.radius // 10 * 2
+            
             pygame.draw.circle (self.image, (55,155,111), (self.radius, self.radius ), self.radius // 1)
             pygame.draw.circle (self.image, (212,20,193), (self.radius , self.radius), self.radius // 2)
             pygame.draw.circle (self.image, (200,169,86), (self.radius, self.radius ) ,self.radius // 3)
@@ -509,8 +510,8 @@ class SpeedBonus(VectorSprite):
     
     
      def create_image(self):
-        self.image = pygame.Surface((self.width,self.height))
-        #pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+        self.image = pygame.Surface((self.radius*2,self.radius*2))
+        
         if self.radius >= 10 :
             dicke = self.radius // 10 * 2
            
@@ -520,7 +521,7 @@ class SpeedBonus(VectorSprite):
             pygame.draw.rect (self.image, (0,0,255), (0, self.radius-dicke, self.radius*2, dicke*2))
             pygame.draw.rect (self.image, (0,0,255), (self.radius-dicke, 0,  dicke*2, self.radius*2 ))
             pygame.draw.circle(self.image, (255,0,0), (self.radius, self.radius), self.radius //self.radius+4)
-            pygame.draw.polygon (self.image, (random.randint(10,255),random.randint(10,255),random.randint(10,255)), [(0,0),(5,25),(10,0),(15,25),(20,0),(25,25),(30,0),(35,25),(40,0),(45,25),(50,0),(45,50),(40,25),(35,50),(30,25),(25,50),(20,25),(15,50),(10,25),(5,50),(0,0)])
+            pygame.draw.polygon (self.image, (random.randint(50,255),random.randint(50,255),random.randint(50,255)), [(0,0),(5,25),(10,0),(15,25),(20,0),(25,25),(30,0),(35,25),(40,0),(45,25),(50,0),(45,25),(40,50),(35,25),(30,50),(25,25),(20,50),(15,25),(10,50),(5,25),(0,0)])
         self.image.set_colorkey((0,0,0))
         self.image = self.image.convert_alpha() # faster blitting with transparent color
         self.rect= self.image.get_rect()
@@ -868,14 +869,15 @@ class PygView(object):
             
             #-------- bonus-------------------
             if random.random() < 0.001:
-                Bonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
+                Bonus(radius = random.randint(10,30),
+                 pos = v.Vec2d(random.randint(0,self.width),
                                                  random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
             self.allgroup.draw(self.screen)
             #---------speedbonus------------
             if random.random() < 0.1:
-                SpeedBonus(radius = random.randint(10,30), pos = v.Vec2d(random.randint(0,self.width),
-                                                 random.randint(0,self.height)),
+                SpeedBonus(radius = 25,pos = v.Vec2d(random.randint(0,self.width),
+                           random.randint(0,self.height)),
                                 max_age = random.randint(2,9))
             self.allgroup.draw(self.screen)           
             # write text over everything 
