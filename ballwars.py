@@ -584,7 +584,7 @@ class PygView(object):
     width = 0
     height = 0
   
-    def __init__(self, width=640, height=400, fps=30, tolerance=5):
+    def __init__(self, width=640, height=400, fps=60, tolerance=5, bouncefactor = 1,maxgoal=5):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
@@ -597,6 +597,9 @@ class PygView(object):
         self.fps = fps
         self.playtime = 0.0
         self.tolerance = tolerance
+        PygView.bouncefactor = bouncefactor
+        PygView.maxgoal = maxgoal
+        print("boucefactor ist {}",PygView.bouncefactor)
         #self.font = pygame.font.SysFont('mono', 24, bold=True)
         self.paint() 
         
@@ -813,7 +816,7 @@ class PygView(object):
                                m = v.Vec2d(60,0) # lenght of cannon
                                m = m.rotated(-self.cannon1.angle)
                                p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                               Ball(pos=p, move=m.normalized()*500+self.player1.move, radius=10,color=(255,0,0),mass=200, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                               Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
                                #knockbackeffect
                                self.player1.move+=m.normalized()*-10
                                self.player1.readyToFire = self.player1.age + 0.3
@@ -826,8 +829,8 @@ class PygView(object):
                    #x1= j.get_axis(2)
                    #y1= j.get_axis(1)
                    #print(x,y)
-                   self.player2.move.x += x  *6
-                   self.player2.move.y += y  *6
+                   self.player2.move.x += x  *10
+                   self.player2.move.y += y  *10
                    #if x1 > 0:
                    #    self.cannon1.rotate(5)
                    #elif x1<0:
@@ -854,7 +857,7 @@ class PygView(object):
                                #knockbackeffect
                                self.player2.move+=m.normalized()*-10
                                self.player2.readyToFire = self.player2.age + 0.3
-                        
+                                
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             if pressed_keys[pygame.K_x]:
@@ -962,7 +965,7 @@ class PygView(object):
             g = pygame.sprite.spritecollideany(self.lazyball1, self.goalgroup)
             if g is not None:
                 if g.number == self.goal1.number:
-                    for p in range(50):
+                    for p in range(100):
                         m = v.Vec2d(random.randint(50,100),0)
                         m.rotate(random.randint(0,360))
                         Wreck(pos=v.Vec2d(self.lazyball1.pos.x,self.lazyball1.pos.y),
@@ -972,7 +975,7 @@ class PygView(object):
                     #print(g)
                     #print("collision! x {}     y {}".format(self.lazyball1.pos.x, self.lazyball1.pos.y))
                 else:
-                    for p in range(1000):
+                    for p in range(100):
                         m = v.Vec2d(random.randint(50,100),0)
                         m.rotate(random.randint(0,360))
                         Wreck(pos=v.Vec2d(self.lazyball1.pos.x,self.lazyball1.pos.y),
@@ -994,8 +997,8 @@ class PygView(object):
             #if g is not None:
             for b in crashgroup:
                 elastic_collision(self.lazyball1, b)
-                self.lazyball1.move.x *= 4.0
-                self.lazyball1.move.y *= 4.0
+                self.lazyball1.move.x *= 6.0*PygView.bouncefactor   
+                self.lazyball1.move.y *= 6.0*PygView.bouncefactor
             # - - - - - - - - - - -collision detection between lazyball and hwall- - - - - - - - - 
             crashgroup = pygame.sprite.spritecollide(self.lazyball1, self.hwallgroup, False, pygame.sprite.collide_mask)
             for w in crashgroup:
@@ -1038,9 +1041,13 @@ class PygView(object):
     
             pygame.display.flip()
             pygame.display.set_caption("Press ESC to quit. Cannon angle: {}".format(self.cannon1.angle))
-            
-    pygame.quit()
+            if self.p1score >= PygView.maxgoal:
+                running = False
+            if self.p2score >= PygView.maxgoal:
+                running = False
 
+    pygame.quit()
+    
 if __name__ == '__main__':
     PygView(1400,800, 60, tolerance=5).run() # try PygView(800,600).run()
     #m=menu1.Menu(menu1.Settings.menu)
