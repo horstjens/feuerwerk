@@ -6,33 +6,52 @@ menu system for pygame
 
 import pygame 
 #import template004_sprites_collision_detection
-import ballwars
 import textscroller_vertical
 import random
 import sys
 import os.path
+import feuerwerk
 
 
 class Settings(object):
-    gold = 100
-    bounce = 1
-    maxgoal = 5
-    menu = {"root":["Play","Help", "Credits", "Options","Quit"],
-            "Options":["set BounceFactor","scorelimit","Change screen resolution"],
-            "Change screen resolution":["640x400","800x640","1024x800","1440x850","1920x1080","2560x1440","3840x2160","4096x2160"],
-            "Credits":["WE"],
-            "scorelimit":["in this you can choose how many goals you can score to win","1","2","3","4","5","6","7","8","9","10","15","100","9999"],
-            "Help":["how to play", "how to win"],
-            "set BounceFactor":["*1","*2","*3"],
-            "how to play":["Try to score Goal by shooting or pushing the LazyBall into the Goal, there are Goalies that will deflect the LazyBall if it hits them. there are 2 Bouncers(we may add a way to increase,decrease or turn them off completely),that will do the same thing as the Goalies... except their bigger(a lot bigger) and are at the 2 sides of the stadium."],
-            "how to win":["there is no real way to win right now, we may add some ways soon."]
+    
+   
+    menu = {"root":["Play", "Difficulty", "Help", "Credits", "Options","Quit",'Upgrades'],
+           
+            
+            "Options":["Turn music off","Turn sound off","Change screen resolution",'Change more screen resolutionc'],
+            "Difficulty":["easy","medium","elite","hardcore"],
+            "Change screen resolution":['1440x830','3440 x 1440',	
+	'2560x1080',
+	'3840x2160',
+	'2560x1440',
+	'1920x1080',	
+	'2560x1600',	
+    '2560x1080',	
+	'3840x2160',	
+	'1920x2160',	
+	
+],
+            'Change more screen resolutionc':[		
+	'2560x1440',	
+	'1920x1080',		
+	'1680x1050',	
+	'1920x1080',	
+		
+	'1600x900',	
+	'1440x900',	
+	'1366x768',	
+	'1280x1024'],
+            "Credits":["Joe","Alex", "Martin"],
+            'Upgrades':['Rocketspeed'],
+            "Help":["how to play", "how to win"]
             } 
         
 
 
 class Menu(object):
     """ each menu item name must be unique"""
-    def __init__(self, menu={"root":["Play","Help","Quit"]}):
+    def __init__(self, menu={"root":["Play","Help","Quit",'Upgrades']}):
         self.menudict = menu
         self.menuname="root"
         self.oldnames = []
@@ -106,6 +125,9 @@ class PygView(object):
         pygame.display.set_caption("Press ESC to quit")
         PygView.width = width
         PygView.height = height
+        PygView.gold =100
+        PygView.price = 5
+        PygView.rocketspeed = 150
         self.set_resolution()
         self.clock = pygame.time.Clock()
         self.fps = fps
@@ -128,7 +150,7 @@ class PygView(object):
                 self.draw_text(i, 100, m.items.index(i)*30+10)
         
         y = self.height - 120
-        #self.draw_text("Gold: {}".format(Settings.gold), 10,y , (200,200,0))
+        self.draw_text("Gold: {},  Price for Speed uptdate: {}".format(PygView.gold, PygView.price), 10,y , (200,200,0))
         #self.draw_text("Red: A:{} D:{}".format(Settings.red_attackers, Settings.red_defenders), 150, y, (200,0,0))
         #self.draw_text("Blue: A:{} D:{}".format(Settings.blue_attackers, Settings.blue_defenders), 340, y, (0,0,200))
 
@@ -171,56 +193,57 @@ class PygView(object):
                         
                         # important: no elif here, instead if, because every menupoint could contain an 'x'        
                         elif result=="Play":
-                            print("activating external program")
-                            ballwars.PygView(PygView.width, PygView.height,bouncefactor = Settings.bounce, maxgoal=Settings.maxgoal).run()
-                            print("bye") 
-                            self.__init__()
-                        elif result == "x1":
-                            Settings.bounce = 1
-                        elif result == "x2":
-                            Settings.bounce = 2
-                        elif result == "x3":
-                            Settings.bounce = 3
-                            
-                            
-                        elif result == "1":
-                            Settings.maxgoal = 1
-                        elif result == "2":
-                            Settings.maxgoal = 2
-                        elif result == "3":
-                            Settings.maxgoal = 3
-                        elif result == "4":
-                            Settings.maxgoal = 4
-                        elif result == "5":
-                            Settings.maxgoal = 5
-                        elif result == "6":
-                            Settings.maxgoal = 6
-                        elif result == "7":
-                            Settings.maxgoal = 7
-                        elif result == "8":
-                            Settings.maxgoal = 8
-                        elif result == "9":
-                            Settings.maxgoal = 9
-                        elif result == "10":
-                            Settings.maxgoal = 10
-                        elif result == "100":
-                            Settings.maxgoal = 100
-                        elif result == "9999":
-                            Settings.maxgoal = 9999
+                            feuerwerk.PygView(PygView.width, PygView.height,price = PygView.price, rocketspeed=PygView.rocketspeed, gold = PygView.gold).run()
+                        ##    # simpledefense.PygView().run()
+                        #    print("activating external program")
+                        #    #externalProgram.PygView(self.width, self.height)
+                        #    pygame.quit()
+                        #    template004_sprites_collision_detection.PygView(900,900).run()
+                        #    #sys.exit()    
+                        #    print("bye") 
+                        #    self.__init__()
+                                                  
+                        
+                                           
+                        
                         elif result == "how to play":
-                            text="play this game\n as you like\n and win!"
+                            text="kill aliens"
                             textscroller_vertical.PygView(text, self.width, self.height).run()
                         elif result == "nix":
                             text="nix\n gar nix\n wirklich nix!"
                             textscroller_vertical.PygView(text, self.width, self.height).run()
                         elif result == "how to win":
-                            text="to win the game:\n shoot down enemies\n avoid catching bullets"
+                            text="to win the game:\n shoot down aliens\n beware your city before bombs"
                             textscroller_vertical.PygView(text, self.width, self.height, bg_filename=os.path.join("data", "800px-La_naissance_de_Venus.jpg")).run()
                         elif result == "False":
                             Settings.menu["Credits"][2] = "True" # toggle
                         elif result == "True":
                            Settings.menu["Credits"][2] = "False" # toggle
-                        elif result=="Quit":
+                        
+                        elif result == 'easy':
+                            difficult = 1
+                            print(difficult)
+                        elif result == 'medium':
+                            difficult = 2
+                            print(difficult)
+                        elif result == 'elite':
+                            difficult = 3
+                            print(difficult)
+                        elif result == 'hardcore':
+                            difficult = 4
+                            print(difficult)
+                        elif result == 'Rocketspeed' and PygView.gold > PygView.price - 0.00001:
+                           # print('88888888888',PygView.rocketspeed,'kg<aa', random.randint(12165,8574359),'JZ>/"("((',random.randint(12165,8574359),'lLIIOIk,kfd,kf',random.randint(12165,8574359),random.randint(12165,8574359),random.randint(12165,8574359),'KKKKKKKKKKKKKKKKKKKKKKNOPEKKKKKKKKKKKKKKKKKKKKK','kigqtr45v258vnb civnakmlceliiiiii#',random.coice(['a','b','c','x','y','z']),random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'],random.coice['a','b','c','x','y','z'])
+                            PygView.gold -= PygView.price
+                            PygView.rocketspeed += 15
+                        else:
+                            print('''nicht genug gold''')
+                        
+                            
+                        
+                        
+                            
+                        if result=="Quit":
                             print("Bye")
                             pygame.quit()
                             sys.exit()
@@ -252,7 +275,9 @@ class PygView(object):
 ####
 
 if __name__ == '__main__':
-
+    
     # call with width of window and fps
     m=Menu(Settings.menu)
     PygView().run()
+    
+        
