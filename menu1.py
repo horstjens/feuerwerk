@@ -6,6 +6,7 @@ menu system for pygame
 
 import pygame 
 #import template004_sprites_collision_detection
+import ballwars
 import textscroller_vertical
 import random
 import sys
@@ -176,8 +177,9 @@ class PygView(object):
                             # simpledefense.PygView().run()
                             print("activating external program")
                             #externalProgram.PygView(self.width, self.height)
-                            pygame.quit()
-                            template004_sprites_collision_detection.PygView(900,900).run()
+                            #pygame.quit()
+                            #template004_sprites_collision_detection.PygView(900,900).run()
+                            ballwars.PygView(PygView.width, PygView.height).run()
                             #sys.exit()    
                             print("bye") 
                             self.__init__()
