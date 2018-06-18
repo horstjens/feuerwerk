@@ -15,20 +15,17 @@ import os.path
 
 class Settings(object):
     gold = 100
-    red_defenders = 0
-    red_attackers = 0
-    blue_defenders = 0
-    blue_attackers = 0
-    price_red = 10
-    price_blue = 10
-    menu = {"root":["Play","buy red army", "buy blue army", "Difficulty", "Help", "Credits", "Options","Quit"],
-            "buy blue army": ["buy blue defender", "buy blue attacker", "sell blue defender", "sell blue attacker"],
-            "buy red army":  ["buy red defender", "buy red attacker", "sell red defender", "sell red attacker"],
-            "Options":["Turn music off","Turn sound off","Change screen resolution", "Turn off Wilhelm"],
-            "Difficulty":["easy","medium","elite","hardcore"],
-            "Change screen resolution":["640x400","800x640","1024x800"],
-            "Credits":["bla1","bla2", "False"],
-            "Help":["how to play", "how to win"]
+    bounce = 1
+    maxgoal = 5
+    menu = {"root":["Play","Help", "Credits", "Options","Quit"],
+            "Options":["set BounceFactor","scorelimit","Change screen resolution"],
+            "Change screen resolution":["640x400","800x640","1024x800","1440x850","1920x1080","2560x1440","3840x2160","4096x2160"],
+            "Credits":["WE"],
+            "scorelimit":["in this you can choose how many goals you can score to win","1","2","3","4","5","6","7","8","9","10","15","100","9999"],
+            "Help":["how to play", "how to win"],
+            "set BounceFactor":["*1","*2","*3"],
+            "how to play":["Try to score Goal by shooting or pushing the LazyBall into the Goal, there are Goalies that will deflect the LazyBall if it hits them. there are 2 Bouncers(we may add a way to increase,decrease or turn them off completely),that will do the same thing as the Goalies... except their bigger(a lot bigger) and are at the 2 sides of the stadium."],
+            "how to win":["there is no real way to win right now, we may add some ways soon."]
             } 
         
 
@@ -131,9 +128,9 @@ class PygView(object):
                 self.draw_text(i, 100, m.items.index(i)*30+10)
         
         y = self.height - 120
-        self.draw_text("Gold: {}".format(Settings.gold), 10,y , (200,200,0))
-        self.draw_text("Red: A:{} D:{}".format(Settings.red_attackers, Settings.red_defenders), 150, y, (200,0,0))
-        self.draw_text("Blue: A:{} D:{}".format(Settings.blue_attackers, Settings.blue_defenders), 340, y, (0,0,200))
+        #self.draw_text("Gold: {}".format(Settings.gold), 10,y , (200,200,0))
+        #self.draw_text("Red: A:{} D:{}".format(Settings.red_attackers, Settings.red_defenders), 150, y, (200,0,0))
+        #self.draw_text("Blue: A:{} D:{}".format(Settings.blue_attackers, Settings.blue_defenders), 340, y, (0,0,200))
 
     def run(self):
         """The mainloop
@@ -174,80 +171,42 @@ class PygView(object):
                         
                         # important: no elif here, instead if, because every menupoint could contain an 'x'        
                         elif result=="Play":
-                            # simpledefense.PygView().run()
                             print("activating external program")
-                            #externalProgram.PygView(self.width, self.height)
-                            #pygame.quit()
-                            #template004_sprites_collision_detection.PygView(900,900).run()
-                            ballwars.PygView(PygView.width, PygView.height).run()
-                            #sys.exit()    
+                            ballwars.PygView(PygView.width, PygView.height,bouncefactor = Settings.bounce, maxgoal=Settings.maxgoal).run()
                             print("bye") 
                             self.__init__()
-                                                  
-                        elif result == "buy blue defender":
-                            self.cash.play()
-                            if Settings.gold >= Settings.price_blue:
-                                Settings.gold -= Settings.price_blue
-                                Settings.blue_defenders += 1
-                            else:
-                                print("earn some money first")
-                        elif result == "buy red defender":
-                            self.cash.play()
-                            if Settings.gold >= Settings.price_red:
-                                Settings.gold -= Settings.price_red
-                                Settings.red_defenders += 1
-                            else:
-                                print("earn some money first")
-                        elif result == "buy blue attacker":
-                            self.cash.play()
-                            if Settings.gold >= Settings.price_blue:
-                                Settings.gold -= Settings.price_blue
-                                Settings.blue_attackers += 1
-                            else:
-                                print("earn some money first")
-                        elif result == "buy red attacker":
-                            self.cash.play()
-                            if Settings.gold >= Settings.price_red:
-                                Settings.gold -= Settings.price_red
-                                Settings.red_attackers += 1
-                            else:
-                                print("earn some money first")
-                                           
-                        #------ sell ------
-                        elif result == "sell blue defender":
-                            self.cash.play()
-                            if Settings.blue_defenders > 0:
-                                Settings.gold += Settings.price_blue / 2
-                                Settings.blue_defenders -= 1
-                            else:
-                                print("you have no blue defenders")
-                        elif result == "sell red defender":
-                            self.cash.play()
-                            if Settings.red_defenders > 0:
-                                Settings.gold += Settings.price_red / 2
-                                Settings.red_defenders -= 1
-                            else:
-                                print("you have no red defenders")
-                        elif result == "sell blue attacker":
-                            self.cash.play()
-                            if Settings.blue_attackers > 0:
-                                Settings.gold += Settings.price_blue / 2
-                                Settings.blue_attackers -= 1
-                            else:
-                                print("you have no blue attackers")
-                        elif result == "sell red attacker":
-                            self.cash.play()
-                            if Settings.red_attackers > 0:
-                                Settings.gold += Settings.price_red / 2
-                                Settings.red_attackers -= 1
-                            else:
-                                print("you have no red attackers")
-                                           
-                    
-                    
-                    
-                    
-                                
+                        elif result == "x1":
+                            Settings.bounce = 1
+                        elif result == "x2":
+                            Settings.bounce = 2
+                        elif result == "x3":
+                            Settings.bounce = 3
+                            
+                            
+                        elif result == "1":
+                            Settings.maxgoal = 1
+                        elif result == "2":
+                            Settings.maxgoal = 2
+                        elif result == "3":
+                            Settings.maxgoal = 3
+                        elif result == "4":
+                            Settings.maxgoal = 4
+                        elif result == "5":
+                            Settings.maxgoal = 5
+                        elif result == "6":
+                            Settings.maxgoal = 6
+                        elif result == "7":
+                            Settings.maxgoal = 7
+                        elif result == "8":
+                            Settings.maxgoal = 8
+                        elif result == "9":
+                            Settings.maxgoal = 9
+                        elif result == "10":
+                            Settings.maxgoal = 10
+                        elif result == "100":
+                            Settings.maxgoal = 100
+                        elif result == "9999":
+                            Settings.maxgoal = 9999
                         elif result == "how to play":
                             text="play this game\n as you like\n and win!"
                             textscroller_vertical.PygView(text, self.width, self.height).run()
