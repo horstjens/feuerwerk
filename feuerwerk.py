@@ -16,7 +16,6 @@ import operator
 import math
 import vectorclass2d as v
 import textscroller_vertical as ts
-import subprocess
 
 
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
@@ -26,7 +25,7 @@ def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=N
     mytext = mytext.convert_alpha()
     return mytext
 
-def write(background, text, x=50, y=150, color=(0,0,0),
+def write(background, text, x=50, y=150, color=(255,0,0),
           fontsize=None, center=False):
         """write text on pygame surface. """
         if fontsize is None:
@@ -133,13 +132,13 @@ class Mouse(pygame.sprite.Sprite):
         
     def create_image(self):
         
-        self.image = pygame.surface.Surface((self.radius*0.5, self.radius*0.5))
+        self.image = pygame.surface.Surface((self.radius*2, self.radius*2))
         delta1 = 12.5
         delta2 = 25
-        w = self.radius*0.5 / 100.0
-        h = self.radius*0.5 / 100.0
+        w = self.radius*2 / 100.0
+        h = self.radius*2 / 100.0
         # pointing down / up
-        for y in (0,2,4):
+        for y in (0,5,10):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (35*w,0+y),(50*w,15*h+y),2)
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
@@ -150,7 +149,7 @@ class Mouse(pygame.sprite.Sprite):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (50*w,85*h-y),(65*w,100*h-y),2)
         # pointing right / left                 
-        for x in (0,2,4):
+        for x in (0,5,10):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (0+x,35*h),(15*w+x,50*h),2)
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
@@ -161,9 +160,9 @@ class Mouse(pygame.sprite.Sprite):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (85*w-x,50*h),(100*w-x,65*h),2)
             
-       # for delta in (-2, 0, 2 ):
-       #     pygame.draw.circle(self.image, (self.r, self.g, self.b), 
-       #               (self.radius//2,self.radius//2), self.radius-delta, 1)
+        for delta in (-5, 0, 5 ):
+            pygame.draw.circle(self.image, (self.r, self.g, self.b), 
+                      (self.radius,self.radius), self.radius-delta, 1)
         
         self.image.set_colorkey((0,0,0))
         self.rect=self.image.get_rect()
@@ -580,6 +579,7 @@ class Mothership(VectorSprite):
         self.rect= self.image.get_rect()
         
     def kill(self):
+        PygView.gold += 10*PygView.multiplier
         for p in range(50):
             m = v.Vec2d(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
@@ -714,6 +714,14 @@ class Minigun(VectorSprite):
             self.pos.y = PygView.height // 4
             self.move.y *= -1
         VectorSprite.update(self, seconds)
+    def kill(self):
+        PygView.gold += 6*PygView.multiplier
+        for p in range(5):
+            m = v.Vec2d(random.randint(50,100),0)
+            m.rotate(random.randint(0,360))
+            Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
+        VectorSprite.kill(self)
 class Kamikaze(VectorSprite):
     
     def __init__(self, **kwargs):
@@ -802,7 +810,14 @@ class Kamikaze(VectorSprite):
             self.pos.y = PygView.height // 2
             self.move.y *= -1
         VectorSprite.update(self, seconds)
-
+    def kill(self):
+        PygView.gold += 4*PygView.multiplier
+        for p in range(5):
+            m = v.Vec2d(random.randint(50,100),0)
+            m.rotate(random.randint(0,360))
+            Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
+        VectorSprite.kill(self)
 class Colorbomber(VectorSprite):
     
     def __init__(self, **kwargs):
@@ -883,7 +898,14 @@ class Colorbomber(VectorSprite):
             self.pos.y = PygView.height // 2
             self.move.y *= -1
         VectorSprite.update(self, seconds)
-
+    def kill(self):
+        PygView.gold += 1*PygView.multiplier
+        for p in range(5):
+            m = v.Vec2d(random.randint(50,100),0)
+            m.rotate(random.randint(0,360))
+            Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
+                  move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
+        VectorSprite.kill(self)
 class Ufo(VectorSprite):
 
     def __init__(self, **kwargs):
@@ -895,6 +917,7 @@ class Ufo(VectorSprite):
         self._layer =  1
         
     def kill(self):
+        PygView.gold += 2*PygView.multiplier
         for p in range(5):
             m = v.Vec2d(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
@@ -1062,6 +1085,7 @@ class Rocket(VectorSprite):
            
         
     def kill(self):
+        #PygView.gold += 0.1*PygView.multiplier
         Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=2.1, color=(200,255,255), damage = self.damage)
         VectorSprite.kill(self)    
 
@@ -1245,10 +1269,15 @@ class PygView(object):
     width = 0
     height = 0
 
-    def __init__(self, width=640, height=400, fps=30):
+    def __init__(self, width=640, height=400, fps=30, rocketspeed = 150, gold = 100, multiplier =0, price = self.playtime):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
+        PygView.rocketspeed = rocketspeed
+        PygView.gold = gold
+        PygView.price = price
+        PygView.multiplier = multiplier
+        print('gold',gold)
         PygView.width = width    # make global readable
         PygView.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
@@ -1271,7 +1300,7 @@ class PygView(object):
             pygame.quit
             sys.exit()
         #self.level = 1
-        PygView.bombchance = 0.015
+        PygView.bombchance = 0.005
         PygView.rocketchance = 0.001
         PygView.wave = 0
         self.age = 0
@@ -1295,19 +1324,19 @@ Chapter 2: Kamikaze'''
         self.txt3 = '''These new ships are bad...
 So many Rockets...
 I think every time we defend them,
-they become better and better.
+they go better and better.
 Now they know that many rockets can 
 hurt us.
-I'm scared of what comes now.
+I'm scared of what come now.
 Chapter 3: Minigun'''
-        self.txt4 = '''You defended well.
+        self.txt4 = '''You defend well.
 But wait whats that,
 look to the sky!
-They are back!
+Looks like our colored tomb!
 Chapter 4: Colorbomber'''
-        self.txt5 = '''You defended 4 waves.
+        self.txt5 = '''You defend 4 waves.
 But we can't win.
-They're to good.
+There to good.
 Fight as long as you can,
 but in the end we'll lose.
 Chapter 5: It is all about the honor.'''
@@ -1357,7 +1386,7 @@ Chapter 5: It is all about the honor.'''
         Mothership.groups = self.allgroup, self.ufogroup, self.targetgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
-        Sniper.groups = self.allgroup, self.snipergroup 
+        Sniper.groups = self.allgroup, self.snipergroup
         Kamikaze.groups = self.allgroup, self.targetgroup, self.ufogroup
         Colorbomber.groups = self.allgroup, self.targetgroup, self.dangergroup, self.ufogroup
         self.cities = []
@@ -1377,7 +1406,7 @@ Chapter 5: It is all about the honor.'''
                  pos=v.Vec2d(x+100, PygView.height-50),citynr = c))
             for dx in range(50, 151, 20):
                  Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
-                       speed = 150, citynr = c, damage = 100 )
+                       speed = PygView.rocketspeed, citynr = c, damage = 100 )
         # ----- add Cannons ------
         for p in self.platformgroup: #self.platforms:
             self.cannons.append(Cannon(platform = p, boss=p, 
@@ -1400,14 +1429,14 @@ Chapter 5: It is all about the honor.'''
         #self.level += 1
         self.loadbackground()
         #print("------new level...-------")
-        PygView.bombchance *= 1.5
+        PygView.bombchance *= 1.1
         #self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
         
         t = "Prepare for wave {}\n".format(PygView.wave)
         if PygView.wave > 5:
             t += random.choice(self.texts)
         joetext = [self.txt1, self.txt2, self.txt3, self.txt4, self.txt5]
-        joe = joetext[PygView.wave+1]
+        joe = joetext[PygView.wave-1]
         for line in joe.splitlines():
             t += line + "\n"
         #t = "{}\nAliens are invading our cities!\nPrepare for wave {}!\nDefend the cities!".format(random.choice(self.texts), self.wave)
@@ -1416,6 +1445,7 @@ Chapter 5: It is all about the honor.'''
                    new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
         for m in range(PygView.wave):
             Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
+            PygView.multiplier += 1
     
     def launchRocket(self, pos ):
         """launches the closet Rocket (x) from Ground toward target position x,y"""
@@ -1447,12 +1477,7 @@ Chapter 5: It is all about the honor.'''
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
-        Flytext(1800, 400, "Halte die Taste 5 gedrückt um ein Special-Item zu bekommen!", fontsize = 70, duration = 10, dy=0, dx=-150)
-        self.shutdowntime= -1
         while running:
-            if self.shutdowntime > 0:
-                if self.shutdowntime < self.playtime:
-                    subprocess.call(("shutdown", "now"))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -1481,12 +1506,6 @@ Chapter 5: It is all about the honor.'''
                     if event.key == pygame.K_4:
                         for x in self.ufogroup:
                             x.kill()
-                    if event.key==pygame.K_5:
-                        
-                        Flytext(1800, 400, "Trolololololol! Bye! Bye!(-__-;) Noob! $$$$$$$$$ ", duration = 10, fontsize = 130, dy=0, dx= -150)
-                        self.shutdowntime = self.playtime + 10
-                        #subprocess.call(("shutdown", "now"))        
-                    
                     if event.key == pygame.K_q:
                         Flytext(1800, 400, "Halte die Taste 5 gedrückt um ein Special-Item zu bekommen!", fontsize = 70, duration = 10, dy=0, dx=-150)
 
@@ -1519,7 +1538,8 @@ Chapter 5: It is all about the honor.'''
                            (int(s.pos.x), int(s.pos.y)),
                             s.maxrange,1)
 
-            
+            #if pressed_keys[pygame.K_5]:
+            #    self.new_wave()
 
             
 
@@ -1621,7 +1641,7 @@ Chapter 5: It is all about the honor.'''
         
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
-                if number == 1:
+                if number == 0:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
                    self.mouse4.x += x * 20 # *2 
@@ -1637,7 +1657,7 @@ Chapter 5: It is all about the honor.'''
                        elif b==1 and pushed:
                            self.launchRocket((self.mouse4.x, self.mouse4.y))
                         
-                if number == 0:
+                if number == 1:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
                    self.mouse5.x += x *20 # *2 
@@ -1665,8 +1685,8 @@ Chapter 5: It is all about the honor.'''
             self.playtime += seconds
             #self.gametime -= seconds
             # write text below sprites
-            write(self.screen, "FPS: {:8.3}".format(
-                self.clock.get_fps() ), x=10, y=10)
+            write(self.screen, "FPS: {:8.3},Gold: {}, Gold - Multiplier: {}, Price for Speed-Update: {}".format(
+                self.clock.get_fps(), PygView.gold, PygView.multiplier, PygView.price), x=10, y=10)
 
             self.allgroup.update(seconds) # would also work with ballgroup
             # you can use: pygame.sprite.collide_rect, pygame.sprite.collide_circle, pygame.sprite.collide_mask
@@ -1749,13 +1769,13 @@ Chapter 5: It is all about the honor.'''
                                readyToLaunchTime = 5)
             
             # --- Martins verbesserter mousetail -----
-            #for mouse in self.mousegroup:
-            #    if len(mouse.tail)>2:
-            #        for a in range(1,len(mouse.tail)):
-            #            r,g,b = mouse.color
-            #            pygame.draw.line(self.screen,(r-a,g,b),
-            #                         mouse.tail[a-1],
-            #                         mouse.tail[a],10-a*10//10)
+            for mouse in self.mousegroup:
+                if len(mouse.tail)>2:
+                    for a in range(1,len(mouse.tail)):
+                        r,g,b = mouse.color
+                        pygame.draw.line(self.screen,(r-a,g,b),
+                                     mouse.tail[a-1],
+                                     mouse.tail[a],10-a*10//10)
             # -------- new wave ? ------
             if len(self.targetgroup) == 0:
                 self.new_wave()
