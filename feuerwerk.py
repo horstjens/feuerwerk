@@ -487,9 +487,7 @@ class Smoke(VectorSprite):
 class Mothership(VectorSprite):
 
     def __init__(self, **kwargs):
-        self.ufo_spawn_rate = 0.009
-        self.kamikaze_spawn_rate = 0.001
-        self.colorbomber_spawn_rate = 0.001
+        self.ufo_spawn_rate = 0.001
         self.radius = 100
         self.hitpoints=1000
         VectorSprite.__init__(self, **kwargs)
@@ -626,13 +624,23 @@ class Explosion(VectorSprite):
          self.rect.center=(self.pos.x, self.pos.y)
          self.radius+=1
          #self.radius = 1+ int(self.age )
+
+
 class Ufo_Minigun(VectorSprite):
     def __init__(self, **kwargs):
+        #print("Minigun")
         self.radius = 50
         self.hitpoints=50
         VectorSprite.__init__(self, **kwargs)
         self.firemode = False
-    
+        # aquire target
+        #m =  v.Vec2d(random.randint(0,PygView.width), PygView.height) - self.pos
+        self.select_target()
+                
+    def select_target(self):
+        self.m =  v.Vec2d(random.randint(0,PygView.width), PygView.height) - self.pos
+                
+        
     def paint(self, color):
         # --- Hülle = 111,111,27, Fülle = 59,59,13
         
@@ -690,15 +698,20 @@ class Ufo_Minigun(VectorSprite):
         if random.random() < 0.005:
             #Flytext(self.pos.x, self.pos.y, "firemode {}".format(self.firemode))
             self.firemode = not self.firemode 
-        # --- chance to fire Rocket ---
-        if self.firemode and random.random() < 0.6: #PygView.rocketchance: #0.01:
+        # --- very small chance to select a new target ----
+        if not self.firemode and random.random() < 0.0001:
+            self.select_target() # select a new target to aim the evil minigun at
+        
+        # --- chance to fire Evil_Tracer ---
+        if self.firemode and random.random() < 0.5: #PygView.rocketchance: #0.01:
             for r in range(random.randint(1,1)):
-            
-                m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
+                #m =  v.Vec2d(random.randint(0,PygView.width), PygView.height) - self.pos
+                m = self.m
                 distance = m.get_length()
-                m = m.normalized() 
-                Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 100, 
-                            citynr = None, max_distance = distance, mass=500, hitpoints=0.01, color = (255,0,0))
+                m = m.normalized() * 50
+                
+                Evil_Tracer(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 200, 
+                          citynr = None, max_distance = distance, mass=5, hitpoints=0.01, color=(0,128,0))
         # --- chance to change move vector ---
         if random.random() < 0.15:
              m = v.Vec2d(0, random.randint(-10, 10))
@@ -1123,6 +1136,23 @@ class Tracer(VectorSprite):
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
         
+class Evil_Tracer(Tracer):
+    
+    def __init__(self, **kwargs):
+        #self.color = (0,128,0)
+        VectorSprite.__init__(self, **kwargs)
+        if self.move.get_length() > 0:
+            self.set_angle(-self.move.get_angle())
+    
+    def create_image(self):
+        self.image = pygame.Surface((8,4))
+        self.image.fill(self.color)
+        #pygame.draw.line(self.image, (255,255,0), (1,3),(9,3), 2)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        
 class Bomb(VectorSprite):
 
    def __init__(self, **kwargs):
@@ -1306,34 +1336,35 @@ class PygView(object):
             j.init()
         self.paint()
         self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
-        self.txt1 = '''Hello.
+        self.txt1 = '''Hello, Sir.
 We have bad news.
-Aliens are attacking our cities.
-You must stop them. Else they stop our lives.
+Aliens are attacking our cities. 
+You must stop them immediately. 
+Otherwise, they will destroy our cities.
 Chapter 1: UFOs'''
         self.txt2 = '''Not bad.
-But the aliens will come again.
-And now, they are more clever.
+But the aliens will come back.
+And now, they are stronger.
 Chapter 2: Kamikaze'''
-        self.txt3 = '''These new ships are bad...
+        self.txt3 = '''These new ships are bad for us.
 So many Rockets...
-I think every time we defend them,
-they go better and better.
+I think every time we defeat them,
+they get better and better.
 Now they know that many rockets can 
 hurt us.
-I'm scared of what come now.
+I'm scared of what comes now.
 Chapter 3: Minigun'''
-        self.txt4 = '''You defend well.
-But wait whats that,
-look to the sky!
+        self.txt4 = '''You are defending well.
+But wait, whats that?
+Look to the sky!
 Looks like our colored tomb!
 Chapter 4: Colorbomber'''
         self.txt5 = '''You defend 4 waves.
-But we can't win.
-There to good.
+But we can't win this battle.
+They're too strong.
 Fight as long as you can,
 but in the end we'll lose.
-Chapter 5: It is all about the honor.'''
+Chapter 5: It is all about the honor...'''
         
         self.new_wave()
         self.loadbackground()
@@ -1360,6 +1391,7 @@ Chapter 5: It is all about the honor.'''
         self.rocketgroup = pygame.sprite.Group()
         self.snipergroup = pygame.sprite.Group()
         self.evilrocketgroup = pygame.sprite.Group()
+        self.eviltracergroup = pygame.sprite.Group()
         self.targetgroup = pygame.sprite.Group()
         self.platformgroup = pygame.sprite.Group()
         self.ufogroup = pygame.sprite.Group()
@@ -1380,6 +1412,7 @@ Chapter 5: It is all about the honor.'''
         Mothership.groups = self.allgroup, self.ufogroup, self.targetgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Tracer.groups = self.allgroup, self.tracergroup
+        Evil_Tracer.groups = self.allgroup, self.dangergroup, self.targetgroup
         Sniper.groups = self.allgroup, self.snipergroup
         Ufo.groups = self.allgroup, self.ufogroup, self.targetgroup
         Ufo_Minigun.groups = self.allgroup, self.ufogroup, self.targetgroup
@@ -1428,7 +1461,6 @@ Chapter 5: It is all about the honor.'''
         #print("------new level...-------")
         PygView.bombchance *= 1.5
         #self.texts = ["We can do this!", "They aren't as strong as we are!", "You are strong!", "You can do this!", "Run for your lives!", "Help us please!"]
-        
         t = "Prepare for wave {}\n".format(PygView.wave)
         if PygView.wave > 5:
             t += random.choice(self.texts)
@@ -1440,6 +1472,7 @@ Chapter 5: It is all about the honor.'''
         #Flytext(PygView.width//2, PygView.height//2, text=t, duration = 5, fontsize=128, color=(224,32,157) )
         ts.PygView(text=t, width = PygView.width, height = PygView.height, 
                    new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
+        
         for m in range(PygView.wave):
             Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
     
