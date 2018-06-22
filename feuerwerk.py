@@ -1506,7 +1506,7 @@ Chapter 5: It is all about the honor...'''
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
-        Flytext(1800, 400, "Drücke die Taste 5 um das Spiel zu beginnen! ", fontsize = 70, duration = 10, dy=0, dx=-150)
+        Flytext(1800, 400, "Very untrustworthy Yannik suggest to press 5 for a real surprise! ", fontsize = 70, duration = 10, dy=0, dx=-150)
         self.shutdowntime= -1
         while running:
             if self.shutdowntime > 0:
