@@ -556,15 +556,19 @@ class Mothership(VectorSprite):
         VectorSprite.update(self, seconds)
 
     def paint(self, color, color2, color3):
-        tmp=pygame.Surface((200, 200))
-        pygame.draw.polygon (tmp, color, [(0, 0),  (50 , 75), (0, 150), (100, 112.5), (200, 150), (150,75), (200, 0), (100, 25), (0, 0)], 0)
-        pygame.draw.polygon (tmp, color2, [(50, 100), (175, 25), (100, 25),  (25, 25), (150, 100), (25, 175), (100, 50), (175, 175), (50, 100)], 0)
-        pygame.draw.polygon(tmp, color3, [ (70, 160), (200, 0), (130, 160), (0, 0), (70, 160)        ], 0)
+        xf=self.xf
+        xy=self.xy
+        tmp=pygame.Surface((int(200*xf), int(200*xy)))
+        pygame.draw.polygon (tmp, color, [(0, 0),  (int(25*xf) , int(37*xy)), (0, int(75*xy)), (int(50*xf), int(66*xy)), (int(100*xf), int(75*xy)), (int(75*xf), int(37*xy)), (int(100*xf), int(0*xy)), (int(50*xf), int(12*xy)), (0, 0)], 0)
+        pygame.draw.polygon (tmp, color2, [(int(25*xf), int(50*xy)), (int(87*xf), int(12*xy)), (int(50*xf), int(12*xy)),  (int(12*xf), int(12*xy)), (int(75*xf), int(50*xy)), (int(12*xf), int(87*xy)), (int(50*xf), int(25*xy)), (int(87*xf), int(87*xy)), (int(25*xf), int(50*xy))], 0)
+        pygame.draw.polygon(tmp, color3, [ (int(35*xf), int(80*xy)), (int(100*xf), 0), (int(65*xy), int(80*xy)), (0, 0), (int(35*xf), int(80*xy))        ], 0)
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
         return tmp
 
     def create_image(self):
+        self.xf=random.random()*2+0.5
+        self.xy=random.random()*2+0.5
         #---------image1------
         self.image1 = self.paint((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))                
         #--------image2
@@ -1506,7 +1510,7 @@ Chapter 5: It is all about the honor...'''
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
-        Flytext(1800, 400, "Very untrustworthy Yannik suggest to press 5 for a real surprise! ", fontsize = 70, duration = 10, dy=0, dx=-150)
+        Flytext(1800, 400, " Yannik recommends to press 5 for a real surprise! ", fontsize = 70, duration = 10, dy=0, dx=-150)
         self.shutdowntime= -1
         while running:
             if self.shutdowntime > 0:
