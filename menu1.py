@@ -17,10 +17,18 @@ class Settings(object):
     gold = 100
     bounce = 1
     maxgoal = 5
+    mass = 1000
+    speed = 10
+    ai = False
+    difficulty = 1
     menu = {"root":["Play","Help", "Credits", "Options","Quit"],
-            "Options":["set BounceFactor","scorelimit","Change screen resolution"],
+            "Options":["mode","set BounceFactor","playerspeed","playermass","scorelimit","Change screen resolution"],
+            "playerspeed":["normalspeed","halfspeed","doublespeed"],
+            "playermass":["mass does not change speed!","normalmass","light","fat","as heavy as the earth"],
             "Change screen resolution":["640x400","800x640","1024x800","1440x850","1920x1080","2560x1440","3840x2160","4096x2160"],
             "Credits":["WE"],
+            "mode":["1 player","2 player"],
+            "1 player":["normal difficuty", "EXTREME difficulty"],
             "scorelimit":["in this you can choose how many goals you can score to win","1","2","3","4","5","6","7","8","9","10","15","100","9999"],
             "Help":["how to play", "how to win"],
             "set BounceFactor":["*1","*2","*3"],
@@ -172,16 +180,41 @@ class PygView(object):
                         # important: no elif here, instead if, because every menupoint could contain an 'x'        
                         elif result=="Play":
                             print("activating external program")
-                            ballwars.PygView(PygView.width, PygView.height,bouncefactor = Settings.bounce, maxgoal=Settings.maxgoal).run()
+                            ballwars.PygView(PygView.width, PygView.height,bouncefactor = Settings.bounce, maxgoal=Settings.maxgoal,playermass = Settings.mass, playerspeed = Settings.speed, ai = Settings.ai, difficulty = Settings.difficulty).run()
                             print("bye") 
                             self.__init__()
-                        elif result == "x1":
+                        elif result == "*1":
                             Settings.bounce = 1
-                        elif result == "x2":
+                        elif result == "*2":
                             Settings.bounce = 2
-                        elif result == "x3":
+                        elif result == "*3":
                             Settings.bounce = 3
+                        
+                        elif result == "EXTREME difficulty":
+                            Settings.difficulty = 10
+                        elif result == "normal difficulty":
+                            Settings.difficulty = 1
+                        
+                        elif result == "1 player":
+                            Settings.ai = True
+                        elif result == "2 player":
+                            Settings.ai = False
+                        
+                        elif result == "normalspeed":
+                            Settings.speed = 10
+                        elif result == "halfspeed":
+                            Settings.speed = 5
+                        elif result == "doublespeed":
+                            Settings.speed = 20
                             
+                        elif result == "normalmass":
+                            Settings.mass = 1000
+                        elif result == "light":
+                            Settings.mass = 500
+                        elif result == "fat":
+                            Settings.mass = 2500
+                        elif result == "as heavy as the earth":
+                            Settings.mass = 100000
                             
                         elif result == "1":
                             Settings.maxgoal = 1
