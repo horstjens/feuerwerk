@@ -170,7 +170,11 @@ class VectorSprite(pygame.sprite.Sprite):
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
         
     def kill(self):
-        del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
+        try:
+            del VectorSprite.numbers[self.number] # remove Sprite from numbers dict
+        except:
+            print('Error deleting sprite',self.number)
+            
         pygame.sprite.Sprite.kill(self)
         
     def init2(self):
@@ -659,11 +663,13 @@ class PygView(object):
         self.bonusgroup = pygame.sprite.Group()
         self.speedbonusgroup = pygame.sprite.Group()
         self.goalgroup = pygame.sprite.Group()
+        self.expandergroup = pygame.sprite.Group()
         Ball.groups = self.allgroup, self.ballgroup # each Ball object belong to those groups
         Goal.groups = self.allgroup, self.goalgroup
         Flytext.groups = self.allgroup
         Bonus.groups = self.allgroup, self.bonusgroup
         SpeedBonus.groups = self.allgroup, self.speedbonusgroup
+        Expander.groups = self.allgroup, self.expandergroup
         #Cannon.groups = self.allgroup, self.cannongroup
         VectorSprite.groups = self.allgroup
         
@@ -684,8 +690,6 @@ class PygView(object):
                             color = (0,200,0), radius = 15)
         self.seeker2 = Ball(pos = v.Vec2d(PygView.width, PygView.height),target = self.ball3, mass = 2000,
                             color = (0,100,0), radius = 15)
-        
-
 
         self.goal1 = Goal(pos=v.Vec2d(25, PygView.height//2), side="left", width=50, height=250, color=(200,50,50))
         self.goal2 = Goal(pos=v.Vec2d(PygView.width - 25, PygView.height//2), side="right", width=50, height=250, color=(200,200,50
@@ -710,6 +714,8 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    if event.key == pygame.K_g:
+                        SpeedBonus()
                     if event.key == pygame.K_b:
                         Ball(pos=v.Vec2d(self.ball1.pos.x,self.ball1.pos.y),
                               move=v.Vec2d(0,0), radius=5,max_age = 4, 
@@ -732,8 +738,6 @@ class PygView(object):
                         Ball(pos = p, move = m.normalized()*30, radius = 10, color = self.ball2.color, max_age = 4)
                         
                                
-                    #if event.key == pygame.K_p:
-                    #   Flytext(100,100,"Janosch war da",(0,200,200)) 
                     
                     
                     # -----------
@@ -814,20 +818,9 @@ class PygView(object):
                            self.clock.get_fps(), self.playtime))
             
             self.allgroup.update(seconds) # would also work with ballgroup
-            #----------- collision detection between balls and expanderbonusgroup ---
-            
-            for ball in [self.ball1, self.ball2]:
-                
-                crashgroup = pygame.sprite.spritecollide(ball, self.speedbonusgroup, False, pygame.sprite.collide_circle)
-                for speedbonus in crashgroup:
-                    
-                   if ball == self.ball1:
-                       self.rightlimitpercent -=10
                        
                        
     
-                    
-                    
             # ---------- collision detection between balls and speedbonusgroup ---
             for ball in [self.ball1, self.ball2]:
                 
@@ -849,6 +842,7 @@ class PygView(object):
                     for w in range (0,360,1):
                         m = v.Vec2d (random.randint(50,250),0)
                         m.rotate(w)
+                        c = (random.randint(100,255),0,0)
                         Fragment(radius = 5, pos = v.Vec2d(speedbonus.pos.x, speedbonus.pos.y),
                                               move = v.Vec2d(m.x, m.y),
                                               max_age=random.random()+0.5, 
@@ -893,8 +887,39 @@ class PygView(object):
                     #-----------------------------------
                     bonus.kill()
                    
+            #--------------collision dedection between balls and Expandergroup-----------
                     
-            
+                    
+            for ball in [self.ball1, self.ball2]:
+                
+        
+                crashgroup = pygame.sprite.spritecollide(ball, self.expandergroup, True, pygame.sprite.collide_circle)
+                for bonus in crashgroup:
+                    self.powerupsound.play()
+                    
+                    
+                    if ball == self.ball2:
+                        PygView.leftlimitpercent -=0.1
+                        
+                    elif ball == self.ball1:
+                        PygView.rightlimitpercent +=0.1
+                        
+                    #-----------graphical effect-------------------    
+                        
+                        
+                    for w in range (0,360,1):
+                        m = v.Vec2d (random.randint(50,250),0)
+                        m.rotate(w)
+                        c = (random.randint(100,255),0,0)
+                        Fragment(radius = 5, pos = v.Vec2d(self.ex1.pos.x, self.ex1.pos.y),
+                                              move = v.Vec2d(m.x, m.y),
+                                              max_age=random.random()+0.5, 
+                                              color = c)
+                    Flytext(ball.pos.x,ball.pos.y,'!!!EXPANDER!!!', ball.color, fontsize = 25, duration = 3 )
+                    
+                    #---------------------------
+                    self.ex1.kill()
+                      
             # --------- collision detection between ball3 and goalgroup --------
             crash = pygame.sprite.spritecollideany(self.ball3, self.goalgroup)
                     #collided = collide_mask) 
@@ -946,9 +971,15 @@ class PygView(object):
             self.allgroup.draw(self.screen) 
             
             #-------------expander-------------
-            #if random.random()<0.5:
-            #    expander
+            if random.random() < 0.1:
+                self.ex1 = Expander(radius = 25, pos = v.Vec2d(random.randint(0,self.width), random.randint(0,self.height)),
+                                max_age = random.randint(2,10))
+                                
+                                
                 
+            self.allgroup.draw(self.screen)
+            
+            
                       
             # write text over everything 
             
