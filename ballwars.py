@@ -147,6 +147,10 @@ class VectorSprite(pygame.sprite.Sprite):
         for key, arg in kwargs.items():
             setattr(self, key, arg)
         # --- default values for missing keywords ----
+        if "ai" not in kwargs:
+            self.ai = False
+        if "playerspeed" not in kwargs:
+            self.playerspeed = 0
         if "static" not in kwargs:
             self.static = False
         if "pos" not in kwargs:
@@ -353,18 +357,30 @@ class Ball(VectorSprite):
     def update(self, seconds):
         VectorSprite.update(self, seconds)
         pressedkeys = pygame.key.get_pressed()
-        if self.upkey is not None:
-            if pressedkeys[self.upkey]:
-                self.move.y -= 5
-        if self.downkey is not None:
-            if pressedkeys[self.downkey]:
-                self.move.y += 5
-        if self.leftkey is not None:
-            if pressedkeys[self.leftkey]:
-                self.move.x -= 5
-        if self.rightkey is not None:
-            if pressedkeys[self.rightkey]:
-                self.move.x += 5
+        if not self.ai:
+            if self.upkey is not None:
+                if pressedkeys[self.upkey]:
+                    self.move.y -= self.playerspeed
+            if self.downkey is not None:
+                if pressedkeys[self.downkey]:
+                    self.move.y += self.playerspeed
+            if self.leftkey is not None:
+                if pressedkeys[self.leftkey]:
+                    self.move.x -= self.playerspeed
+            if self.rightkey is not None:
+                if pressedkeys[self.rightkey]:
+                    self.move.x += self.playerspeed
+        else:
+            #ai control
+            move = random.randint(1,4)
+            if move == 1:
+                self.move.y -= random.randint(10,20)
+            if move == 2:
+                self.move.y += random.randint(10,20)
+            if move == 3:
+                self.move.x -= random.randint(10,20)
+            if move == 4:
+                self.move.x += random.randint(10,20)
                 
     def create_image(self):
         # create a rectangular surface for the ball 50x50
@@ -584,7 +600,8 @@ class PygView(object):
     width = 0
     height = 0
   
-    def __init__(self, width=640, height=400, fps=60, tolerance=5, bouncefactor = 1,maxgoal=5):
+    def __init__(self, width=640, height=400, fps=60, tolerance=5, bouncefactor = 1,
+                 maxgoal=5, playerspeed = 10, playermass = 1000, ai = True, difficulty = 1):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
@@ -597,8 +614,12 @@ class PygView(object):
         self.fps = fps
         self.playtime = 0.0
         self.tolerance = tolerance
+        self.playerspeed = playerspeed
+        self.playermass = playermass
         PygView.bouncefactor = bouncefactor
         PygView.maxgoal = maxgoal
+        self.ai = ai
+        self.difficulty = difficulty
         print("boucefactor ist {}",PygView.bouncefactor)
         #self.font = pygame.font.SysFont('mono', 24, bold=True)
         self.paint() 
@@ -653,8 +674,8 @@ class PygView(object):
                             bounce_on_edge=True, 
                             upkey=pygame.K_w, downkey=pygame.K_s, 
                             leftkey=pygame.K_a, rightkey=pygame.K_d, 
-                            mass=1000,color=(150,0,0),
-                            friction=0.99) # creating a Ball Sprite
+                            mass=self.playermass,color=(150,0,0),
+                            friction=0.99, ai = False, playerspeed = self.playerspeed) # creating a Ball Sprite
         self.cannon1 = Cannon(bossnumber = self.player1.number,maxrange=300)
         #self.ball2 = Ball(pos=v.Vec2d(600,350), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,255,0)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
         #self.cannon2 = Cannon(bossnumber = self.ball2.number)
@@ -662,8 +683,8 @@ class PygView(object):
                            bounce_on_edge=True,
                            upkey=pygame.K_UP, downkey=pygame.K_DOWN,
                            leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, 
-                           mass=1000,color=(150,150,150),
-                           friction=0.99, angle = 180)
+                           mass=self.playermass,color=(150,150,150),
+                           friction=0.99, angle = 180, ai = self.ai, playerspeed = self.playerspeed)
         self.cannon3 = Cannon(bossnumber = self.player2.number,maxrange=300)
         self.cannon3.rotate(180)
         #self.ball4 = Ball(pos=v.Vec2d(800,500), move=v.Vec2d(0,0), bounce_on_edge=True,mass=5000,color=(0,0,255)) #upkey=pygame.K_UP, downkey=pygame.K_DOWN, leftkey=pygame.K_LEFT, rightkey=pygame.K_RIGHT, mass=500)
@@ -768,14 +789,14 @@ class PygView(object):
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon1.angle)
                         p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=4) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player1.move+=m.normalized()*-10 
                     if event.key == pygame.K_m:
                         m = v.Vec2d(60,0) # lenght of cannon
                         m = m.rotated(-self.cannon3.angle)
                         p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
-                        Ball(pos=p, move=m.normalized()*420+self.player2.move,mass=100,radius=2, color=(0,0,255), kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                        Ball(pos=p, move=m.normalized()*420+self.player2.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=4) # move=v.Vec2d(0,0),
                         #knockbackeffect
                         self.player2.move+=m.normalized()*-10
 
@@ -783,7 +804,14 @@ class PygView(object):
                         self.player1.rotate(1) #
                         
                        
-                         
+            if self.ai and random.random() < 0.08:
+                        m = v.Vec2d(60,0) # lenght of cannon
+                        m = m.rotated(-self.cannon3.angle)
+                        p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
+                        Ball(pos=p, move=m.normalized()*420+self.player2.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=4) # move=v.Vec2d(0,0),
+                        #knockbackeffect
+                        self.player2.move+=m.normalized()*-10
+             
             # ------ joystick 0 , player1 -------
             for number, j in enumerate(self.joysticks):
                 if number == 0:
@@ -792,8 +820,8 @@ class PygView(object):
                    #x1= j.get_axis(2)
                    #y1= j.get_axis(1)
                    #print(x,y)
-                   self.player1.move.x += x  *10
-                   self.player1.move.y += y  *10
+                   self.player1.move.x += x  *self.playerspeed
+                   self.player1.move.y += y  *self.playerspeed
                    #if x1 > 0:
                    #    self.cannon1.rotate(5)
                    #elif x1<0:
@@ -816,7 +844,7 @@ class PygView(object):
                                m = v.Vec2d(60,0) # lenght of cannon
                                m = m.rotated(-self.cannon1.angle)
                                p = v.Vec2d(self.player1.pos.x, self.player1.pos.y) + m
-                               Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                               Ball(pos=p, move=m.normalized()*420+self.player1.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=4) # move=v.Vec2d(0,0),
                                #knockbackeffect
                                self.player1.move+=m.normalized()*-10
                                self.player1.readyToFire = self.player1.age + 0.3
@@ -829,8 +857,8 @@ class PygView(object):
                    #x1= j.get_axis(2)
                    #y1= j.get_axis(1)
                    #print(x,y)
-                   self.player2.move.x += x  *10
-                   self.player2.move.y += y  *10
+                   self.player2.move.x += x  *self.playerspeed
+                   self.player2.move.y += y  *self.playerspeed
                    #if x1 > 0:
                    #    self.cannon1.rotate(5)
                    #elif x1<0:
@@ -853,7 +881,7 @@ class PygView(object):
                                m = v.Vec2d(60,0) # lenght of cannon
                                m = m.rotated(-self.cannon3.angle)
                                p = v.Vec2d(self.player2.pos.x, self.player2.pos.y) + m
-                               Ball(pos=p, move=m.normalized()*420+self.player2.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=10) # move=v.Vec2d(0,0),
+                               Ball(pos=p, move=m.normalized()*420+self.player2.move, radius=10,color=(255,0,0),mass=100, kill_on_edge=True, max_age=4) # move=v.Vec2d(0,0),
                                #knockbackeffect
                                self.player2.move+=m.normalized()*-10
                                self.player2.readyToFire = self.player2.age + 0.3
@@ -864,11 +892,20 @@ class PygView(object):
                 self.cannon1.rotate(5)
             if pressed_keys[pygame.K_y]:
                 self.cannon1.rotate(-5)
-            if pressed_keys[pygame.K_k]:
-                self.cannon3.rotate(5)
-            if pressed_keys[pygame.K_l]:
-                self.cannon3.rotate(-5)
-                                                       
+            if not self.ai:
+                if pressed_keys[pygame.K_k]:
+                    self.cannon3.rotate(5)
+                if pressed_keys[pygame.K_l]:
+                    self.cannon3.rotate(-5)
+                                            
+            else:
+                #ai control
+                target = self.player1
+                vectordiff =self.cannon3.pos - target.pos
+                self.cannon3.set_angle(-vectordiff.get_angle()-180)
+                #ramming
+                if random.random() < 0.02:
+                    self.player2.move -= vectordiff *self.difficulty
             # ----- auto shooting for corner cannons -------
                         # corner cannon auto aim
             for c in [self.cannon5,self.cannon6,self.cannon7,self.cannon8]:
