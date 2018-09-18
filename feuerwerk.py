@@ -129,6 +129,8 @@ class Mouse(pygame.sprite.Sprite):
         self.create_image()
         self.rect = self.image.get_rect()
         self.control = control # "mouse" "keyboard1" "keyboard2"
+        # joystick single fire
+        self.pushed = False
         
     def create_image(self):
         
@@ -200,7 +202,7 @@ class Mouse(pygame.sprite.Sprite):
             if pressed[pygame.K_RIGHT]:
                 self.x += delta
         elif self.control == "joystick1":
-            pass 
+            pass
         elif self.control == "joystick2":
             pass
         if self.x < 0:
@@ -642,8 +644,11 @@ class Ufo_Minigun(VectorSprite):
         self.select_target()
                 
     def select_target(self):
-        self.m =  v.Vec2d(random.randint(0,PygView.width), PygView.height) - self.pos
-                
+        # target selection for moving
+        self.m = v.Vec2d(random.randint(0,PygView.width), PygView.height) - self.pos
+         
+#    def select_enemy(self):
+#        self.e = v.Vec2d(random.randint(0,PygView.width), PygView.height)
         
     def paint(self, color):
         # --- Hülle = 111,111,27, Fülle = 59,59,13
@@ -690,15 +695,6 @@ class Ufo_Minigun(VectorSprite):
         self.set_angle(270)
     
     def update(self, seconds):
-        # --- animate ---
-        #i = self.age *3 % len(self.images)
-        #self.image = self.images[int(i)]
-        # --- chance to throw bomb ---
-        #if random.random() < PygView.bombchance: #0.015:
-         #   m = v.Vec2d(0, -random.random()*75)
-          #  m.rotate(random.randint(-90,90))
-           # Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
-            #     gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         if random.random() < 0.005:
             #Flytext(self.pos.x, self.pos.y, "firemode {}".format(self.firemode))
             self.firemode = not self.firemode 
@@ -828,7 +824,40 @@ class Ufo(VectorSprite):
         self.image = self.images[0]
         self.rect= self.image.get_rect()
 
-class Ufo_Rocketship(VectorSprite):
+class Ufo_Bomber(Ufo):
+    """default ufo that throws bombs"""
+    
+    def paint(self, color):
+        tmp=pygame.Surface((100, 100))
+        pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
+        pygame.draw.arc(tmp, color, (0, -20, 100, 100), (math.pi*1.5)-(math.pi/4),(math.pi*1.5)+(math.pi/4), 2 )
+        pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
+        pygame.draw.line(tmp, color, (10, 80), (25, 73),  2)
+        pygame.draw.line(tmp, color, (85, 80), (70, 73),  2)
+        pygame.draw.ellipse(tmp, (41, 154, 54), (25, 23, 50, 50), 0)
+        pygame.draw.ellipse(tmp, color, (0, 50, 100, 30), 0)
+        tmp.set_colorkey((0,0,0))
+        tmp.convert_alpha()
+        return tmp
+
+    def create_image(self):
+        #---------image1------
+        self.image1=self.paint((210, 51, 177))
+        #--------image2
+        self.image2 = self.paint((180, 80, 157))
+        #-------image3
+        self.image3 = self.paint((160, 100, 137))
+        #---------------image4
+        self.image4=self.paint((140, 140, 117))
+        #--------------image5
+        self.image5=self.paint((166, 0, 255))
+        #------------------
+        self.images = [ self.image1, self.image2, self.image3, self.image4]
+        self.image = self.images[0]
+        self.rect= self.image.get_rect()
+
+
+class Ufo_Rocketship(Ufo):
     """Ufo that hovers around and shoots an arc of slow missles"""
     
     def _overwrite_parameters(self):
@@ -861,7 +890,7 @@ class Ufo_Rocketship(VectorSprite):
         
         tmp.set_colorkey((0,0,0))
         tmp.convert_alpha()
-        
+        tmp = pygame.transform.rotate(tmp,270)
         return tmp
 
     def create_image(self):
@@ -880,7 +909,8 @@ class Ufo_Rocketship(VectorSprite):
         self.image = self.images[0]
         self.image0 = self.image.copy()
         self.rect= self.image.get_rect()
-        self.set_angle(270)
+        #self.set_angle(270)
+        #self.set_angle(-90)
     
     def fire(self):
          for r in range(random.randint(10,50)):
@@ -969,37 +999,7 @@ class Ufo_Diver(Ufo):
             self.kill()
         VectorSprite.update(self, seconds)
 
-class Ufo_Bomber(Ufo):
-    """default ufo that throws bombs"""
-    
-    def paint(self, color):
-        tmp=pygame.Surface((100, 100))
-        pygame.draw.arc(tmp,color, (0, 50, 100, 100), (math.pi/2)-(math.pi/4),(math.pi/2)+(math.pi/4), 2 )
-        pygame.draw.arc(tmp, color, (0, -20, 100, 100), (math.pi*1.5)-(math.pi/4),(math.pi*1.5)+(math.pi/4), 2 )
-        pygame.draw.arc(tmp, (41, 154, 54),(25, 23, 50, 50),  0-(math.pi/8),math.pi+(math.pi/8), 4 )
-        pygame.draw.line(tmp, color, (10, 80), (25, 73),  2)
-        pygame.draw.line(tmp, color, (85, 80), (70, 73),  2)
-        pygame.draw.ellipse(tmp, (41, 154, 54), (25, 23, 50, 50), 0)
-        pygame.draw.ellipse(tmp, color, (0, 50, 100, 30), 0)
-        tmp.set_colorkey((0,0,0))
-        tmp.convert_alpha()
-        return tmp
 
-    def create_image(self):
-        #---------image1------
-        self.image1=self.paint((210, 51, 177))
-        #--------image2
-        self.image2 = self.paint((180, 80, 157))
-        #-------image3
-        self.image3 = self.paint((160, 100, 137))
-        #---------------image4
-        self.image4=self.paint((140, 140, 117))
-        #--------------image5
-        self.image5=self.paint((166, 0, 255))
-        #------------------
-        self.images = [ self.image1, self.image2, self.image3, self.image4]
-        self.image = self.images[0]
-        self.rect= self.image.get_rect()
 
 class City(VectorSprite):
 
@@ -1680,40 +1680,24 @@ Chapter 5: It is all about the honor...'''
             oldleft, oldmiddle, oldright = left, middle, right  
         
             # ------ joystick handler -------
+            mouses = [self.mouse4, self.mouse5]
             for number, j in enumerate(self.joysticks):
                 if number == 0:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
-                   self.mouse4.x += x * 20 # *2 
-                   self.mouse4.y += y * 20 # *2 
+                   mouses[number].x += x * 20 # *2 
+                   mouses[number].y += y * 20 # *2 
                    buttons = j.get_numbuttons()
-                   oldpushed = False
                    for b in range(buttons):
                        pushed = j.get_button( b )
-                       if b == 0:
-                          if oldpushed and not pushed:
-                              self.launchRocket((self.mouse4.x, self.mouse4.y))
-                          oldpushed = pushed
-                       elif b==1 and pushed:
-                           self.launchRocket((self.mouse4.x, self.mouse4.y))
-                        
-                if number == 1:
-                   x = j.get_axis(0)
-                   y = j.get_axis(1)
-                   self.mouse5.x += x *20 # *2 
-                   self.mouse5.y += y *20 # *2 
-                   buttons = j.get_numbuttons()
-                   oldpushed = False
-                   for b in range(buttons):
-                       pushed = j.get_button( b )
-                       if b == 0:
-                          if oldpushed and not pushed:
-                              self.launchRocket((self.mouse5.x, self.mouse5.y))
-                          oldpushed = pushed
-                       elif b==1 and pushed:
-                           self.launchRocket((self.mouse5.x, self.mouse5.y))
-                        
-            
+                       if b == 0 and pushed:
+                               self.launchRocket((mouses[number].x, mouses[number].y))
+                       elif b == 1 and pushed:
+                           if not self.mouse4.pushed: 
+                               self.launchRocket((mouses[number].x, mouses[number].y))
+                               mouses[number] = True
+                       elif b == 1 and not pushed:
+                           mouses[number] = False
            
             pos1 = v.Vec2d(pygame.mouse.get_pos())
             pos2 = self.mouse2.rect.center
@@ -1825,4 +1809,4 @@ Chapter 5: It is all about the honor...'''
         pygame.quit()
 
 if __name__ == '__main__':
-	PygView(1430,800).run() # try PygView(800,600).run()
+    PygView(1430,800).run() # try PygView(800,600).run()
