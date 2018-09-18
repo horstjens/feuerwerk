@@ -1515,7 +1515,8 @@ Chapter 5: It is all about the honor...'''
         while running:
             if self.shutdowntime > 0:
                 if self.shutdowntime < self.playtime:
-                    subprocess.call(("shutdown", "now"))
+                    #subprocess.call(("shutdown", "now"))
+                    print("...shutting down...")
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
