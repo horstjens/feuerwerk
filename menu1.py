@@ -22,13 +22,13 @@ class Settings(object):
     ai = False
     difficulty = 1
     menu = {"root":["Play","Help", "Credits", "Options","Quit"],
-            "Options":["mode","set BounceFactor","playerspeed","playermass","scorelimit","Change screen resolution"],
+            "Options":["mode","set BounceFactor","difficulty","playerspeed","playermass","scorelimit","Change screen resolution"],
             "playerspeed":["normalspeed","halfspeed","doublespeed"],
             "playermass":["mass does not change speed!","normalmass","light","fat","as heavy as the earth"],
             "Change screen resolution":["640x400","800x640","1024x800","1440x850","1920x1080","2560x1440","3840x2160","4096x2160"],
             "Credits":["WE"],
+            "difficulty":["normal","EXTREME"],
             "mode":["1 player","2 player"],
-            "1 player":["normal difficuty", "EXTREME difficulty"],
             "scorelimit":["in this you can choose how many goals you can score to win","1","2","3","4","5","6","7","8","9","10","15","100","9999"],
             "Help":["how to play", "how to win"],
             "set BounceFactor":["*1","*2","*3"],
@@ -95,9 +95,9 @@ class Menu(object):
             
 
 class PygView(object):
-    width = 640
-    height = 400
-    def __init__(self, width=640, height=400, fps=30):
+    width = 1440
+    height = 850
+    def __init__(self, width=1440, height=850, fps=60):
         """Initialize pygame, window, background, font,...
            default arguments 
         """
@@ -190,9 +190,9 @@ class PygView(object):
                         elif result == "*3":
                             Settings.bounce = 3
                         
-                        elif result == "EXTREME difficulty":
+                        elif result == "EXTREME":
                             Settings.difficulty = 10
-                        elif result == "normal difficulty":
+                        elif result == "normal":
                             Settings.difficulty = 1
                         
                         elif result == "1 player":
