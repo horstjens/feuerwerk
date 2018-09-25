@@ -1163,6 +1163,8 @@ class Cannon(VectorSprite):
             self.image = self.images[i]
             self.image0 = self.images[i]
             self.set_angle(self.angle)
+        if self.boss.hitpoints <= 0:
+            self.kill()
 
 class PygView(object):
     width = 0
@@ -1382,9 +1384,7 @@ Chapter 5: It is all about the honor...'''
                     gameOver = True
                     exittime = self.playtime + 4.0
                     Flytext(PygView.width/2, PygView.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
-        #    if self.shutdowntime > 0:
-        #        if self.shutdowntime < self.playtime:
-        #            subprocess.call(("shutdown", "now"))
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -1403,6 +1403,9 @@ Chapter 5: It is all about the honor...'''
                     if event.key == pygame.K_c:
                         for c in self.citygroup:
                             c.hitpoints -= 20
+                    if event.key == pygame.K_g:
+                       for g in self.platformgroup:
+                           g.hitpoints -= 20
 #                    if event.key == pygame.K_n:
 #                        self.new_wave()
 #                    if event.key == pygame.K_u:
