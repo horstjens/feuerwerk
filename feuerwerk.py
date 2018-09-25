@@ -18,6 +18,8 @@ import vectorclass2d as v
 import textscroller_vertical as ts
 import subprocess
 
+"""Best game: 10 waves by Ines"""
+
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
     """returns pygame surface with text. You still need to blit the surface."""
     myfont = pygame.font.SysFont(font, fontsize)
@@ -489,8 +491,8 @@ class Mothership(VectorSprite):
                     Ufo_Rocketship(pos=v.Vec2d(self.pos.x,self.pos.y+50))
                 elif z == 3:
                     Ufo_Minigun(pos=v.Vec2d(self.pos.x,self.pos.y+50))
-                elif z == 4:
-                    Ufo_Diver(pos=v.Vec2d(self.pos.x,self.pos.y+50))
+                #elif z == 4:
+                #    Ufo_Diver(pos=v.Vec2d(self.pos.x,self.pos.y+50))
 
         # --- chance to change move vector ---
         if random.random() < 0.05:
@@ -1321,14 +1323,15 @@ Chapter 5: It is all about the honor...'''
         t = "Prepare for wave {}\n".format(PygView.wave)
         if PygView.wave > 5:
             t += random.choice(self.texts)
-        joetext = [self.txt1, self.txt2, self.txt3, self.txt4, self.txt5]
-        joe = joetext[PygView.wave-1]
-        for line in joe.splitlines():
-            t += line + "\n"
+        else:
+            joetext = [self.txt1, self.txt2, self.txt3, self.txt4, self.txt5]
+            joe = joetext[PygView.wave-1]
+            for line in joe.splitlines():
+                t += line + "\n"
         ts.PygView(text=t, width = PygView.width, height = PygView.height, 
                    new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
         for m in range(PygView.wave):
-            Mothership(move=v.Vec2d(50,0), color=(0,0,255), layer=7, age=-5)
+            Mothership(move=v.Vec2d(50,20), color=(0,0,255), layer=7, age=-5)
 
     def launchRocket(self, pos ):
         """launches the closet Rocket (x) from Ground toward target position x,y"""
@@ -1360,11 +1363,28 @@ Chapter 5: It is all about the honor...'''
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
-        self.shutdowntime= -1
+        gameOver = False
+        exittime = 0
         while running:
-            if self.shutdowntime > 0:
-                if self.shutdowntime < self.playtime:
-                    subprocess.call(("shutdown", "now"))
+            milliseconds = self.clock.tick(self.fps) #
+            seconds = milliseconds / 1000
+            self.playtime += seconds
+            if gameOver:
+                if self.playtime > exittime:
+                    break
+            #Game over?
+            if not gameOver:
+                for c in self.citygroup:
+                    if c.hitpoints > 0:
+                        break
+                else:
+                    print("Game over! You lose!")
+                    gameOver = True
+                    exittime = self.playtime + 4.0
+                    Flytext(PygView.width/2, PygView.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
+        #    if self.shutdowntime > 0:
+        #        if self.shutdowntime < self.playtime:
+        #            subprocess.call(("shutdown", "now"))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -1372,12 +1392,17 @@ Chapter 5: It is all about the honor...'''
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-#                    if event.key == pygame.K_r:
-#                        Ufo_Rocketship(pos=v.Vec2d(100,100))
-#                    if event.key == pygame.K_m:
-#                        Ufo_Minigun(pos=v.Vec2d(1000,50))
-#                    if event.key == pygame.K_d:
-#                        Ufo_Diver(pos=v.Vec2d(200,100))
+                    if event.key == pygame.K_b:
+                        Ufo_Bomber(pos=v.Vec2d(200,100))
+                    if event.key == pygame.K_r:
+                        Ufo_Rocketship(pos=v.Vec2d(100,100))
+                    if event.key == pygame.K_m:
+                        Ufo_Minigun(pos=v.Vec2d(1000,50))
+                    if event.key == pygame.K_d:
+                        Ufo_Diver(pos=v.Vec2d(200,100))
+                    if event.key == pygame.K_c:
+                        for c in self.citygroup:
+                            c.hitpoints -= 20
 #                    if event.key == pygame.K_n:
 #                        self.new_wave()
 #                    if event.key == pygame.K_u:
@@ -1386,7 +1411,7 @@ Chapter 5: It is all about the honor...'''
                         self.launchRocket((self.mouse2.x, self.mouse2.y))
                     if event.key == pygame.K_RCTRL:
                         self.launchRocket((self.mouse3.x, self.mouse3.y))
-                        self.shutdowntime = self.playtime + 10                                
+                        #self.shutdowntime = self.playtime + 10                                
                     if event.key == pygame.K_t:
                         lines= "This is Firework.... \nAre you ready? \nDefend the cities!"
                         ts.PygView(text=lines, width = PygView.width,
@@ -1520,9 +1545,7 @@ Chapter 5: It is all about the honor...'''
             pos1 = v.Vec2d(pygame.mouse.get_pos())
             pos2 = self.mouse2.rect.center
             pos3 = self.mouse3.rect.center
-            milliseconds = self.clock.tick(self.fps) #
-            seconds = milliseconds / 1000
-            self.playtime += seconds
+            
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
@@ -1554,7 +1577,7 @@ Chapter 5: It is all about the honor...'''
                              pygame.sprite.collide_mask)
                 for b in crashgroup:
                     if c in self.citygroup:
-                        sink = 1
+                        sink = 9
                     elif c in self.platformgroup:
                         sink = 10
                         # sink also cannons
@@ -1604,6 +1627,7 @@ Chapter 5: It is all about the honor...'''
                 self.new_wave()
             # -------- next frame -------------
             pygame.display.flip()
+        #-----------------------------------------------------
         pygame.mouse.set_visible(True)    
         pygame.quit()
 
