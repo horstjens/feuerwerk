@@ -6,6 +6,7 @@ contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 download: 
 idea: defend cities against aliens
+
 """
 import pygame
 import math
@@ -395,6 +396,17 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.y = PygView.height
                 self.move.y *= -1
 
+class Dreieck(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((150,150))
+        pygame.draw.polygon(self.image, (0,0,255), ((0,0),(150,50),(0,100)))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        
+
 class Wreck(VectorSprite):
 
     def update(self, seconds):
@@ -674,7 +686,7 @@ class Ufo_Minigun(VectorSprite):
         if random.random() < 0.15:
              #m = v.Vec2d(0, random.randint(-10, 10))
              m = pygame.math.Vector2(0, random.randint(-10, 10))
-             m.rotate(random.randint(-120, 120))
+             m = m.rotate(random.randint(-120, 120))
              self.move += m
         if self.pos.x < 0:
             self.pos.x = 0
@@ -718,7 +730,7 @@ class Ufo(VectorSprite):
     def new_move(self):
         #m = v.Vec2d(0, random.randint(-10, 10))
         m = pygame.math.Vector2(0, random.randint(-10, 10))
-        m.rotate(random.randint(-120, 120))
+        m = m.rotate(random.randint(-120, 120))
         self.move += m
 
     def wallbounce(self):
@@ -812,7 +824,7 @@ class Ufo_Bomber(Ufo):
     def fire(self):
         #m = v.Vec2d(0, -random.random()*75)
         m = pygame.math.Vector2(0, -random.random()*75)
-        m.rotate(random.randint(-90,90))
+        m = m.rotate(random.randint(-90,90))
         #Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
         #     gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         Bomb(pos=pygame.math.Vector2(self.pos.x, self.pos.y), move=m,
@@ -1078,7 +1090,7 @@ class Evil_Rocket(Rocket):
         if self.move.length() != self.speed:
             self.move = self.move.normalize() * self.speed
         if self.move.length() > 0:
-            self.set_angle(-self.move.angle_to(pygame.math.Vector2(-1,0)))
+            self.set_angle(self.move.angle_to(pygame.math.Vector2(1,0)))
             # --- Smoke ---
             if random.random() < 0.4 and self.age > 0.05:
                 #Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
@@ -1374,6 +1386,8 @@ Chapter 5: It is all about the honor...'''
         self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
+        self.eck =  Dreieck(pos=pygame.math.Vector2(PygView.width/2,PygView.height/2))
+
     def new_wave(self):
         PygView.wave += 1
         self.loadbackground()
@@ -1462,6 +1476,41 @@ Chapter 5: It is all about the honor...'''
                     if event.key == pygame.K_k:
                         #Ufo_Diver(pos=v.Vec2d(200,100))
                         Ufo_Diver(pos=pygame.math.Vector2(200,100))
+                    if event.key == pygame.K_KP6:
+                       self.eck.set_angle(0)
+                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP9:
+                        self.eck.set_angle(45)
+                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 45°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP8:
+                       self.eck.set_angle(90)
+                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 90°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP7:
+                        self.eck.set_angle(135)
+                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 135°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP4:
+                       self.eck.set_angle(180)
+                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 180°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP1:
+                        self.eck.set_angle(225)
+                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 225°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP2:
+                       self.eck.set_angle(270)
+                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 270°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP3:
+                        self.eck.set_angle(315)
+                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 315°", color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP0:
+                        self.eck.rotate(5)
+                        Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(self.eck.angle), color=(255,0,0), duration = 3, fontsize=20)
+                    if event.key == pygame.K_KP5:
+                        mausvector = pygame.math.Vector2(self.mouse1.x, -self.mouse1.y)
+                        eckvector = pygame.math.Vector2(self.eck.pos.x, -self.eck.pos.y)
+                        diffvector = mausvector - eckvector
+                        rechtsvector = pygame.math.Vector2(1,0)
+                        angle = rechtsvector.angle_to(diffvector)
+                        #self.eck.rotate(m)
+                        Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(angle), color=(255,0,0), duration = 3, fontsize=20)
                     if event.key == pygame.K_c:
                         for c in self.citygroup:
                             c.hitpoints -= 20
@@ -1488,6 +1537,8 @@ Chapter 5: It is all about the honor...'''
 
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
+            
+
             if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
                 c1 = self.playtime*100 % 255
