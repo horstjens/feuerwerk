@@ -255,10 +255,8 @@ class VectorSprite(pygame.sprite.Sprite):
         if "static" not in kwargs:
             self.static = False
         if "pos" not in kwargs:
-            #self.pos = v.Vec2d(random.randint(0, PygView.width),50)
             self.pos = pygame.math.Vector2(random.randint(0, PygView.width),50)
         if "move" not in kwargs:
-            #self.move = v.Vec2d(0,0)
             self.move = pygame.math.Vector2(0,0)
         if "radius" not in kwargs:
             self.radius = 5
@@ -413,9 +411,6 @@ class Wreck(VectorSprite):
         if self.gravity is not None:
             self.move += self.gravity * seconds
         VectorSprite.update(self, seconds)
-        #Smoke(pos=v.Vec2d(self.pos.x, self.pos.y), 
-        #         color=(random.randint(1,255),random.randint(1,255),random.randint(1,255)), gravity=v.Vec2d(0, -3),
-        #         max_age=0.1+random.random()*2)
         Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y), 
                  color=(random.randint(1,255),random.randint(1,255),random.randint(1,255)), gravity=pygame.math.Vector2(0, -3),
                  max_age=0.1+random.random()*2)
@@ -494,35 +489,24 @@ class Mothership(VectorSprite):
         self.image = self.images[int(i)]
         if random.random()<  self.ufo_spawn_rate:
             if PygView.wave == 1:
-                #Ufo_Bomber(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
                 Ufo_Bomber(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50), layer = 8 )
             elif PygView.wave == 2:
-                #Ufo_Rocketship(pos=v.Vec2d(self.pos.x,self.pos.y+50))
                 Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50))
             elif PygView.wave == 3:
-                #Ufo_Minigun(pos=v.Vec2d(self.pos.x,self.pos.y+50))
                 Ufo_Minigun(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50))
             elif PygView.wave == 4:
-                #Ufo_Bomber(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
                 Ufo_Bomber(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50), layer = 8 )
             else:
                 z = random.randint(1,4)
                 if z == 1:
-                    #Ufo_Bomber(pos=v.Vec2d(self.pos.x,self.pos.y+50), layer = 8 )
                     Ufo_Bomber(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50), layer = 8 )
                 elif z == 2:
-                    #Ufo_Rocketship(pos=v.Vec2d(self.pos.x,self.pos.y+50))
                     Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50))
                 elif z == 3:
-                    #Ufo_Minigun(pos=v.Vec2d(self.pos.x,self.pos.y+50))
                     Ufo_Minigun(pos=pygame.math.Vector2(self.pos.x,self.pos.y+50))
-
-                #elif z == 4:
-                #    Ufo_Diver(pos=v.Vec2d(self.pos.x,self.pos.y+50))
 
         # --- chance to change move vector ---
         if random.random() < 0.05:
-             #m = v.Vec2d(0, random.randint(-10, 10))
              m = pygame.math.Vector2(0, random.randint(-10, 10))
              m.rotate(random.randint(-120, 120))
              self.move += m
@@ -571,11 +555,8 @@ class Mothership(VectorSprite):
         
     def kill(self):
         for p in range(50):
-            #m = v.Vec2d(random.randint(50,100),0)
             m = pygame.math.Vector2(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
-            #Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-            #      move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
             Wreck(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
                   move = m, gravity = pygame.math.Vector2(0,50),max_age = random.random()*3+1)
         VectorSprite.kill(self)
@@ -623,7 +604,6 @@ class Ufo_Minigun(VectorSprite):
         self.select_target()
                 
     def select_target(self):
-        #self.m = v.Vec2d(random.randint(0,PygView.width), PygView.height) - self.pos
         self.m = pygame.math.Vector2(random.randint(0,PygView.width), PygView.height) - self.pos
 
     def paint(self, color):
@@ -673,18 +653,16 @@ class Ufo_Minigun(VectorSprite):
         if not self.firemode and random.random() < 0.0001:
             self.select_target() # select a new target to aim the evil minigun at
         # --- chance to fire Evil_Tracer ---
-        if self.firemode and random.random() < 0.5:
+        if self.firemode and random.random() < 0.05:   #0.5
             for r in range(random.randint(1,1)):
                 m = self.m
                 distance = m.length()
                 m = m.normalize() * 50
-                #Evil_Tracer(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 200, 
-                #          citynr = None, max_distance = distance, mass=5, hitpoints=0.01,color=(0,128,0))
+                angle = m.angle_to(pygame.math.Vector2(1,0))
                 Evil_Tracer(pos=pygame.math.Vector2(self.pos.x, self.pos.y), move=m, speed = 200, 
-                          citynr = None, max_distance = distance, mass=5, hitpoints=0.01,color=(0,128,0))
+                          citynr = None, max_distance = distance, mass=5, hitpoints=0.01,color=(0,128,0), angle=angle)
         # --- chance to change move vector ---
         if random.random() < 0.15:
-             #m = v.Vec2d(0, random.randint(-10, 10))
              m = pygame.math.Vector2(0, random.randint(-10, 10))
              m = m.rotate(random.randint(-120, 120))
              self.move += m
@@ -715,11 +693,8 @@ class Ufo(VectorSprite):
     
     def kill(self):
         for p in range(5):
-            #m = v.Vec2d(random.randint(50,100),0)
             m = pygame.math.Vector2(random.randint(50,100),0)
             m.rotate(random.randint(0,360))
-            #Wreck(pos=v.Vec2d(self.pos.x, self.pos.y),
-            #      move = m, gravity = v.Vec2d(0,50),max_age = random.random()*3+1)
             Wreck(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
                   move = m, gravity = pygame.math.Vector2(0,50),max_age = random.random()*3+1)
         VectorSprite.kill(self)
@@ -728,7 +703,6 @@ class Ufo(VectorSprite):
         pass
         
     def new_move(self):
-        #m = v.Vec2d(0, random.randint(-10, 10))
         m = pygame.math.Vector2(0, random.randint(-10, 10))
         m = m.rotate(random.randint(-120, 120))
         self.move += m
@@ -822,11 +796,8 @@ class Ufo_Bomber(Ufo):
         self.rect= self.image.get_rect()
         
     def fire(self):
-        #m = v.Vec2d(0, -random.random()*75)
         m = pygame.math.Vector2(0, -random.random()*75)
         m = m.rotate(random.randint(-90,90))
-        #Bomb(pos=v.Vec2d(self.pos.x, self.pos.y), move=m,
-        #     gravity = v.Vec2d(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
         Bomb(pos=pygame.math.Vector2(self.pos.x, self.pos.y), move=m,
              gravity = pygame.math.Vector2(0,0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
 
@@ -882,12 +853,9 @@ class Ufo_Rocketship(Ufo):
     
     def fire(self):
         for r in range(random.randint(10,50)):
-            #m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
             m = pygame.math.Vector2(random.randint(0,PygView.width), PygView.height)-self.pos
             distance = m.length()
             m = m.normalize() 
-            #Evil_Rocket(pos=v.Vec2d(self.pos.x, self.pos.y), move=m, speed = 20, 
-            #            citynr = None, max_distance = distance, mass=500, hitpoints=10)
             Evil_Rocket(pos=pygame.math.Vector2(self.pos.x, self.pos.y), move=m, speed = 20, 
                         citynr = None, max_distance = distance, mass=500, hitpoints=10)
 
@@ -937,7 +905,6 @@ class Ufo_Diver(Ufo):
     def fire(self):
         if not self.dive:
             self.dive = True # initiate kamikaze dive
-            #m = v.Vec2d(random.randint(0,PygView.width), PygView.height)-self.pos
             m = pygame.math.Vector2(random.randint(0,PygView.width), PygView.height)-self.pos
             distance = m.length()
             m = m.normalized() 
@@ -946,7 +913,6 @@ class Ufo_Diver(Ufo):
 
     def new_move(self):
         if not self.dive:
-            #m = v.Vec2d(0, random.randint(-10, 10))
             m = pygame.math.Vector2(0, random.randint(-10, 10))
             m.rotate(random.randint(-120, 120))
             self.move += m
@@ -1061,8 +1027,6 @@ class Rocket(VectorSprite):
             self.move = self.move.normalize() * self.speed
             # --- Smoke ---
             if random.random() < 0.2 and self.age > 0.1:
-                #Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
-                #   gravity=v.Vec2d(0,4), max_age = 4)
                 Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y), 
                    gravity=pygame.math.Vector2(0,4), max_age = 4)
         self.oldage = self.age
@@ -1072,7 +1036,6 @@ class Rocket(VectorSprite):
             self.pos.y -= 500
 
     def kill(self):
-        #Explosion(pos=v.Vec2d(self.pos.x, self.pos.y),max_age=2.1, color=(200,255,255), damage = self.damage)
         Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y),max_age=2.1, color=(200,255,255), damage = self.damage)
         VectorSprite.kill(self)    
 
@@ -1093,8 +1056,6 @@ class Evil_Rocket(Rocket):
             self.set_angle(self.move.angle_to(pygame.math.Vector2(1,0)))
             # --- Smoke ---
             if random.random() < 0.4 and self.age > 0.05:
-                #Smoke(pos= v.Vec2d(self.pos.x, self.pos.y), 
-                #   gravity=v.Vec2d(0,0), max_age = 1.5)
                 Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y), 
                    gravity=pygame.math.Vector2(0,0), max_age = 1.5)
         self.oldage = self.age
@@ -1118,8 +1079,9 @@ class Evil_Tracer(Tracer):
             self.set_angle(-self.move.angle_to(pygame.math.Vector2(-1,0)))
 
     def create_image(self):
-        self.image = pygame.Surface((8,4))
+        self.image = pygame.Surface((16,8))   #(8,4)
         self.image.fill(self.color)
+        pygame.draw.circle(self.image,(255,0,0),(12,4),3)  #only temporary!
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -1130,7 +1092,6 @@ class Bomb(VectorSprite):
    def __init__(self, **kwargs):
         VectorSprite.__init__(self, **kwargs)
         if "gravity" not in kwargs:
-            #self.gravity = v.Vec2d(0, 7)
             self.gravity = pygame.math.Vector2(0, 7)
 
    def create_image(self):
@@ -1148,8 +1109,6 @@ class Bomb(VectorSprite):
         VectorSprite.update(self, seconds)
         self.move += self.gravity
         if random.random() < 0.25:
-            #Smoke(pos=v.Vec2d(self.pos.x, self.pos.y),
-            #      max_age=2, gravity=v.Vec2d(0, -2))
             Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
                   max_age=2, gravity=pygame.math.Vector2(0, -2))
 
@@ -1351,23 +1310,17 @@ Chapter 5: It is all about the honor...'''
         nr = PygView.width // 200
 
         # ----- add Sniper -------
-        #Sniper(pos=v.Vec2d(100, PygView.height-50))
         Sniper(pos=pygame.math.Vector2(100, PygView.height-50))
         # ----- add Gun Platforms -----
         for p in range(nr):   
             x = PygView.width // nr * p + random.randint(25,50)
-            #GunPlatform(pos=v.Vec2d(x, PygView.height-100)) # +random.randint(0,50))))
             GunPlatform(pos=pygame.math.Vector2(x, PygView.height-100)) # +random.randint(0,50))))
         # ------ add Cities -------
         for c in range(nr):
             x = PygView.width // nr * c
-            #self.cities.append(City(
-            #     pos=v.Vec2d(x+100, PygView.height-50),citynr = c))
             self.cities.append(City(
                  pos=pygame.math.Vector2(x+100, PygView.height-50),citynr = c))
             for dx in range(50, 151, 20):
-                 #Rocket(pos=v.Vec2d(x+dx, PygView.height-15),
-                 #      speed = 150, citynr = c, damage = 100 )
                  Rocket(pos=pygame.math.Vector2(x+dx, PygView.height-15),
                        speed = 150, citynr = c, damage = 100 )
         # ----- add Cannons ------
@@ -1403,7 +1356,6 @@ Chapter 5: It is all about the honor...'''
         ts.PygView(text=t, width = PygView.width, height = PygView.height, 
                    new_init = False, bg_object= self.background, font=('mono', 48, True)).run()
         for m in range(PygView.wave):
-            #Mothership(move=v.Vec2d(50,20), color=(0,0,255), layer=7, age=-5)
             Mothership(move=pygame.math.Vector2(50,20), color=(0,0,255), layer=7, age=-5)
 
     def launchRocket(self, pos ):
@@ -1424,7 +1376,6 @@ Chapter 5: It is all about the honor...'''
                 mindist = dist
                 bestRocket = r
         if bestRocket is not None:
-            #flightpath = v.Vec2d(x,y) - bestRocket.pos
             flightpath = pygame.math.Vector2(x,y) - bestRocket.pos
             bestRocket.move = flightpath
             bestRocket.max_distance = flightpath.length()
@@ -1465,16 +1416,12 @@ Chapter 5: It is all about the honor...'''
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_b:
-                        #Ufo_Bomber(pos=v.Vec2d(200,100))
                         Ufo_Bomber(pos=pygame.math.Vector2(200,100))
                     if event.key == pygame.K_r:
-                        #Ufo_Rocketship(pos=v.Vec2d(100,100))
                         Ufo_Rocketship(pos=pygame.math.Vector2(100,100))
                     if event.key == pygame.K_m:
-                        #Ufo_Minigun(pos=v.Vec2d(1000,50))
                         Ufo_Minigun(pos=pygame.math.Vector2(1000,50))
                     if event.key == pygame.K_k:
-                        #Ufo_Diver(pos=v.Vec2d(200,100))
                         Ufo_Diver(pos=pygame.math.Vector2(200,100))
                     if event.key == pygame.K_KP6:
                        self.eck.set_angle(0)
@@ -1575,24 +1522,25 @@ Chapter 5: It is all about the honor...'''
                                     self.snipertarget.hitpoints -= 1
             for x in range(100):
                 if pressed_keys[pygame.K_2]:
-                    for s in self.snipergroup:
-                                snipertargets = []
-                                for u in self.ufogroup:
-                                    if s.pos.distance_to(u.pos) < 10000:
-                                        snipertargets.append(u)
-                                distance = 2 * s.maxrange
-                                for t in snipertargets:
-                                    dd = s.pos.distance_to(t.pos)
-                                    if dd < distance:
-                                        distance = dd
-                                        e = t
-                                if len(snipertargets) > 0:
-                                    self.snipertarget = random.choice(snipertargets)
-                                    if self.snipertarget.hitpoints > 0:
-                                        pygame.draw.line(self.screen, (0,0, random.randint(180,255)),
-                                              (100, PygView.height-50), (self.snipertarget.pos.x, 
-                                               self.snipertarget.pos.y), random.randint(1,7))
-                                        self.snipertarget.hitpoints -= 0.1
+                    if pressed_keys[pygame.K_5]:
+                        for s in self.snipergroup:
+                                    snipertargets = []
+                                    for u in self.ufogroup:
+                                        if s.pos.distance_to(u.pos) < 10000:
+                                            snipertargets.append(u)
+                                    distance = 2 * s.maxrange
+                                    for t in snipertargets:
+                                        dd = s.pos.distance_to(t.pos)
+                                        if dd < distance:
+                                            distance = dd
+                                            e = t
+                                    if len(snipertargets) > 0:
+                                        self.snipertarget = random.choice(snipertargets)
+                                        if self.snipertarget.hitpoints > 0:
+                                            pygame.draw.line(self.screen, (0,0, random.randint(180,255)),
+                                                (100, PygView.height-50), (self.snipertarget.pos.x, 
+                                                self.snipertarget.pos.y), random.randint(1,7))
+                                            self.snipertarget.hitpoints -= 0.1
             if pressed_keys[pygame.K_TAB]:
                 self.launchRocket((self.mouse2.x, self.mouse2.y))
             if pressed_keys[pygame.K_RETURN]:
@@ -1615,22 +1563,26 @@ Chapter 5: It is all about the honor...'''
 
                     # ------ aiming -------
                     for c in cannons:
-                        d = c.pos - e.pos
-                        c.set_angle(-d.angle_to(pygame.math.Vector2(-1,0))-180)
+                        enemyvector = pygame.math.Vector2(e.pos.x, -e.pos.y)
+                        cannonvector = pygame.math.Vector2(c.pos.x, -c.pos.y)
+                        diffvector = enemyvector - cannonvector
+                        rechtsvector = pygame.math.Vector2(1,0)
+                        angle = rechtsvector.angle_to(diffvector)
+                        #self.eck.rotate(m)
+                        #d = c.pos - e.pos
+                        #c.set_angle(-d.angle_to(pygame.math.Vector2(-1,0))-180)
+                        c.set_angle(angle)
 
                     # ------- autofire -------
                     for c in cannons:
-                        if c.readytofire < c.age and random.random()<0.9:
-                            #m = v.Vec2d(60,c.cy) # lenght of cannon
+                        if c.readytofire < c.age and random.random()<0.9: #comment out the next two lines for singlefire
                             m = pygame.math.Vector2(60,c.cy) # lenght of cannon
-                            m.rotate(-c.angle)
-                            #m2 = v.Vec2d(60,0)
+                            m = m.rotate(-c.angle)
                             m2 = pygame.math.Vector2(60,0)
-                            m2.rotate(-c.angle)
-                            #start = v.Vec2d(c.pos.x, c.pos.y) + m
+                            m2 = m2.rotate(-c.angle)
                             start = pygame.math.Vector2(c.pos.x, c.pos.y) + m
                             Tracer(pos=start, move=m2.normalize()*200, radius=5, mass=5, color=(255,0,0),
-                                   kill_on_edge=True, max_age=1.5, damage=1, angle=c.angle-90)
+                                   kill_on_edge=True, max_age=1.5, damage=1, angle=c.angle)
                             c.readytofire = c.age + c.recoiltime
                             break
 
@@ -1661,7 +1613,6 @@ Chapter 5: It is all about the honor...'''
                                mouses[number] = True
                        elif b == 1 and not pushed:
                            mouses[number] = False
-            #pos1 = v.Vec2d(pygame.mouse.get_pos())
             pos1 = pygame.math.Vector2(pygame.mouse.get_pos())
             pos2 = self.mouse2.rect.center
             pos3 = self.mouse3.rect.center
@@ -1687,8 +1638,6 @@ Chapter 5: It is all about the honor...'''
                    elastic_collision(t, b) # change dx and dy of both sprites
                    t.hitpoints -= b.damage
                    if t.hitpoints <= 0:
-                       #Explosion(pos=v.Vec2d(t.pos.x, t.pos.y),
-                       #          max_age = 0.3)
                        Explosion(pos=pygame.math.Vector2(t.pos.x, t.pos.y),
                                  max_age = 0.3)
                    b.kill()
@@ -1710,14 +1659,10 @@ Chapter 5: It is all about the honor...'''
                     c.hitpoints -= b.damage
                     # --- city dead ? ----
                     if c.hitpoints < 1:
-                        #Explosion(pos=v.Vec2d(c.pos.x, c.pos.y), max_age = 10)
                         Explosion(pos=pygame.math.Vector2(c.pos.x, c.pos.y), max_age = 10)
                         c.kill()
                     else:
-                        #Explosion(pos=v.Vec2d(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
                         Explosion(pos=pygame.math.Vector2(b.pos.x, b.pos.y), max_age = random.random() * 1.5+1)
-                        #Fire(pos=v.Vec2d(c.pos.x + random.randint(-50,50),
-                        #             c.pos.y + random.randint(-20,20)),
                         Fire(pos=pygame.math.Vector2(c.pos.x + random.randint(-50,50),
                                      c.pos.y + random.randint(-20,20)),
                                      max_age= 10)
@@ -1736,8 +1681,6 @@ Chapter 5: It is all about the honor...'''
                     Flytext(c.pos.x, c.pos.y, "reloading", 
                             color=(0,200,0), duration = 5)
                     for dx in range(50, 151, 20):
-                        #Rocket(pos=v.Vec2d(c.pos.x-100+dx, PygView.height-15 + 500),
-                        #       speed = 150, citynr = c.citynr, damage = 100,
                         Rocket(pos=pygame.math.Vector2(c.pos.x-100+dx, PygView.height-15 + 500),
                                speed = 150, citynr = c.citynr, damage = 100,
                                readyToLaunchTime = 5)
