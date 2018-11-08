@@ -6,7 +6,6 @@ license: GPL
 author: Horst JENS and students of http://spielend-programmieren.at
 """
 
-
 import pygame 
 import random
 
@@ -165,6 +164,10 @@ class FlyingObject(pygame.sprite.Sprite):
             self.color_cycle_time = 1.0 # seconds
         if "cannonleft" not in kwargs:
             self.cannonleft = False
+        if "wind" not in kwargs:
+            self.wind = False
+        if "gravity" not in kwargs:
+            self.gravity = False
         #repaint
         if self.start_color is not None and self.end_color is not None:
             #self.create_image()
@@ -271,11 +274,15 @@ class FlyingObject(pygame.sprite.Sprite):
            self.angle = pygame.math.Vector2(1,0).angle_to(self.move)
            for _ in range(5):
                Fragment(pos=pygame.math.Vector2(self.pos[0], self.pos[1]))
+    
+    
     def calculate_movement(self, seconds):
             
         # calculate movement
         self.oldangle = self.angle
         self.control()
+        if self.gravity:
+            self.move += PygView.gravity
         self.pos += self.move  * seconds
         self.wallcheck()
         #to do flip only for tank
@@ -567,6 +574,9 @@ class Turret(FlyingObject):
 class PygView():
     width = 0
     height = 0
+    gravity = pygame.math.Vector2(0, -90)
+    wind = pygame.math.Vector2(0,0)
+    
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
            default arguments """
@@ -717,7 +727,7 @@ class PygView():
             # ---- player 1 stops firing ----
             if not pressed[pygame.K_TAB] and oldpressed[pygame.K_TAB]:
                 print("player 1 stops firing")
-                Rocket(mothership = self.cannon, speed = 5 * self.cannon.hitpoints)
+                Rocket(gravity = True, mothership = self.cannon, speed = 5 * self.cannon.hitpoints)
                 self.cannon.hitpoints = 1
             # ---- player 1 is firing -----
             if pressed[pygame.K_TAB] and oldpressed[pygame.K_TAB]:
@@ -728,7 +738,7 @@ class PygView():
             # ---- player 2 stops firing -----
             if not pressed[pygame.K_SPACE] and oldpressed[pygame.K_SPACE]:
                 print("player 2 stops firing")
-                Rocket(mothership = self.cannon2, speed= 5 * self.cannon2.hitpoints)
+                Rocket(gravity = True, mothership = self.cannon2, speed= 5 * self.cannon2.hitpoints)
                 self.cannon2.hitpoints = 1
             # ---- player 2 is firing -----
             if pressed[pygame.K_SPACE] and oldpressed[pygame.K_SPACE]:
