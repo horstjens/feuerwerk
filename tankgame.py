@@ -102,16 +102,20 @@ class FlyingObject(pygame.sprite.Sprite):
             self._layer = self.layer
         if "static" not in kwargs:
             self.static = False
+            
         if "control_method" not in kwargs:
             self.control_method = None
+            
         if "facing_control_method" not in kwargs:
-            self.facing_control_method = None 
+            self.facing_control_method = None
+            
         if "move" in kwargs:
             self.speed = self.move.length()
             self.angle = pygame.math.Vector2(1,0).angle_to(self.move)
         else:
             if "speed" not in kwargs:
                 self.speed = 50
+                
             if "angle" not in kwargs:
                 self.angle = 0 # moving right?
             # create move from speed and angle 
@@ -127,7 +131,8 @@ class FlyingObject(pygame.sprite.Sprite):
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         if "hitpoints" not in kwargs:
             self.hitpoints = 100
-        self.hitpointsfull = self.hitpoints # makes a copy
+        if "hitpointsfull" not in kwargs:
+            self.hitpointsfull = self.hitpoints # makes a copy
         if "mass" not in kwargs:
             self.mass = 10
         if "damage" not in kwargs:
@@ -158,6 +163,8 @@ class FlyingObject(pygame.sprite.Sprite):
             self.pos_correction = pygame.math.Vector2(0,0)
         if "color_cycle_time" not in kwargs:
             self.color_cycle_time = 1.0 # seconds
+        if "cannonleft" not in kwargs:
+            self.cannonleft = False
         #repaint
         if self.start_color is not None and self.end_color is not None:
             #self.create_image()
@@ -186,25 +193,25 @@ class FlyingObject(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image0, angle)
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
-        
     
+    
+        
+        
     def rotate_facing(self, angle):
-        """rotates the original image (image0) BY angle degrees"""
+        """rotates the original image (image0) by angle degrees"""
         oldcenter = self.rect.center
-        self.image = pygame.transform.rotate(self.image0, self.facing + angle)
+        self.image = pygame.transform.rotate(self.image0, angle)
         self.rect = self.image.get_rect()
         self.rect.center = oldcenter
+    
+    
         self.facing += angle
-        #print(self.startcolor)
-        
     
         
     def control(self):
-        
         if self.boss is not None:
             self.pos = self.boss.pos + self.pos_correction
-            return 
-            
+            return
         keyboard = False
         if self.control_method == "cursor":
             keyboard = True
@@ -229,7 +236,8 @@ class FlyingObject(pygame.sprite.Sprite):
             leftkey = pygame.K_j
             rightkey = pygame.K_l
             facing_leftkey = pygame.K_u
-            facing_rightkey = pygame.K_o
+            facing_rightkey = pygame.K_o       
+        
         
         
         if keyboard:
@@ -247,14 +255,11 @@ class FlyingObject(pygame.sprite.Sprite):
             if pressedkeys[downkey]:
                     #self.dy += 1
                     self.speed -= 1
-            # -------- rotate facing -------
+            #--- rotate facing-----
             if pressedkeys[facing_leftkey]:
                 self.rotate_facing(-1)
-                print(self.facing)
             if pressedkeys[facing_rightkey]:
                 self.rotate_facing(1)
-                print(self.facing)
-                
         #print("speed", self.speed)
         self.move = pygame.math.Vector2(self.speed, 0)
         self.move = self.move.rotate(self.angle)
@@ -266,8 +271,8 @@ class FlyingObject(pygame.sprite.Sprite):
            self.angle = pygame.math.Vector2(1,0).angle_to(self.move)
            for _ in range(5):
                Fragment(pos=pygame.math.Vector2(self.pos[0], self.pos[1]))
-    
     def calculate_movement(self, seconds):
+            
         # calculate movement
         self.oldangle = self.angle
         self.control()
@@ -344,17 +349,18 @@ class FlyingObject(pygame.sprite.Sprite):
         
         # ---- print!!! ---
         #print("pos, move, angle, speed:", self.pos, self.move, self.angle, self.speed)
-        self.calculate_movement(seconds) 
-         
+        self.calculate_movement(seconds)  
+
 class Cannon(FlyingObject):
     
     def create_image(self):
-        self.image = pygame.Surface((2*self.radius , 2*self.radius ))
-        pygame.draw.rect(self.image, self.color, (self.radius,
-                                         self.radius, self.radius, 10))
+        self.image = pygame.Surface((2*self.radius , self.radius*2))
+        pygame.draw.rect(self.image,self.color, (self.radius,self.radius,self.radius,10))
         self.image.set_colorkey((0,0,0))
         self.image = self.image.convert_alpha()
-
+        if self.boss.cannonleft:
+            self.angle = 180
+        
 
 
 class Hitpointbar(FlyingObject):
@@ -419,9 +425,9 @@ class Rocket(FlyingObject):
         self.color = self.mothership.color
         self.pos = pygame.math.Vector2(self.mothership.pos[0], 
                                        self.mothership.pos[1])
-        self.pos += pygame.math.Vector2(120, 20)
         self.angle += self.mothership.angle
         self.speed = self.mothership.speed + self.speed
+        self.pos += pygame.math.Vector2(140,17)
           
     def create_image(self):
         self.image = pygame.Surface((20,10))
@@ -513,12 +519,10 @@ class Tank(FlyingObject):
             downkey = pygame.K_k
             leftkey = pygame.K_j
             rightkey = pygame.K_l
-        
-        
+            
         if keyboard:
             # --- keyboard control ----
             pressedkeys = pygame.key.get_pressed() # keys that you can press all the time
-            # bremse
             self.speed = 0
             if pressedkeys[leftkey]:
                     #self.dx -=1
@@ -530,16 +534,20 @@ class Tank(FlyingObject):
                     self.speed = 40
             if pressedkeys[upkey]:
                     #self.dy -= 1
-                    self.speed = 10
                     self.angle = 90
+                    self.speed = 20
             if pressedkeys[downkey]:
-                    #self.dy += 1
-                    self.speed = 10
                     self.angle = 270
+                    #self.dy += 1
+                    self.speed = 20
         #print("speed", self.speed)
         self.move = pygame.math.Vector2(self.speed, 0)
         self.move = self.move.rotate(self.angle)
          
+            
+                
+        
+    
               
 class Turret(FlyingObject):
     
@@ -579,7 +587,7 @@ class PygView():
         
     def preparesprites(self):
         self.allgroup = pygame.sprite.LayeredUpdates()
-        self.tankgrop = pygame.sprite.Group()
+        self.tankgroup = pygame.sprite.Group()
         self.shipgroup = pygame.sprite.Group()
         self.cannongroup= pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
@@ -597,14 +605,19 @@ class PygView():
         self.player2 = Spaceship(start_color = (255, 255, 0), end_color = (0, 0, 255), pen_size = 3, radius = 50, x=400, y=200, color=(100,200,100), bounce_on_edge=True, control_method = "ijkl", has_hitpointbar=True)
         #self.test1 = FlyingObject(bounce_on_edge=True, control_method = "cursor")
         #self.turret1 = Turret(x=300, y= 300, speed = 0)
-        self.tank = Tank(speed=0, angle=0, control_method="wasd", x=200, y= 200, radius = 100, bounce_on_edge = True)
-        self.tank2 = Tank(speed=0, angle=0, control_method="ijkl", x=1400, y= 600, radius = 100,bounce_on_edge = True)
-        
-        corr = pygame.math.Vector2(0,25)
-        
-        self.cannon  = Cannon(facing=0, pos_correction = corr, boss=self.tank, speed=0, color = (0,100,200),radius = 120 )
-        self.cannon2 = Cannon(facing=180, pos_correction = corr, boss= self.tank2, speed=0, color = (0,100,200),radius = 120)
-    
+        self.tank = Tank(speed = 0,angle = 0,control_method = "wasd",x=200, y= 200, radius = 100, bounce_on_edge = True)
+        self.tank2 = Tank(speed = 0,angle = 0,control_method ="ijkl",
+                          x=1300, y= 600, radius = 100,bounce_on_edge = True,
+                          cannonleft=True)
+        corr = pygame.math.Vector2(20,22)
+        self.cannon = Cannon(speed = 0,pos_correction = corr,
+                             boss = self.tank,x= 1400, y= 580,color = (1,0,0),
+                             radius = 120, hitpoints=1, hitpointsfull=100)
+        self.cannon2 = Cannon(speed = 0,pos_correction = corr,boss = self.tank2,
+                              x= 300, y = 182,color = (1,0,0),
+                              radius = 120, hitpoints=1, hitpointsfull=100)
+        self.powerbar1 = Hitpointbar(mothership=self.cannon)
+        self.powerbar2 = Hitpointbar(mothership=self.cannon2)
     def paint(self):
         
         """painting on the surface"""
@@ -655,6 +668,7 @@ class PygView():
     def run(self):
         self.paint() 
         running = True
+        oldpressed = pygame.key.get_pressed()
         while running:
             milliseconds = self.clock.tick(self.fps)
             seconds = milliseconds / 1000.0
@@ -670,21 +684,57 @@ class PygView():
                     # keys that you press once and release
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    #if event.key == pygame.K_j:
-                    #    self.cannon.angle += 10
-                    if event.key == pygame.K_TAB:
-                        if self.player1 in self.shipgroup:
-                            Rocket(mothership=self.player1, speed=100)
-                    if event.key == pygame.K_SPACE:
-                        if self.player2 in self.shipgroup:
-                            Rocket(mothership=self.player2, speed=100)
-                    if event.key == pygame.K_TAB:
-                        #if self.player1 in self.shipgroup:
-                        Rocket(mothership=self.tank, speed = 50)
-                            
+                    #if event.key == pygame.K_TAB:
+                        #Rocket(mothership = self.tank, speed = 100)
+                        
+                    #if event.key == pygame.K_SPACE:
+                        #if self.player2 in self.shipgroup:
+                        #    Rocket(mothership=self.player2, speed=100)
+                    # ----- cannon 1 angle -----
+                    if event.key == pygame.K_q:
+                        self.cannon.angle += 1
+                        self.cannon.rotate_image(self.cannon.angle)
+                    if event.key == pygame.K_e:
+                        self.cannon.angle -= 1
+                        self.cannon.rotate_image(self.cannon.angle)
+                    # ----- cannon 2 angle ------
+                    if event.key == pygame.K_u:
+                        self.cannon2.angle += 1
+                        self.cannon2.rotate_image(self.cannon2.angle)
+                    if event.key == pygame.K_o:
+                        self.cannon2.angle -= 1
+                        self.cannon2.rotate_image(self.cannon2.angle)
+                
                     
                     #if event.key == pygame.K_RETURN:
                     #    Rocket(self.player3)
+                    
+            #----- pressed keys ----
+            pressed = pygame.key.get_pressed()
+            # ---- player 1 start firing ----
+            if pressed[pygame.K_TAB] and not oldpressed[pygame.K_TAB]:
+                print("player 1 start firing")
+            # ---- player 1 stops firing ----
+            if not pressed[pygame.K_TAB] and oldpressed[pygame.K_TAB]:
+                print("player 1 stops firing")
+                Rocket(mothership = self.cannon, speed = 5 * self.cannon.hitpoints)
+                self.cannon.hitpoints = 1
+            # ---- player 1 is firing -----
+            if pressed[pygame.K_TAB] and oldpressed[pygame.K_TAB]:
+                self.cannon.hitpoints += 1
+            # ---- player 2 start firing ---
+            if pressed[pygame.K_SPACE] and not oldpressed[pygame.K_SPACE]:
+                print("player 2 start firing")
+            # ---- player 2 stops firing -----
+            if not pressed[pygame.K_SPACE] and oldpressed[pygame.K_SPACE]:
+                print("player 2 stops firing")
+                Rocket(mothership = self.cannon2, speed= 5 * self.cannon2.hitpoints)
+                self.cannon2.hitpoints = 1
+            # ---- player 2 is firing -----
+            if pressed[pygame.K_SPACE] and oldpressed[pygame.K_SPACE]:
+                self.cannon2.hitpoints += 1
+            
+            oldpressed = pressed
             # ---- mouse events ----
             left,middle,right = pygame.mouse.get_pressed() # Mouse buttons
             if left: # left button was pressed?
