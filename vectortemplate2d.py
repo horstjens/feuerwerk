@@ -1,4 +1,3 @@
-
 """
 author: Horst JENS
 email: horstjens@gmail.com
@@ -537,10 +536,10 @@ class PygView(object):
             random.shuffle(self.backgroundfilenames) # remix sort order
         except:
             print("no folder 'data' or no jpg files in it")
-        if len(self.backgroundfilenames) == 0:
-            print("Error: no .jpg files found")
-            pygame.quit
-            sys.exit()
+        #if len(self.backgroundfilenames) == 0:
+        #    print("Error: no .jpg files found")
+        #    pygame.quit
+        #    sys.exit()
         PygView.bombchance = 0.015
         PygView.rocketchance = 0.001
         PygView.wave = 0
