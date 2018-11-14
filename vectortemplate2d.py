@@ -5,7 +5,7 @@ email: horstjens@gmail.com
 contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 download: 
-idea: defend cities against aliens
+idea: clean python3/pygame template using pygame.math.vector2
 
 """
 import pygame
@@ -529,11 +529,14 @@ class PygView(object):
         self.playtime = 0.0
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
-        for root, dirs, files in os.walk("data"):
-            for file in files:
-                if file[-4:] == ".jpg" or file[-5:] == ".jpeg":
-                    self.backgroundfilenames.append(file)
-        random.shuffle(self.backgroundfilenames) # remix sort order
+        try:
+            for root, dirs, files in os.walk("data"):
+                for file in files:
+                    if file[-4:] == ".jpg" or file[-5:] == ".jpeg":
+                        self.backgroundfilenames.append(file)
+            random.shuffle(self.backgroundfilenames) # remix sort order
+        except:
+            print("no folder 'data' or no jpg files in it")
         if len(self.backgroundfilenames) == 0:
             print("Error: no .jpg files found")
             pygame.quit
@@ -551,14 +554,19 @@ class PygView(object):
         self.loadbackground()
 
     def loadbackground(self):
-        self.background = pygame.Surface(self.screen.get_size()).convert()
-        self.background.fill((255,255,255)) # fill background white
-        self.background = pygame.image.load(os.path.join("data",
-             self.backgroundfilenames[PygView.wave %
-             len(self.backgroundfilenames)]))
+        
+        try:
+            self.background = pygame.image.load(os.path.join("data",
+                 self.backgroundfilenames[PygView.wave %
+                 len(self.backgroundfilenames)]))
+        except:
+            self.background = pygame.Surface(self.screen.get_size()).convert()
+            self.background.fill((255,255,255)) # fill background white
+            
         self.background = pygame.transform.scale(self.background,
-             (PygView.width,PygView.height))
+                          (PygView.width,PygView.height))
         self.background.convert()
+        
 
     def paint(self):
         """painting on the surface and create sprites"""
