@@ -5,7 +5,7 @@ email: horstjens@gmail.com
 contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 download: 
-idea: clean python3 pygame template using pygame.math.vector2
+idea: defend cities against aliens
 
 """
 import pygame
