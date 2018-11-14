@@ -305,6 +305,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.speed = None
         if "age" not in kwargs:
             self.age = 0 # age in seconds
+        if "warp_on_edge" not in kwargs:
+            self.warp_on_edge = False
 
     def kill(self):
         if self.number in self.numbers:
@@ -367,24 +369,34 @@ class VectorSprite(pygame.sprite.Sprite):
 
     def wallbounce(self):
         # ---- bounce / kill on screen edge ----
+        # ------- left edge ----
         if self.pos.x < 0:
             if self.kill_on_edge:
                 self.kill()
             elif self.bounce_on_edge:
                 self.pos.x = 0
                 self.move.x *= -1
+            elif self.warp_on_edge:
+                self.pos.x = PygView.width 
+        # -------- upper edge -----
         if self.pos.y  > 0:
             if self.kill_on_edge:
                 self.kill()
             elif self.bounce_on_edge:
-                self.y = 0
+                self.pos.y = 0
                 self.move.y *= -1
+            elif self.warp_on_edge:
+                self.pos.y = -PygView.height
+        # -------- right edge -----                
         if self.pos.x  > PygView.width:
             if self.kill_on_edge:
                 self.kill()
             elif self.bounce_on_edge:
                 self.pos.x = PygView.width
                 self.move.x *= -1
+            elif self.warp_on_edge:
+                self.pos.x = 0
+        # --------- lower edge ------------
         if self.pos.y   < -PygView.height:
             if self.kill_on_edge:
                 self.hitpoints = 0
@@ -392,12 +404,14 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.bounce_on_edge:
                 self.pos.y = PygView.height
                 self.move.y *= -1
+            elif self.warp_on_edge:
+                self.pos.y = 0
 
 class Dreieck(VectorSprite):
     
     def create_image(self):
-        self.image = pygame.Surface((150,150))
-        pygame.draw.polygon(self.image, (0,0,255), ((0,0),(150,50),(0,100)))
+        self.image = pygame.Surface((50,50))
+        pygame.draw.polygon(self.image, (0,0,255), ((0,0),(50,25),(0,50),(25,25)))
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -590,7 +604,7 @@ class PygView(object):
         self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
-        self.eck =  Dreieck(pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
+        self.eck =  Dreieck(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
 
    
    
@@ -619,45 +633,62 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    if event.key == pygame.K_KP6:
-                       self.eck.set_angle(0)
-                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP9:
-                        self.eck.set_angle(45)
-                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 45°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP8:
-                       self.eck.set_angle(90)
-                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 90°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP7:
-                        self.eck.set_angle(135)
-                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 135°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP4:
-                       self.eck.set_angle(180)
-                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 180°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP1:
-                        self.eck.set_angle(225)
-                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 225°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP2:
-                       self.eck.set_angle(270)
-                       Flytext(PygView.width/2, PygView.height/2,  "set_angle: 270°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP3:
-                        self.eck.set_angle(315)
-                        Flytext(PygView.width/2, PygView.height/2,  "set_angle: 315°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP0:
-                        self.eck.rotate(5)
-                        Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(self.eck.angle), color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_KP5:
-                        mausvector = pygame.math.Vector2(self.mouse1.x, -self.mouse1.y)
-                        eckvector = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
-                        diffvector = mausvector - eckvector
-                        rechtsvector = pygame.math.Vector2(1,0)
-                        angle = rechtsvector.angle_to(diffvector)
+                    # if event.key == pygame.K_d :
+                    #    self.eck.set_angle(0)
+                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_e:
+                    #     self.eck.set_angle(45)
+                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 45°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_w:
+                    #    self.eck.set_angle(90)
+                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 90°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_q:
+                    #    self.eck.set_angle(135)
+                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 135°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_a:
+                    #    self.eck.set_angle(180)
+                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 180°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_y:
+                    #     self.eck.set_angle(225)
+                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 225°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_x:
+                    #    self.eck.set_angle(270)
+                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 270°", color=(255,0,0), duration = 3, fontsize=20)
+                    # if event.key == pygame.K_c:
+                    #     self.eck.set_angle(315)
+                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 315°", color=(255,0,0), duration = 3, fontsize=20)
+                   
+                    #if event.key == pygame.K_s:
+                    #    mausvector = pygame.math.Vector2(self.mouse1.x, -self.mouse1.y)
+                    #    eckvector = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
+                    #    diffvector = mausvector - eckvector
+                    #    rechtsvector = pygame.math.Vector2(1,0)
+                    #    angle = rechtsvector.angle_to(diffvector)
                         #self.eck.rotate(m)
-                        Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(angle), color=(255,0,0), duration = 3, fontsize=20)
-                        
+                    #    Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(angle), color=(255,0,0), duration = 3, fontsize=20)
+                    # ---- -simple movement for self.eck -------
+                    if event.key == pygame.K_RIGHT:
+                        self.eck.move += pygame.math.Vector2(10,0)
+                    if event.key == pygame.K_LEFT:
+                        self.eck.move += pygame.math.Vector2(-10,0)
+                    if event.key == pygame.K_UP:
+                        self.eck.move += pygame.math.Vector2(0,10)
+                    if event.key == pygame.K_DOWN:
+                        self.eck.move += pygame.math.Vector2(0,-10)
+                    # ---- stop movement for self.eck -----
+                    if event.key == pygame.K_r:
+                        self.eck.move *= 0.1 # remove 90% of movement
+                    
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
+            
+            # ------ move indicator for self.eck -----
+            pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
+            glitter = (0, random.randint(128, 255), 0)
+            pygame.draw.line(self.screen, glitter, (100,100), 
+                            (100 + self.eck.move.x, 100 - self.eck.move.y))
+            
             
             # --- line from eck to mouse ---
             pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.mouse1.x, self.mouse1.y))
@@ -668,6 +699,19 @@ class PygView(object):
 
             # if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
+            if pressed_keys[pygame.K_a]:
+                self.eck.rotate(3)
+            if pressed_keys[pygame.K_d]:
+                self.eck.rotate(-3)
+            if pressed_keys[pygame.K_w]:
+                v = pygame.math.Vector2(1,0)
+                v.rotate_ip(self.eck.angle)
+                self.eck.move += v
+            if pressed_keys[pygame.K_s]:
+                v = pygame.math.Vector2(1,0)
+                v.rotate_ip(self.eck.angle)
+                self.eck.move += -v
+    
             
             # ------ mouse handler ------
             left,middle,right = pygame.mouse.get_pressed()
