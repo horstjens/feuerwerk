@@ -15,6 +15,13 @@ import math
 
 """Best game: 10 waves by Ines"""
 
+def randomize_color(color, delta=50):
+    d=random.randint(-delta, delta)
+    color = color + d
+    color = min(255,color)
+    color = max(0, color)
+    return color
+
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
     """returns pygame surface with text. You still need to blit the surface."""
     myfont = pygame.font.SysFont(font, fontsize)
@@ -226,6 +233,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.number = VectorSprite.number # unique number for each sprite
         VectorSprite.number += 1
         #VectorSprite.numbers[self.number] = self
+        if "color" not in kwargs:
+            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         self.create_image()
         self.distance_traveled = 0 # in pixel
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
@@ -259,9 +268,7 @@ class VectorSprite(pygame.sprite.Sprite):
             self.width = self.radius * 2
         if "height" not in kwargs:
             self.height = self.radius * 2
-        if "color" not in kwargs:
-            #self.color = None
-            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        
         if "hitpoints" not in kwargs:
             self.hitpoints = 100
         self.hitpointsfull = self.hitpoints # makes a copy
@@ -458,12 +465,17 @@ class Spark(VectorSprite):
     
     def _overwrite_parameters(self):
         self._layer = 2
+        self.kill_on_edge = True
     
     def create_image(self):
+        r,g,b = self.color
+        r = randomize_color(r,50)
+        g = randomize_color(g,50)
+        b = randomize_color(b,50)
         self.image = pygame.Surface((10,10))
-        pygame.draw.line(self.image, self.color, 
+        pygame.draw.line(self.image, (r,g,b), 
                          (10,5), (5,5), 3)
-        pygame.draw.line(self.image, self.color,
+        pygame.draw.line(self.image, (r,g,b),
                           (5,5), (2,5), 1)
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
@@ -481,7 +493,7 @@ class Explosion():
             speed = random.randint(5, 150)
             duration = random.random() * 3
             Spark(pos=pygame.math.Vector2(posvector.x, posvector.y), angle= a, move=v*speed,
-                  max_age = duration)
+                  max_age = duration, color=(255,255,0))
 
 class Rocket(VectorSprite):
 
