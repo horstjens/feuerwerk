@@ -451,39 +451,34 @@ class Smoke(VectorSprite):
         self.color=(c,c,c)
 
 
-class Explosion(VectorSprite):
-
+class Spark(VectorSprite):
+    
     def _overwrite_parameters(self):
         self._layer = 2
-
+    
     def create_image(self):
-        self.image=pygame.Surface((self.radius*2, self.radius*2))
-        pygame.draw.circle(self.image, (197, 37,  37),(self.radius, self.radius),  self.radius, 0)
-        r, g, b = self.color
-        for rad in range(5,66, 5):
-            if self.radius > rad:
-                if r != 0 and r != 255:
-                   r1 = (random.randint(rad-10,rad) + r) % 255
-                else:
-                    r1 = r
-                if g != 0 and g != 255:
-                    g1 = (random.randint(rad-10,rad) + g) % 255
-                else:
-                    g1 = g
-                if b != 0 and b != 255:
-                    b1 = (random.randint(rad-10,rad) + b) % 255
-                else:
-                    b1 = b
-                pygame.draw.circle(self.image, (r1,g1,b1), (self.radius, self.radius), self.radius-rad, 0)
+        self.image = pygame.Surface((10,10))
+        pygame.draw.line(self.image, self.color, 
+                         (10,5), (5,5), 3)
+        pygame.draw.line(self.image, self.color,
+                          (5,5), (2,5), 1)
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
+        self.image0 = self.image.copy()                          
+        
 
-    def update(self,seconds):
-         VectorSprite.update(self, seconds)
-         self.create_image()
-         self.rect=self.image.get_rect()
-         self.rect.center=(self.pos.x, self.pos.y)
-         self.radius+=1
+class Explosion():
+    
+    def __init__(self, posvector):
+
+        for s in range(random.randint(5,20)):
+            v = pygame.math.Vector2(1,0) # vector aiming right (0°)
+            a = random.randint(0,360)
+            v.rotate_ip(a)
+            speed = random.randint(5, 150)
+            duration = random.random() * 3
+            Spark(pos=posvector, angle= a, move=v*speed,
+                  max_age = duration)
 
 class Rocket(VectorSprite):
 
@@ -572,9 +567,10 @@ class PygView(object):
         self.rocketgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
-        Dreieck.groups = self.allgroup, self.playergroup  # , self.tailgroup
-        Rocket.group = self.allgroup, self.rocketgroup
         VectorSprite.groups = self.allgroup
+        Dreieck.groups = self.allgroup, self.playergroup  # , self.tailgroup
+        Rocket.groups = self.allgroup, self.rocketgroup
+        
         Flytext.groups = self.allgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         
@@ -729,8 +725,7 @@ class PygView(object):
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
-            self.allgroup.update(seconds)
-
+            
             # --------- collision detection between target and Explosion -----
             #for e in self.explosiongroup:
             #    crashgroup = pygame.sprite.spritecollide(e, self.targetgroup,
@@ -744,12 +739,16 @@ class PygView(object):
             for p in self.playergroup:
                 crashgroup = pygame.sprite.spritecollide(p, self.rocketgroup,
                              False, pygame.sprite.collide_rect)
+                #print(p.groups, self.rocketgroup)
                 for r in crashgroup:
                     if r.bossnumber != p.number:
                         p.hitpoints -= 1
-                        Explosion(pos=r.pos)
+                        Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         r.kill()
             
+            # -------------- UPDATE all sprites -------             
+            self.allgroup.update(seconds)
+
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
 
