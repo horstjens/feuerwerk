@@ -619,7 +619,6 @@ class PygView(object):
                         running = False
                     # ------- change Background image ----
                     if event.key == pygame.K_b:
-                        print("background")
                         self.loadbackground()
                     # ------- fire player 1 -----
                     if event.key == pygame.K_TAB:
