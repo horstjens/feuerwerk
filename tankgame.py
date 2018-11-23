@@ -431,6 +431,9 @@ class Dreieck(VectorSprite):
 
 class Smoke(VectorSprite):
 
+    def _overwrite_parameters(self):
+      self._layer = 1
+
     def create_image(self):
         self.image = pygame.Surface((50,50))
         pygame.draw.circle(self.image, self.color, (25,25),
@@ -477,7 +480,7 @@ class Explosion():
             v.rotate_ip(a)
             speed = random.randint(5, 150)
             duration = random.random() * 3
-            Spark(pos=posvector, angle= a, move=v*speed,
+            Spark(pos=pygame.math.Vector2(posvector.x, posvector.y), angle= a, move=v*speed,
                   max_age = duration)
 
 class Rocket(VectorSprite):
@@ -545,8 +548,7 @@ class PygView(object):
         
         try:
             self.background = pygame.image.load(os.path.join("data",
-                 self.backgroundfilenames[PygView.wave %
-                 len(self.backgroundfilenames)]))
+                 random.choice(self.backgroundfilenames)))
         except:
             self.background = pygame.Surface(self.screen.get_size()).convert()
             self.background.fill((255,255,255)) # fill background white
@@ -615,6 +617,10 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    # ------- change Background image ----
+                    if event.key == pygame.K_b:
+                        print("background")
+                        self.loadbackground()
                     # ------- fire player 1 -----
                     if event.key == pygame.K_TAB:
                         v = pygame.math.Vector2(88,0)
