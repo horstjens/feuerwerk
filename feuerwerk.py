@@ -20,6 +20,13 @@ import math
 
 """Best game: 10 waves by Ines"""
 
+def randomize_color(color, delta=50):
+    d=random.randint(-delta, delta)
+    color = color + d
+    color = min(255,color)
+    color = max(0, color)
+    return color
+
 def make_text(msg="pygame is cool", fontcolor=(255, 0, 255), fontsize=42, font=None):
     """returns pygame surface with text. You still need to blit the surface."""
     myfont = pygame.font.SysFont(font, fontsize)
@@ -432,6 +439,10 @@ class Spaceship(VectorSprite):
         self.rect = self.image.get_rect()
         
 class Bombership(VectorSprite):
+    def __init__(self, **kwargs):
+        self.readyToLaunchTime = 0
+        VectorSprite.__init__(self, **kwargs)
+        self.fire_chance = 0.015
 
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -449,6 +460,14 @@ class Bombership(VectorSprite):
     def ai(self):
         if random.random() < 0.01:
             self.move = pygame.math.Vector2(random.randint(-30,30),random.randint(-50,50))
+        if random.random() < self.fire_chance:
+            self.fire()
+            
+    def fire(self):
+        m = pygame.math.Vector2(0, random.random()*75)
+        m = m.rotate(random.randint(-90,90))
+        Bomb(pos=pygame.math.Vector2(self.pos.x, self.pos.y), move=m,
+             gravity = pygame.math.Vector2(0,-0.7), kill_on_edge=True, mass=1800, hitpoints=10 )
             
 class Snipership(VectorSprite):
 
@@ -509,11 +528,61 @@ class Rocketship(VectorSprite):
         elif self.angle < self.min_angle:
             self.angle = self.min_angle
             self.delta_angle *= -1
+        if random.random() < 0.25:
+            self.fire()
+        #print(self.angle)
             
-                
+    def fire(self):
+        m = pygame.math.Vector2(88,0)
+        m.rotate_ip(self.angle)
+        Rocket(pos=pygame.math.Vector2(self.pos.x, self.pos.y), angle=self.angle, move=m+self.move, speed = 100, mass=500, hitpoints=10,kill_on_edge=True)     #speed=20
+
+class Bomb(VectorSprite):
+
+   def __init__(self, **kwargs):
+        VectorSprite.__init__(self, **kwargs)
+        if "gravity" not in kwargs:
+            self.gravity = pygame.math.Vector2(0, -0.7)
+
+   def create_image(self):
+        self.image = pygame.Surface((20,40))
+        pygame.draw.circle(self.image, (15,15,50), (10,30), 10)
+        pygame.draw.polygon(self.image, (15,15,50), [(0,30),(5, 10), (15,10), (20,30)])
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
+
+   def update(self, seconds):
+        if self.pos.y < -PygView.height+20:
+            if self.kill_on_edge:
+                Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y),color=(255,165,0), sparksmax=500, gravityy=0.5, minspeed=50, maxspeed=200)#, max_age=random.random()*10)
+        VectorSprite.update(self, seconds)
+        self.move += self.gravity
+        #if random.random() < 0.25:
+        #    Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
+        #          max_age=2, gravity=pygame.math.Vector2(0, -2))
         
-        #if self.firemode is True:
-            
+class Rocket(VectorSprite):
+
+    def _overwrite_parameters(self):
+        self._layer = 1    
+
+    def create_image(self):
+        #self.angle = 90
+        self.image = pygame.Surface((20,10))
+        pygame.draw.polygon(self.image, self.color, [(0,0),(5,0), (20,5), (5,10), (0,10), (5,5)])
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        #self.set_angle(self.angle)
+        
+    def update(self, seconds):
+        if self.pos.y < -PygView.height+20:
+            if self.kill_on_edge:
+                Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y))#, max_age=random.random()*10)
+        VectorSprite.update(self, seconds)
+        #self.move += self.gravity
 
 class Smoke(VectorSprite):
 
@@ -536,89 +605,48 @@ class Smoke(VectorSprite):
         c = min(255,c)
         self.color=(c,c,c)
 
+class Explosion():
+    
+    def __init__(self, pos, maxspeed=150, minspeed=20, color=(255,255,0),maxduration=2.5,gravityy=3.7,sparksmin=5,sparksmax=20):
 
-class Explosion(VectorSprite):
-
-    def _overwrite_parameters(self):
-        self._layer = 2
-
-    def create_image(self):
-        self.image=pygame.Surface((self.radius*2, self.radius*2))
-        pygame.draw.circle(self.image, (197, 37,  37),(self.radius, self.radius),  self.radius, 0)
-        r, g, b = self.color
-        for rad in range(5,66, 5):
-            if self.radius > rad:
-                if r != 0 and r != 255:
-                   r1 = (random.randint(rad-10,rad) + r) % 255
-                else:
-                    r1 = r
-                if g != 0 and g != 255:
-                    g1 = (random.randint(rad-10,rad) + g) % 255
-                else:
-                    g1 = g
-                if b != 0 and b != 255:
-                    b1 = (random.randint(rad-10,rad) + b) % 255
-                else:
-                    b1 = b
-                pygame.draw.circle(self.image, (r1,g1,b1), (self.radius, self.radius), self.radius-rad, 0)
-        self.image.set_colorkey((0,0,0))
-        self.rect= self.image.get_rect()
-
-    def update(self,seconds):
-         VectorSprite.update(self, seconds)
-         self.create_image()
-         self.rect=self.image.get_rect()
-         self.rect.center=(self.pos.x, self.pos.y)
-         self.radius+=1
-
-class Rocket(VectorSprite):
+        for s in range(random.randint(sparksmin,sparksmax)):
+            v = pygame.math.Vector2(1,0) # vector aiming right (0°)
+            a = random.randint(0,360)
+            v.rotate_ip(a)
+            g = pygame.math.Vector2(0, - gravityy)
+            speed = random.randint(minspeed, maxspeed)     #150
+            duration = random.random() * maxduration     
+            Spark(pos=pygame.math.Vector2(pos.x, pos.y), angle= a, move=v*speed,
+                  max_age = duration, color=color, gravity = g)
+                  
+class Spark(VectorSprite):
 
     def __init__(self, **kwargs):
-        self.readyToLaunchTime = 0
         VectorSprite.__init__(self, **kwargs)
-        
-        self.damage = 3
-        self.color = (255,156,0)
-        self.create_image()
-
+        if "gravity" not in kwargs:
+            self.gravity = pygame.math.Vector2(0, -3.7)
+    
     def _overwrite_parameters(self):
-        self._layer = 1    
-
+        self._layer = 2
+        self.kill_on_edge = True
+    
     def create_image(self):
-        self.angle = 90
-        self.image = pygame.Surface((20,10))
-        pygame.draw.polygon(self.image, self.color, [(0,0),(5,0), (20,5), (5,10), (0,10), (5,5)])
+        r,g,b = self.color
+        r = randomize_color(r,50)
+        g = randomize_color(g,50)
+        b = randomize_color(b,50)
+        self.image = pygame.Surface((10,10))
+        pygame.draw.line(self.image, (r,g,b), 
+                         (10,5), (5,5), 3)
+        pygame.draw.line(self.image, (r,g,b),
+                          (5,5), (2,5), 1)
         self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
+        self.rect= self.image.get_rect()
         self.image0 = self.image.copy()
-        self.rect = self.image.get_rect()
-        self.set_angle(self.angle)
 
     def update(self, seconds):
-        # --- speed limit ---
-        if self.move.length() != self.speed:
-            if self.move.length() < 0:
-                self.move = self.move.normalize() * self.speed
-            else:
-                pass
-        if self.move.length() > 0:
-            self.set_angle(-self.move.angle_to(pygame.math.Vector2(-1,0)))
-            self.move = self.move.normalize() * self.speed
-            # --- Smoke ---
-            if random.random() < 0.2 and self.age > 0.1:
-                Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y), 
-                   gravity=pygame.math.Vector2(0,4), max_age = 4)
-        self.oldage = self.age
         VectorSprite.update(self, seconds)
-        # new rockets are stored offscreen 500 pixel below PygView.height
-        if self.age > self.readyToLaunchTime and self.oldage < self.readyToLaunchTime:
-            self.pos.y -= 500
-
-    def kill(self):
-        Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y),max_age=2.1, color=(200,255,255), damage = self.damage)
-        VectorSprite.kill(self)    
-
-
+        self.move += self.gravity
 
 class PygView(object):
     width = 0
@@ -733,8 +761,11 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    # if event.key == pygame.K_d :
-                    #    self.eck.set_angle(0)
+                    if event.key == pygame.K_e:
+                       Explosion(pos=pygame.math.Vector2(self.mouse1.x, -self.mouse1.y))
+                       #Explosion(pos=pygame.math.Vector2(300, -300))
+                       #Explosion(pos=pygame.math.Vector2(PygView.width/2, -PygView.height/2))
+                       
                     #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
                     # if event.key == pygame.K_e:
                     #     self.eck.set_angle(45)
