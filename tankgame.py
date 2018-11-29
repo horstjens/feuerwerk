@@ -776,9 +776,9 @@ class PygView(object):
                        self.player1.move_forward()
                    if y < -0.1:
                        self.player1.move_backward()
-                    if x > 0.1:
+                   if x > 0.1:
                         self.player1.turn_right()
-                    if x < -0.1:
+                   if x < -0.1:
                         self.player1.turn_left()
                         
                    #mouses[number].x += x * 20 # *2 
