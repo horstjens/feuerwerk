@@ -414,6 +414,15 @@ class VectorSprite(pygame.sprite.Sprite):
 
 class Dreieck(VectorSprite):
     
+    def fire(self):
+        v = pygame.math.Vector2(188,0)
+        v.rotate_ip(self.angle)
+        Rocket(pos=pygame.math.Vector2(self.pos.x,
+                               self.pos.y), angle=self.angle,
+                               move=v+self.move, max_age=8,
+                               warp_on_edge=True, color=self.color,
+                               bossnumber=self.number)
+    
     def update(self, seconds):
         VectorSprite.update(self, seconds)
         #self.tail.insert(0,(self.pos.x,-self.pos.y))
@@ -425,6 +434,16 @@ class Dreieck(VectorSprite):
                  Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
                        self.pos.x, self.pos.y), color=(255,255,255))
             
+    def strafe_left(self):
+        v = pygame.math.Vector2(50, 0)
+        v.rotate_ip(self.angle + 90)   # strafe left!!
+        self.move += v
+        
+    def strafe_right(self):
+        v = pygame.math.Vector2(50, 0)
+        v.rotate_ip(self.angle - 90)   # strafe right!!
+        self.move += v
+    
     def move_forward(self):
         v = pygame.math.Vector2(1,0)
         v.rotate_ip(self.angle)
@@ -668,25 +687,26 @@ class PygView(object):
                     # ------- change Background image ----
                     if event.key == pygame.K_b:
                         self.loadbackground()
+                    # ------- strafe left player 1 -------
+                    if event.key == pygame.K_q:
+                        self.player1.strafe_left()
+                    # ------- strafe right player 1 ------
+                    if event.key == pygame.K_e:
+                        self.player1.strafe_right()
+                    # ------- strafe left player 2 -------
+                    if event.key == pygame.K_u:
+                        self.player2.strafe_left()
+                    # ------- strafe right player 2 ------
+                    if event.key == pygame.K_o:
+                        self.player2.strafe_right()
+                    
                     # ------- fire player 1 -----
                     if event.key == pygame.K_TAB:
-                        v = pygame.math.Vector2(188,0)
-                        v.rotate_ip(self.player1.angle)
-                        Rocket(pos=pygame.math.Vector2(self.player1.pos.x,
-                               self.player1.pos.y), angle=self.player1.angle,
-                               move=v+self.player1.move, max_age=8,
-                               warp_on_edge=True, color=self.player1.color,
-                               bossnumber=self.player1.number)
+                        self.player1.fire()
                     # ------- fire player 2 ------
                     if event.key == pygame.K_SPACE:
-                        v = pygame.math.Vector2(188,0)
-                        v.rotate_ip(self.player2.angle)
-                        Rocket(pos=pygame.math.Vector2(self.player2.pos.x,
-                               self.player2.pos.y), angle=self.player2.angle,
-                               move=v+self.player2.move, max_age=8,
-                               warp_on_edge=True, color=self.player2.color,
-                               bossnumber=self.player2.number)
-                    
+                        self.player2.fire()
+                        
          
                     # ---- -simple movement for self.eck -------
                     #if event.key == pygame.K_RIGHT:
@@ -745,13 +765,24 @@ class PygView(object):
             oldleft, oldmiddle, oldright = left, middle, right
 
             # ------ joystick handler -------
-            mouses = [self.mouse4, self.mouse5]
+            #mouses = [self.mouse4, self.mouse5]
             for number, j in enumerate(self.joysticks):
                 if number == 0:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
-                   mouses[number].x += x * 20 # *2 
-                   mouses[number].y += y * 20 # *2 
+                   print(x,y)
+                   
+                   if y > 0.1:
+                       self.player1.move_forward()
+                   if y < -0.1:
+                       self.player1.move_backward()
+                    if x > 0.1:
+                        self.player1.turn_right()
+                    if x < -0.1:
+                        self.player1.turn_left()
+                        
+                   #mouses[number].x += x * 20 # *2 
+                   #mouses[number].y += y * 20 # *2 
                    buttons = j.get_numbuttons()
                    for b in range(buttons):
                        pushed = j.get_button( b )
