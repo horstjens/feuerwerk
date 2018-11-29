@@ -422,9 +422,35 @@ class Dreieck(VectorSprite):
             for x,y  in [(-25,25), (-25,-25)]:
                  v = pygame.math.Vector2(x,y)
                  v.rotate_ip(self.angle)
-                 Smoke(max_age=4, pos=v+pygame.math.Vector2(self.pos.x, self.pos.y))
+                 Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
+                       self.pos.x, self.pos.y), color=(255,255,255))
             
-            
+    def move_forward(self):
+        v = pygame.math.Vector2(1,0)
+        v.rotate_ip(self.angle)
+        self.move += v
+        Explosion(pygame.math.Vector2(self.pos.x, self.pos.y),
+                          minsparks = 0,
+                          maxsparks = 2,
+                          minangle = self.angle+180-5, 
+                          maxangle = self.angle+180+5, 
+                          maxlifetime = 1,
+                          minspeed = 100,
+                          maxspeed = 200,
+                          blue=200, blue_delta=50,
+                          green = 0, 
+                          red = 0
+                          )
+    def move_backward(self):
+        v = pygame.math.Vector2(1,0)
+        v.rotate_ip(self.angle)
+        self.move += -v
+        
+    def turn_left(self):
+        self.rotate(3)
+        
+    def turn_right(self):
+        self.rotate(-3)
             
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -456,10 +482,7 @@ class Smoke(VectorSprite):
         self.create_image()
         self.rect=self.image.get_rect()
         self.rect.center=(self.pos.x, -self.pos.y)
-        c = int(self.age * 100)
-        c = min(255,c)
-        self.color=(c,c,c)
-
+    
 
 class Spark(VectorSprite):
     
@@ -483,22 +506,35 @@ class Spark(VectorSprite):
         
 
 class Explosion():
-    
-    def __init__(self, posvector):
-
-        for s in range(random.randint(5,20)):
+    """emits a lot of sparks, for Explosion or Spaceship engine"""
+    def __init__(self, posvector, minangle=0, maxangle=360, maxlifetime=3,
+                 minspeed=5, maxspeed=150, red=255, red_delta=0, 
+                 green=225, green_delta=25, blue=0, blue_delta=0,
+                 minsparks=5, maxsparks=20):
+        for s in range(random.randint(minsparks,maxsparks)):
             v = pygame.math.Vector2(1,0) # vector aiming right (0°)
-            a = random.randint(0,360)
+            a = random.randint(minangle,maxangle)
             v.rotate_ip(a)
-            speed = random.randint(5, 150)
-            duration = random.random() * 3
-            Spark(pos=pygame.math.Vector2(posvector.x, posvector.y), angle= a, move=v*speed,
-                  max_age = duration, color=(255,255,0))
+            speed = random.randint(minspeed, maxspeed)
+            duration = random.random() * maxlifetime # in seconds
+            red   = randomize_color(red, red_delta)
+            green = randomize_color(green, green_delta)
+            blue  = randomize_color(blue, blue_delta)
+            Spark(pos=pygame.math.Vector2(posvector.x, posvector.y),
+                  angle= a, move=v*speed, max_age = duration, 
+                  color=(red,green,blue), kill_on_edge = True)
 
 class Rocket(VectorSprite):
 
     def _overwrite_parameters(self):
         self._layer = 1    
+
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        if random.random() < 0.35:
+            Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
+                  color=(100,100,100),
+                  max_age=2.5)
 
     def create_image(self):
         #self.angle = 90
@@ -634,7 +670,7 @@ class PygView(object):
                         self.loadbackground()
                     # ------- fire player 1 -----
                     if event.key == pygame.K_TAB:
-                        v = pygame.math.Vector2(88,0)
+                        v = pygame.math.Vector2(188,0)
                         v.rotate_ip(self.player1.angle)
                         Rocket(pos=pygame.math.Vector2(self.player1.pos.x,
                                self.player1.pos.y), angle=self.player1.angle,
@@ -643,7 +679,7 @@ class PygView(object):
                                bossnumber=self.player1.number)
                     # ------- fire player 2 ------
                     if event.key == pygame.K_SPACE:
-                        v = pygame.math.Vector2(88,0)
+                        v = pygame.math.Vector2(188,0)
                         v.rotate_ip(self.player2.angle)
                         Rocket(pos=pygame.math.Vector2(self.player2.pos.x,
                                self.player2.pos.y), angle=self.player2.angle,
@@ -683,30 +719,22 @@ class PygView(object):
             pressed_keys = pygame.key.get_pressed()
             # ------- movement keys for player1 -------
             if pressed_keys[pygame.K_a]:
-                self.player1.rotate(3)
+                self.player1.turn_left()
             if pressed_keys[pygame.K_d]:
-                self.player1.rotate(-3)
+                self.player1.turn_right()
             if pressed_keys[pygame.K_w]:
-                v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.player1.angle)
-                self.player1.move += v
+                self.player1.move_forward()
             if pressed_keys[pygame.K_s]:
-                v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.player1.angle)
-                self.player1.move += -v
+                self.player1.move_backward()
             # ------- movement keys for player 2 ---------
             if pressed_keys[pygame.K_j]:
-                self.player2.rotate(3)
+                 self.player2.turn_left()
             if pressed_keys[pygame.K_l]:
-                self.player2.rotate(-3)
+                 self.player2.turn_right()
             if pressed_keys[pygame.K_i]:
-                v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.player2.angle)
-                self.player2.move += v
+                 self.player2.move_forward()
             if pressed_keys[pygame.K_k]:
-                v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.player2.angle)
-                self.player2.move += -v    
+                 self.player2.move_backward()  
             
             # ------ mouse handler ------
             left,middle,right = pygame.mouse.get_pressed()
