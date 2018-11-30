@@ -262,6 +262,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.pos = pygame.math.Vector2(random.randint(0, PygView.width),-50)
         if "move" not in kwargs:
             self.move = pygame.math.Vector2(0,0)
+        if "friction" not in kwargs:
+            self.friction = 1.0 # no friction
         if "radius" not in kwargs:
             self.radius = 5
         if "width" not in kwargs:
@@ -367,6 +369,7 @@ class VectorSprite(pygame.sprite.Sprite):
                 #self.pos = v.Vec2d(boss.pos.x, boss.pos.y)
                 self.pos = pygame.math.Vector2(boss.pos.x, boss.pos.y)
         self.pos += self.move * seconds
+        self.move *= self.friction 
         self.distance_traveled += self.move.length() * seconds
         self.age += seconds
         self.wallbounce()
@@ -414,6 +417,10 @@ class VectorSprite(pygame.sprite.Sprite):
 
 class Dreieck(VectorSprite):
     
+    def _overwrite_parameters(self):
+        #self._layer = 1
+        self.friction = 0.995  #1.0 = no friction
+    
     def fire(self):
         v = pygame.math.Vector2(188,0)
         v.rotate_ip(self.angle)
@@ -438,11 +445,40 @@ class Dreieck(VectorSprite):
         v = pygame.math.Vector2(50, 0)
         v.rotate_ip(self.angle + 90)   # strafe left!!
         self.move += v
+        Explosion(self.pos, 
+                  minangle = self.angle - 90 -35,
+                  maxangle = self.angle - 90 +35,
+                  maxlifetime = 0.75,
+                  minsparks = 100,
+                  maxsparks = 150,
+                  minspeed = 50,
+                  red = 0, red_delta=0,
+                  green= 0, green_delta=0,
+                  blue = 200, blue_delta = 50
+                  )
+                  
+                  
+                  
         
     def strafe_right(self):
         v = pygame.math.Vector2(50, 0)
         v.rotate_ip(self.angle - 90)   # strafe right!!
         self.move += v
+        Explosion(self.pos, 
+                  minangle = self.angle + 90 -35,
+                  maxangle = self.angle + 90 +35,
+                  maxlifetime = 0.75,
+                  minsparks = 100,
+                  maxsparks = 150,
+                  minspeed = 50,
+                  red = 0, red_delta=0,
+                  green= 0, green_delta=0,
+                  blue = 200, blue_delta = 50
+                  )
+        
+        
+        
+        
     
     def move_forward(self):
         v = pygame.math.Vector2(1,0)
@@ -550,6 +586,19 @@ class Rocket(VectorSprite):
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
+        # ---- red Spark ---
+        if random.random() < 0.5:
+            Explosion(self.pos,
+                      minangle = self.angle+180-15,
+                      maxangle = self.angle+180+15,
+                      minsparks = 1,
+                      maxsparks = 5,
+                      maxlifetime = 0.5,
+                      red = 200, red_delta = 50,
+                      green= 0, green_delta=0,
+                      blue = 0, blue_delta=0,
+                      )
+        # ---- Smoke ---
         if random.random() < 0.35:
             Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
                   color=(100,100,100),
