@@ -532,9 +532,10 @@ class Dreieck(VectorSprite):
         self.rotate(-3)
             
     def create_image(self):
-        self.image = pygame.Surface((50,50))
-        pygame.draw.polygon(self.image, self.color, ((0,0),(50,25),(0,50),(25,25)))
-        self.image.set_colorkey((0,0,0))
+        self.image = Dreieck.images[0]
+        #self.image = pygame.Surface((50,50))
+        #pygame.draw.polygon(self.image, self.color, ((0,0),(50,25),(0,50),(25,25)))
+        #self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -697,9 +698,19 @@ class PygView(object):
                           (PygView.width,PygView.height))
         self.background.convert()
         
-
+    
+    def load_sprites(self):
+        Dreieck.images = []
+        try:
+            Dreieck.images.append(pygame.image.load(
+                 os.path.join("data", "player1.png")))
+        except:
+            print("problem loading player1.png from folder data")
+            
+     
     def paint(self):
         """painting on the surface and create sprites"""
+        self.load_sprites()
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
         self.tracergroup = pygame.sprite.Group()
         self.mousegroup = pygame.sprite.Group()
