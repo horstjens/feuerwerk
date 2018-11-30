@@ -532,7 +532,7 @@ class Dreieck(VectorSprite):
         self.rotate(-3)
             
     def create_image(self):
-        self.image = Dreieck.images[0]
+        self.image = PygView.images[self.imagename]
         #self.image = pygame.Surface((50,50))
         #pygame.draw.polygon(self.image, self.color, ((0,0),(50,25),(0,50),(25,25)))
         #self.image.set_colorkey((0,0,0))
@@ -646,6 +646,7 @@ class Rocket(VectorSprite):
 class PygView(object):
     width = 0
     height = 0
+    images = {}
 
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
@@ -700,12 +701,13 @@ class PygView(object):
         
     
     def load_sprites(self):
-        Dreieck.images = []
         try:
-            Dreieck.images.append(pygame.image.load(
-                 os.path.join("data", "player1.png")))
+            PygView.images["player1"]= pygame.image.load(
+                 os.path.join("data", "player1.png"))
+            PygView.images["player2"]=pygame.image.load(
+                 os.path.join("data", "player2.png"))
         except:
-            print("problem loading player1.png from folder data")
+            print("problem loading player1.png or player2.png from folder data")
             
      
     def paint(self):
@@ -737,8 +739,8 @@ class PygView(object):
         self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
-        self.player1 =  Dreieck(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
-        self.player2 =  Dreieck(angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
+        self.player1 =  Dreieck(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
+        self.player2 =  Dreieck(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
    
    
     def run(self):
