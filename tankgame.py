@@ -415,6 +415,25 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
+class Ufo(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        pygame.draw.polygon(self.image, self.color, (
+             (4,4),  (13,4), (13,5),  (9,5), (9,8),
+             (17,8),(20,10),(17,12), (9,12), (9,15),
+             (13,15), (13,16),(4,16), (4,15), (8,18),
+             (8,12), (6,12), (6, 8), (8,8), (8,5),(4,5))
+             
+        
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        
+
+    
+
 class Dreieck(VectorSprite):
     
     def _overwrite_parameters(self):
