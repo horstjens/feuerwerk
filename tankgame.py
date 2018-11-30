@@ -418,13 +418,18 @@ class VectorSprite(pygame.sprite.Sprite):
 class Ufo(VectorSprite):
     
     def create_image(self):
-        self.image = pygame.Surface((50,50))
+        self.image = pygame.Surface((24,24))
+        #pygame.draw.polygon(self.image, self.color, (
+        #     (4,4),  (13,4), (13,5),  (9,5), (9,8),
+        #     (17,8),(20,10),(17,12), (9,12), (9,15),
+        #     (13,15), (13,16),(4,16), (4,15), (8,15),
+        #     (8,12), (6,12), (6, 8), (8,8), (8,5),(4,5)))
         pygame.draw.polygon(self.image, self.color, (
-             (4,4),  (13,4), (13,5),  (9,5), (9,8),
-             (17,8),(20,10),(17,12), (9,12), (9,15),
-             (13,15), (13,16),(4,16), (4,15), (8,18),
-             (8,12), (6,12), (6, 8), (8,8), (8,5),(4,5))
-             
+               (1,2), (2,1), (4,1), (5,2),
+               (5,4), (4,5), (2,5), (1,4)))
+        pygame.draw.rect(self.image,  (200,200,0), 
+               (2,2,2,2))
+               
         
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
@@ -707,7 +712,7 @@ class PygView(object):
         VectorSprite.groups = self.allgroup
         Dreieck.groups = self.allgroup, self.playergroup  # , self.tailgroup
         Rocket.groups = self.allgroup, self.rocketgroup
-        
+        Ufo.groups = self.allgroup
         Flytext.groups = self.allgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         
@@ -752,6 +757,8 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    if event.key == pygame.K_x:
+                        Ufo(pos=pygame.math.Vector2(100,-100))
                     # ------- change Background image ----
                     if event.key == pygame.K_b:
                         self.loadbackground()
