@@ -459,11 +459,12 @@ class Dreieck(VectorSprite):
         #self.tail.insert(0,(self.pos.x,-self.pos.y))
         #self.tail = self.tail[:1024]
         if random.random() < 0.8:
-            for x,y  in [(-25,25), (-25,-25)]:
+            for x,y  in [(-30,-8), (-30,8)]:
                  v = pygame.math.Vector2(x,y)
                  v.rotate_ip(self.angle)
+                 c = randomize_color(160, 25)
                  Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
-                       self.pos.x, self.pos.y), color=(255,255,255))
+                       self.pos.x, self.pos.y), color=(c,c,c))
             
     def strafe_left(self):
         v = pygame.math.Vector2(50, 0)
@@ -508,7 +509,10 @@ class Dreieck(VectorSprite):
         v = pygame.math.Vector2(1,0)
         v.rotate_ip(self.angle)
         self.move += v
-        Explosion(pygame.math.Vector2(self.pos.x, self.pos.y),
+        for p in [(-30,8), (-30,-8)]:
+               w=pygame.math.Vector2(p[0],p[1])
+               w.rotate_ip(self.angle)
+               Explosion(self.pos+w,
                           minsparks = 0,
                           maxsparks = 2,
                           minangle = self.angle+180-5, 
@@ -516,9 +520,9 @@ class Dreieck(VectorSprite):
                           maxlifetime = 1,
                           minspeed = 100,
                           maxspeed = 200,
-                          blue=200, blue_delta=50,
-                          green = 0, 
-                          red = 0
+                          blue=0, blue_delta=0,
+                          green = 214, green_delta=20,
+                          red = 255, red_delta = 20
                           )
     def move_backward(self):
         v = pygame.math.Vector2(1,0)
@@ -706,6 +710,13 @@ class PygView(object):
                  os.path.join("data", "player1.png"))
             PygView.images["player2"]=pygame.image.load(
                  os.path.join("data", "player2.png"))
+            
+            # --- scalieren ---
+            for name in PygView.images:
+                img = PygView.images[name]
+                img = pygame.transform.scale(img, (100,100))
+                PygView.images[name] = img
+            
         except:
             print("problem loading player1.png or player2.png from folder data")
             
@@ -733,11 +744,11 @@ class PygView(object):
 
    
         # ------ player1,2,3: mouse, keyboard, joystick ---
-        self.mouse1 = Mouse(control="mouse", color=(255,0,0))
-        self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
-        self.mouse3 = Mouse(control="keyboard2", color=(255,0,255))
-        self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
-        self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
+        #self.mouse1 = Mouse(control="mouse", color=(255,0,0))
+        #self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
+        #self.mouse3 = Mouse(control="keyboard2", color=(255,0,255))
+        #self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
+        #self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
         self.player1 =  Dreieck(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
         self.player2 =  Dreieck(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
@@ -814,14 +825,14 @@ class PygView(object):
             self.screen.blit(self.background, (0, 0))
             
             # ------ move indicator for self.eck -----
-            pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
-            glitter = (0, random.randint(128, 255), 0)
-            pygame.draw.line(self.screen, glitter, (100,100), 
-                            (100 + self.player1.move.x, 100 - self.player1.move.y))
-            
+            #pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
+            #glitter = (0, random.randint(128, 255), 0)
+            #pygame.draw.line(self.screen, glitter, (100,100), 
+            #                (100 + self.player1.move.x, 100 - self.player1.move.y))
+            # 
             
             # --- line from eck to mouse ---
-            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.player1.pos.x, -self.player1.pos.y), (self.mouse1.x, self.mouse1.y))
+            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.player1.pos.x, -self.player1.pos.y), (self.mouse1.x, self.mouse1.y))
 
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
@@ -882,9 +893,9 @@ class PygView(object):
                        #        mouses[number] = True
                        #elif b == 1 and not pushed:
                        #    mouses[number] = False
-            pos1 = pygame.math.Vector2(pygame.mouse.get_pos())
-            pos2 = self.mouse2.rect.center
-            pos3 = self.mouse3.rect.center
+            #pos1 = pygame.math.Vector2(pygame.mouse.get_pos())
+            #pos2 = self.mouse2.rect.center
+            #pos3 = self.mouse3.rect.center
             
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
