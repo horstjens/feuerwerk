@@ -1,0 +1,9 @@
+filename: player2.png:
+license: cc-by-sa 3.0
+user: http://opengameart.org/users/skorpio, 
+download: https://opengameart.org/content/spaceship-fighter
+
+filename: player1.png:
+license: cc-by-sa 3.0
+user: http://opengameart.org/users/skorpio, 
+download: https://opengameart.org/content/spaceship-6
