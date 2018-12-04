@@ -320,6 +320,8 @@ class VectorSprite(pygame.sprite.Sprite):
             self.warp_on_edge = False
         if "dangerhigh" not in kwargs:
             self.dangerhigh = False
+        if "target" not in kwargs:
+            self.target = None
 
     def kill(self):
         if self.number in self.numbers:
@@ -647,6 +649,27 @@ class Spark(VectorSprite):
     def update(self, seconds):
         VectorSprite.update(self, seconds)
         self.move += self.gravity
+        
+class Cannon(VectorSprite):
+    
+    def create_image(self):
+        self.image = pygame.Surface((100,10))
+        pygame.draw.rect(self.image, (1,1,1), (50,0,50,10))
+        self.image.set_colorkey((0,0,0))
+        self.rect= self.image.get_rect()
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        
+    def ai(self):
+        if self.target is not None:
+            #------ angle from cannon to eck --------
+            targetvector = pygame.math.Vector2(self.target.pos.x, self.target.pos.y)
+            cannonvector = pygame.math.Vector2(self.pos.x, self.pos.y)
+            diffvector = targetvector - cannonvector
+            angle = pygame.math.Vector2(1,0).angle_to(diffvector)
+            self.set_angle(angle)
+            #print(angle)
+        
 
 class PygView(object):
     width = 0
@@ -687,7 +710,7 @@ class PygView(object):
         self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         for j in self.joysticks:
             j.init()
-        self.paint()
+        self.prepare_sprites()
         self.loadbackground()
 
     def loadbackground(self):
@@ -705,20 +728,26 @@ class PygView(object):
         self.background.convert()
         
 
-    def paint(self):
+    def prepare_sprites(self):
         """painting on the surface and create sprites"""
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
         self.tracergroup = pygame.sprite.Group()
         self.mousegroup = pygame.sprite.Group()
         self.explosiongroup = pygame.sprite.Group()
         self.snipergroup = pygame.sprite.Group()
+        self.enemygroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup
         
         VectorSprite.groups = self.allgroup
         Flytext.groups = self.allgroup
         Explosion.groups = self.allgroup, self.explosiongroup
-        Snipership.groups = self.allgroup, self.snipergroup
+        Snipership.groups = self.allgroup, self.snipergroup, self.enemygroup
+        Rocketship.groups = self.allgroup, self.enemygroup
+        Cannon.groups = self.allgroup
+        Bombership.groups = self.allgroup, self.enemygroup
+        Bomb.groups = self.allgroup, self.enemygroup
+        Rocket.groups = self.allgroup, self.enemygroup
         
         
 
@@ -735,6 +764,8 @@ class PygView(object):
         for x in range(4):
             self.ship = Snipership(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50), color=(0,255,255))
         self.ship2 =  Rocketship(pos=pygame.math.Vector2(50,-50), color=(0,255,0))
+        self.cannon1 = Cannon(pos=pygame.math.Vector2(100,-400))
+        self.cannon1.target = self.eck
    
     def run(self):
         """The mainloop"""
@@ -767,14 +798,15 @@ class PygView(object):
                        #Explosion(pos=pygame.math.Vector2(PygView.width/2, -PygView.height/2))
                        
                     #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_e:
-                    #     self.eck.set_angle(45)
+                    if event.key == pygame.K_4:
+                        self.cannon1.rotate(90)
                     #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 45°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_w:
-                    #    self.eck.set_angle(90)
+                    if event.key == pygame.K_5:
+                        self.cannon1.rotate(-90)
                     #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 90°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_q:
-                    #    self.eck.set_angle(135)
+                    if event.key == pygame.K_6:
+                        e= self.enemygroup.sprites()
+                        self.cannon1.target = random.choice(e)
                     #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 135°", color=(255,0,0), duration = 3, fontsize=20)
                     # if event.key == pygame.K_a:
                     #    self.eck.set_angle(180)
@@ -810,6 +842,8 @@ class PygView(object):
                     if event.key == pygame.K_r:
                         self.eck.move *= 0.1 # remove 90% of movement
                     
+            # ------- ai ----------
+            self.cannon1.ai()
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
@@ -819,10 +853,13 @@ class PygView(object):
             glitter = (0, random.randint(128, 255), 0)
             pygame.draw.line(self.screen, glitter, (100,100), 
                             (100 + self.eck.move.x, 100 - self.eck.move.y))
-            
-            
+            # --- line from cannon to target ---
+            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.cannon1.pos.x, -self.cannon1.pos.y), (self.cannon1.target.pos.x, -self.cannon1.target.pos.y))
             # --- line from eck to mouse ---
             pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.mouse1.x, self.mouse1.y))
+            # --- line from eck to cannon -----
+            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.cannon1.pos.x, -self.cannon1.pos.y))
+            
             
             # --- line from snipership to target ---
             for s in self.snipergroup:
