@@ -402,7 +402,7 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.hitpoints = 0
                 self.kill()
             elif self.bounce_on_edge:
-                self.pos.y = PygView.height
+                self.pos.y = -PygView.height
                 self.move.y *= -1
             elif self.warp_on_edge:
                 self.pos.y = 0
