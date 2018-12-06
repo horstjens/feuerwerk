@@ -890,7 +890,10 @@ class PygView(object):
                        if b == 0 and pushed:
                            #print("pushed", b)  # green joystick button "A"
                            player.fire()
-                    
+                       if b == 4 and pushed:
+                           player.strafe_left()
+                       if b == 5 and pushed:
+                           player.strafe_right()                
                 
               
                        
