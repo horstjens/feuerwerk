@@ -497,8 +497,8 @@ class Spaceship(VectorSprite):
         
         
     
-    def move_forward(self):
-        v = pygame.math.Vector2(1,0)
+    def move_forward(self, speed=1):
+        v = pygame.math.Vector2(speed,0)
         v.rotate_ip(self.angle)
         self.move += v
         for p in [(-30,8), (-30,-8)]:
@@ -506,26 +506,26 @@ class Spaceship(VectorSprite):
                w.rotate_ip(self.angle)
                Explosion(self.pos+w,
                           minsparks = 0,
-                          maxsparks = 2,
+                          maxsparks = 1,
                           minangle = self.angle+180-5, 
                           maxangle = self.angle+180+5, 
-                          maxlifetime = 1,
+                          maxlifetime = 0.3,
                           minspeed = 100,
                           maxspeed = 200,
                           blue=0, blue_delta=0,
                           green = 214, green_delta=20,
                           red = 255, red_delta = 20
                           )
-    def move_backward(self):
-        v = pygame.math.Vector2(1,0)
+    def move_backward(self, speed=1):
+        v = pygame.math.Vector2(speed,0)
         v.rotate_ip(self.angle)
         self.move += -v
         
-    def turn_left(self):
-        self.rotate(3)
+    def turn_left(self, speed=3):
+        self.rotate(speed)
         
-    def turn_right(self):
-        self.rotate(-3)
+    def turn_right(self, speed=3):
+        self.rotate(-speed)
             
     def create_image(self):
         self.image = PygView.images[self.imagename]
@@ -619,10 +619,10 @@ class Rocket(VectorSprite):
                       blue = 0, blue_delta=0,
                       )
         # ---- Smoke ---
-        if random.random() < 0.35:
-            Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
-                  color=(100,100,100),
-                  max_age=2.5)
+        #if random.random() < 0.35:
+         #   Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
+         #         color=(100,100,100),
+         #         max_age=2.5)
 
     def create_image(self):
         self.image = pygame.Surface((20,10))
@@ -865,6 +865,17 @@ class PygView(object):
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, r)
                         r.kill()
+            
+            # -------------- collision detection between player and player------ #
+            for p in self.playergroup:
+                crashgroup = pygame.sprite.spritecollide(p, self.playergroup,
+                             False, pygame.sprite.collide_mask)
+                for p2 in crashgroup:
+                    if p.number != p2.number:
+                        #p.hitpoints -= 1
+                        #Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
+                        elastic_collision(p, p2)
+                        #r.kill()
             
             # -------------- UPDATE all sprites -------             
             self.allgroup.update(seconds)
