@@ -863,40 +863,38 @@ class PygView(object):
             #    self.launchRocket(pygame.mouse.get_pos())
             oldleft, oldmiddle, oldright = left, middle, right
 
+           
             # ------ joystick handler -------
-            #mouses = [self.mouse4, self.mouse5]
             for number, j in enumerate(self.joysticks):
                 if number == 0:
-                   x = j.get_axis(0)
-                   y = j.get_axis(1)
-                   print(x,y)
-                   
-                   if y > 0.1:
-                       self.player1.move_forward()
-                   if y < -0.1:
-                       self.player1.move_backward()
-                   if x > 0.1:
-                        self.player1.turn_right()
-                   if x < -0.1:
-                        self.player1.turn_left()
-                        
-                   #mouses[number].x += x * 20 # *2 
-                   #mouses[number].y += y * 20 # *2 
-                   buttons = j.get_numbuttons()
-                   for b in range(buttons):
+                    player = self.player1
+                elif number ==1:
+                    player = self.player2
+                else:
+                    continue 
+                x = j.get_axis(0)
+                y = j.get_axis(1)
+                #print(x,y)
+                if y > 0.5:
+                    player.move_backward()
+                if y < -0.5:
+                    player.move_forward()
+                if x > 0.5:
+                    player.turn_right()
+                if x < -0.5:
+                    player.turn_left()
+                
+                buttons = j.get_numbuttons()
+                for b in range(buttons):
                        pushed = j.get_button( b )
-                       #if b == 0 and pushed:
-                       #        self.launchRocket((mouses[number].x, mouses[number].y))
-                       #elif b == 1 and pushed:
-                       #    if not self.mouse4.pushed: 
-                       #        self.launchRocket((mouses[number].x, mouses[number].y))
-                       #        mouses[number] = True
-                       #elif b == 1 and not pushed:
-                       #    mouses[number] = False
-            #pos1 = pygame.math.Vector2(pygame.mouse.get_pos())
-            #pos2 = self.mouse2.rect.center
-            #pos3 = self.mouse3.rect.center
-            
+                       if b == 0 and pushed:
+                           #print("pushed", b)  # green joystick button "A"
+                           player.fire()
+                    
+                
+              
+                       
+                       
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
