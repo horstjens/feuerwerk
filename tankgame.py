@@ -432,7 +432,7 @@ class Ufo(VectorSprite):
 
     
 
-class Dreieck(VectorSprite):
+class Spaceship(VectorSprite):
     
     def _overwrite_parameters(self):
         self.friction = 0.995  #1.0 = no friction
@@ -719,7 +719,7 @@ class PygView(object):
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
-        Dreieck.groups = self.allgroup, self.playergroup  # , self.tailgroup
+        Spaceship.groups = self.allgroup, self.playergroup  # , self.tailgroup
         Rocket.groups = self.allgroup, self.rocketgroup
         Ufo.groups = self.allgroup
         Flytext.groups = self.allgroup
@@ -727,8 +727,8 @@ class PygView(object):
         
         
 
-        self.player1 =  Dreieck(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
-        self.player2 =  Dreieck(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
+        self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
+        self.player2 =  Spaceship(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
    
    
     def run(self):
@@ -786,7 +786,7 @@ class PygView(object):
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
             
-            # ------ move indicator for self.eck -----
+            # ------ move indicator for player 1 -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
             glitter = (0, random.randint(128, 255), 0)
             pygame.draw.line(self.screen, glitter, (100,100), 
