@@ -447,6 +447,13 @@ class Spaceship(VectorSprite):
                                move=v+self.move, max_age=10,
                                kill_on_edge=True, color=self.color,
                                bossnumber=self.number)
+        # --- mzzleflash 25, 0  vor raumschiff
+        p = pygame.math.Vector2(25,0)
+        p.rotate_ip(self.angle)
+        Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle)
+        
+        
+        
     
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -636,7 +643,16 @@ class Rocket(VectorSprite):
         #self.image.convert_alpha()
         #self.image0 = self.image.copy()
         #self.rect = self.image.get_rect()
+
+
+class Muzzle_flash(VectorSprite):
     
+    def create_image(self):
+        self.image = PygView.images["muzzle_flash"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+
     
 
 
@@ -710,6 +726,10 @@ class PygView(object):
                      img = PygView.images[name]
                      img = pygame.transform.scale(img, (50,50))
                      PygView.images[name] = img
+                if "muzzle_flash" in name:
+                     img = PygView.images[name]
+                     img = pygame.transform.scale(img, (50,30))
+                     PygView.images[name] = img
                 
         except:
             print("problem loading player1.png or player2.png from folder data")
@@ -733,6 +753,7 @@ class PygView(object):
         Ufo.groups = self.allgroup
         Flytext.groups = self.allgroup
         Explosion.groups= self.allgroup, self.explosiongroup
+        Muzzle_flash.groups= self.allgroup
         
         
 
