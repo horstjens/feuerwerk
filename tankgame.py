@@ -435,7 +435,7 @@ class Ufo(VectorSprite):
 class Spaceship(VectorSprite):
     
     def _overwrite_parameters(self):
-        self.friction = 0.995  #1.0 = no friction
+        self.friction = 0.980  #1.0 = no friction
         self.radius = 8
         self.mass = 3000
     
@@ -444,8 +444,8 @@ class Spaceship(VectorSprite):
         v.rotate_ip(self.angle)
         Rocket(pos=pygame.math.Vector2(self.pos.x,
                                self.pos.y), angle=self.angle,
-                               move=v+self.move, max_age=8,
-                               warp_on_edge=True, color=self.color,
+                               move=v+self.move, max_age=10,
+                               kill_on_edge=True, color=self.color,
                                bossnumber=self.number)
     
     def update(self, seconds):
@@ -607,17 +607,17 @@ class Rocket(VectorSprite):
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        if random.random() < 0.5:
-            Explosion(self.pos,
-                      minangle = self.angle+180-15,
-                      maxangle = self.angle+180+15,
-                      minsparks = 1,
-                      maxsparks = 5,
-                      maxlifetime = 0.5,
-                      red = 200, red_delta = 50,
-                      green= 0, green_delta=0,
-                      blue = 0, blue_delta=0,
-                      )
+        #if random.random() < 0.5:
+        #    Explosion(self.pos,
+        #              minangle = self.angle+180-15,
+        #              maxangle = self.angle+180+15,
+        #              minsparks = 1,
+        #              maxsparks = 5,
+        #              maxlifetime = 0.5,
+        #              red = 200, red_delta = 50,
+        #              green= 0, green_delta=0,
+        #              blue = 0, blue_delta=0,
+        #              )
         # ---- Smoke ---
         #if random.random() < 0.35:
          #   Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
@@ -625,12 +625,17 @@ class Rocket(VectorSprite):
          #         max_age=2.5)
 
     def create_image(self):
-        self.image = pygame.Surface((20,10))
-        pygame.draw.polygon(self.image, self.color, [(0,0),(5,0), (20,5), (5,10), (0,10), (5,5)])
-        self.image.set_colorkey((0,0,0))
+        self.image = PygView.images["bullet"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+
+        #self.image = pygame.Surface((20,10))
+        #pygame.draw.polygon(self.image, self.color, [(0,0),(5,0), (20,5), (5,10), (0,10), (5,5)])
+        #self.image.set_colorkey((0,0,0))
+        #self.image.convert_alpha()
+        #self.image0 = self.image.copy()
+        #self.rect = self.image.get_rect()
     
     
 
@@ -695,13 +700,17 @@ class PygView(object):
                  os.path.join("data", "player1.png"))
             PygView.images["player2"]=pygame.image.load(
                  os.path.join("data", "player2.png"))
-            
+            PygView.images["bullet"]= pygame.image.load(
+                 os.path.join("data", "bullet.png"))
+            PygView.images["muzzle_flash"]=pygame.image.load(
+                 os.path.join("data", "muzzle_flash.png"))
             # --- scalieren ---
             for name in PygView.images:
-                img = PygView.images[name]
-                img = pygame.transform.scale(img, (50,50))
-                PygView.images[name] = img
-            
+                if "player" in name:
+                     img = PygView.images[name]
+                     img = pygame.transform.scale(img, (50,50))
+                     PygView.images[name] = img
+                
         except:
             print("problem loading player1.png or player2.png from folder data")
             
@@ -861,7 +870,7 @@ class PygView(object):
                              False, pygame.sprite.collide_mask)
                 for r in crashgroup:
                     if r.bossnumber != p.number:
-                        p.hitpoints -= 1
+                        p.hitpoints -= random.randint(4,9)
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, r)
                         r.kill()
