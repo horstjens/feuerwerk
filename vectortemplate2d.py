@@ -3,7 +3,7 @@ author: Horst JENS
 email: horstjens@gmail.com
 contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
-download: 
+download: https://github.com/horstjens/feuerwerk/blob/master/vectortemplate2d.py
 idea: clean python3/pygame template using pygame.math.vector2
 
 """
@@ -407,7 +407,7 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
-class Dreieck(VectorSprite):
+class Spaceship(VectorSprite):
     
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -577,8 +577,8 @@ class PygView(object):
         self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
-        self.eck =  Dreieck(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
-        self.eck2 =  Dreieck(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
+        self.player1 =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
+        self.player2 =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
 
    
    
@@ -607,77 +607,37 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    # ---- shooting rockets for player1 ----
                     if event.key == pygame.K_TAB:
                         v = pygame.math.Vector2(100,0)
-                        v.rotate_ip(self.eck.angle) 
-                        v += self.eck.move # adding speed of spaceship to rocket
+                        v.rotate_ip(self.player1.angle) 
+                        v += self.player1.move # adding speed of spaceship to rocket
                         # create a new vector (a copy, but not the same, as the pos vector of spaceship)
-                        p = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
-                        a = self.eck.angle
+                        p = pygame.math.Vector2(self.player1.pos.x, self.player1.pos.y)
+                        a = self.player1.angle
                         # launch rocktet not from middle of spaceship, but from it's nose (rightmost point)
                         # we know that from middle of spaceship to right edge ("nose") is 25 pixel
                         t = pygame.math.Vector2(25,0)
-                        t.rotate_ip(self.eck.angle)
+                        t.rotate_ip(self.player1.angle)
                         Rocket(pos=p+t, move=v, angle=a)
-                    # if event.key == pygame.K_d :
-                    #    self.eck.set_angle(0)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_e:
-                    #     self.eck.set_angle(45)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 45°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_w:
-                    #    self.eck.set_angle(90)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 90°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_q:
-                    #    self.eck.set_angle(135)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 135°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_a:
-                    #    self.eck.set_angle(180)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 180°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_y:
-                    #     self.eck.set_angle(225)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 225°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_x:
-                    #    self.eck.set_angle(270)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 270°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_c:
-                    #     self.eck.set_angle(315)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 315°", color=(255,0,0), duration = 3, fontsize=20)
-                   
-                    #if event.key == pygame.K_s:
-                    #    mausvector = pygame.math.Vector2(self.mouse1.x, -self.mouse1.y)
-                    #    eckvector = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
-                    #    diffvector = mausvector - eckvector
-                    #    rechtsvector = pygame.math.Vector2(1,0)
-                    #    angle = rechtsvector.angle_to(diffvector)
-                        #self.eck.rotate(m)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(angle), color=(255,0,0), duration = 3, fontsize=20)
-                    # ---- -simple movement for self.eck -------
-                    if event.key == pygame.K_RIGHT:
-                        self.eck.move += pygame.math.Vector2(10,0)
-                    if event.key == pygame.K_LEFT:
-                        self.eck.move += pygame.math.Vector2(-10,0)
-                    if event.key == pygame.K_UP:
-                        self.eck.move += pygame.math.Vector2(0,10)
-                    if event.key == pygame.K_DOWN:
-                        self.eck.move += pygame.math.Vector2(0,-10)
-                    # ---- stop movement for self.eck -----
-                    if event.key == pygame.K_r:
-                        self.eck.move *= 0.1 # remove 90% of movement
+                
+                    # ---- stop movement for self.player1 -----
+                    #if event.key == pygame.K_r:
+                    #    self.player1.move *= 0.1 # remove 90% of movement
                     
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
             
-            # ------ move indicator for self.eck -----
+            # ------ move indicator for self.player1 -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
             glitter = (0, random.randint(128, 255), 0)
             pygame.draw.line(self.screen, glitter, (100,100), 
-                            (100 + self.eck.move.x, 100 - self.eck.move.y))
+                            (100 + self.player1.move.x, 100 - self.player1.move.y))
             
             
             # --- line from eck to mouse ---
-            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.mouse1.x, self.mouse1.y))
+            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.player1.pos.x, -self.player1.pos.y), (self.mouse1.x, self.mouse1.y))
 
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
@@ -686,17 +646,17 @@ class PygView(object):
             # if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
             if pressed_keys[pygame.K_a]:
-                self.eck.rotate(3)
+                self.player1.rotate(3)
             if pressed_keys[pygame.K_d]:
-                self.eck.rotate(-3)
+                self.player1.rotate(-3)
             if pressed_keys[pygame.K_w]:
                 v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.eck.angle)
-                self.eck.move += v
+                v.rotate_ip(self.player1.angle)
+                self.player1.move += v
             if pressed_keys[pygame.K_s]:
                 v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.eck.angle)
-                self.eck.move += -v
+                v.rotate_ip(self.player1.angle)
+                self.player1.move += -v
     
             
             # ------ mouse handler ------
