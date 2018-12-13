@@ -477,51 +477,17 @@ class Explosion(VectorSprite):
 
 class Rocket(VectorSprite):
 
-    def __init__(self, **kwargs):
-        self.readyToLaunchTime = 0
-        VectorSprite.__init__(self, **kwargs)
-        
-        self.damage = 3
-        self.color = (255,156,0)
-        self.create_image()
 
     def _overwrite_parameters(self):
         self._layer = 1    
 
     def create_image(self):
-        self.angle = 90
-        self.image = pygame.Surface((20,10))
-        pygame.draw.polygon(self.image, self.color, [(0,0),(5,0), (20,5), (5,10), (0,10), (5,5)])
-        self.image.set_colorkey((0,0,0))
+        #self.image = PygView.images["bullet"]
+        self.image = pygame.Surface((100,25))
+        self.image.fill((255,255,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
-        self.set_angle(self.angle)
-
-    def update(self, seconds):
-        # --- speed limit ---
-        if self.move.length() != self.speed:
-            if self.move.length() < 0:
-                self.move = self.move.normalize() * self.speed
-            else:
-                pass
-        if self.move.length() > 0:
-            self.set_angle(-self.move.angle_to(pygame.math.Vector2(-1,0)))
-            self.move = self.move.normalize() * self.speed
-            # --- Smoke ---
-            if random.random() < 0.2 and self.age > 0.1:
-                Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y), 
-                   gravity=pygame.math.Vector2(0,4), max_age = 4)
-        self.oldage = self.age
-        VectorSprite.update(self, seconds)
-        # new rockets are stored offscreen 500 pixel below PygView.height
-        if self.age > self.readyToLaunchTime and self.oldage < self.readyToLaunchTime:
-            self.pos.y -= 500
-
-    def kill(self):
-        Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y),max_age=2.1, color=(200,255,255), damage = self.damage)
-        VectorSprite.kill(self)    
-
 
 
 class PygView(object):
@@ -605,6 +571,7 @@ class PygView(object):
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
         self.eck =  Dreieck(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
+        self.eck2 =  Dreieck(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
 
    
    
@@ -633,6 +600,11 @@ class PygView(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    if event.key == pygame.K_TAB:
+                        v = pygame.math.Vector2(100,0)
+                        v.rotate_ip(self.eck.angle)
+                        p = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
+                        Rocket(pos=p, move=v, angle=self.eck.angle)
                     # if event.key == pygame.K_d :
                     #    self.eck.set_angle(0)
                     #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
