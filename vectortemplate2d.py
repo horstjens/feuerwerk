@@ -479,12 +479,19 @@ class Rocket(VectorSprite):
 
 
     def _overwrite_parameters(self):
-        self._layer = 1    
+        self._layer = 1 
+        self.kill_on_edge = True
 
     def create_image(self):
         #self.image = PygView.images["bullet"]
-        self.image = pygame.Surface((100,25))
-        self.image.fill((255,255,0))
+        self.image = pygame.Surface((10,5))
+        #pygame.draw.rect(self.image, (255,255,0), (0,2, 8,3),0)
+        #pygame.draw.line(self.image, (220,220,0), (0,3),(10,3),2)
+        pygame.draw.polygon(self.image, (255,255,0), 
+                            [(0,0), (7,0), (9,2), (9,3), (7, 4), (0,4)]
+                           ) 
+        #self.image.fill((255,255,0))
+        self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -602,9 +609,16 @@ class PygView(object):
                         running = False
                     if event.key == pygame.K_TAB:
                         v = pygame.math.Vector2(100,0)
-                        v.rotate_ip(self.eck.angle)
+                        v.rotate_ip(self.eck.angle) 
+                        v += self.eck.move # adding speed of spaceship to rocket
+                        # create a new vector (a copy, but not the same, as the pos vector of spaceship)
                         p = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
-                        Rocket(pos=p, move=v, angle=self.eck.angle)
+                        a = self.eck.angle
+                        # launch rocktet not from middle of spaceship, but from it's nose (rightmost point)
+                        # we know that from middle of spaceship to right edge ("nose") is 25 pixel
+                        t = pygame.math.Vector2(25,0)
+                        t.rotate_ip(self.eck.angle)
+                        Rocket(pos=p+t, move=v, angle=a)
                     # if event.key == pygame.K_d :
                     #    self.eck.set_angle(0)
                     #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
