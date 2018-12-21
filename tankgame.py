@@ -367,7 +367,20 @@ class VectorSprite(pygame.sprite.Sprite):
                 boss = VectorSprite.numbers[self.bossnumber]
                 self.pos = pygame.math.Vector2(boss.pos.x, boss.pos.y)
         self.pos += self.move * seconds
+        # -- friction ---
         self.move *= self.friction 
+        # -- gravity ---
+        # only one object can be the gravity source
+        if self.gravity is not None:
+            
+            for p in self.gravity:
+                # vector between self and gravity
+                v = p.pos - self.pos
+                l = v.length()
+                v.normalize_ip() # has now lenght of 1
+                #print("vector", v)
+                v *= 1000/l
+                self.move += v 
         self.distance_traveled += self.move.length() * seconds
         self.age += seconds
         self.wallbounce()
@@ -438,17 +451,18 @@ class Spaceship(VectorSprite):
         self.friction = 0.980  #1.0 = no friction
         self.radius = 8
         self.mass = 3000
+        self.reloadtime = 0
     
     def fire(self):
         v = pygame.math.Vector2(188,0)
         v.rotate_ip(self.angle)
         Rocket(pos=pygame.math.Vector2(self.pos.x,
                                self.pos.y), angle=self.angle,
-                               move=v+self.move, max_age=10,
+                               move=v+self.move, max_age=1000,
                                kill_on_edge=True, color=self.color,
                                bossnumber=self.number)
         # --- mzzleflash 25, 0  vor raumschiff
-        p = pygame.math.Vector2(25,0)
+        p = pygame.math.Vector2(32,0)
         p.rotate_ip(self.angle)
         Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle)
         
@@ -457,24 +471,26 @@ class Spaceship(VectorSprite):
     
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        if random.random() < 0.8:
-            for x,y  in [(-30,-8), (-30,8)]:
-                 v = pygame.math.Vector2(x,y)
-                 v.rotate_ip(self.angle)
-                 c = randomize_color(160, 25)
-                 Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
-                       self.pos.x, self.pos.y), color=(c,c,c))
-            
+        if self.reloadtime > 0:
+            self.reloadtime -= seconds
+        #if random.random() < 0.8:
+        #    for x,y  in [(-30,-8), (-30,8)]:
+        #         v = pygame.math.Vector2(x,y)
+        #         v.rotate_ip(self.angle)
+                 #c = randomize_color(160, 25)
+                 #Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
+                 #      self.pos.x, self.pos.y), color=(c,c,c))
+        
     def strafe_left(self):
         v = pygame.math.Vector2(50, 0)
         v.rotate_ip(self.angle + 90)   # strafe left!!
         self.move += v
         Explosion(self.pos, 
-                  minangle = self.angle - 90 -35,
-                  maxangle = self.angle - 90 +35,
+                  minangle = int(self.angle) - 90 -35,
+                  maxangle = int(self.angle) - 90 +35,
                   maxlifetime = 0.75,
-                  minsparks = 100,
-                  maxsparks = 150,
+                  minsparks = 50,
+                  maxsparks = 70,
                   minspeed = 50,
                   red = 0, red_delta=0,
                   green= 0, green_delta=0,
@@ -489,11 +505,11 @@ class Spaceship(VectorSprite):
         v.rotate_ip(self.angle - 90)   # strafe right!!
         self.move += v
         Explosion(self.pos, 
-                  minangle = self.angle + 90 -35,
-                  maxangle = self.angle + 90 +35,
+                  minangle = int(self.angle) + 90 -35,
+                  maxangle = int(self.angle) + 90 +35,
                   maxlifetime = 0.75,
-                  minsparks = 100,
-                  maxsparks = 150,
+                  minsparks = 50,
+                  maxsparks = 70,
                   minspeed = 50,
                   red = 0, red_delta=0,
                   green= 0, green_delta=0,
@@ -509,20 +525,23 @@ class Spaceship(VectorSprite):
         v.rotate_ip(self.angle)
         self.move += v
         for p in [(-30,8), (-30,-8)]:
-               w=pygame.math.Vector2(p[0],p[1])
-               w.rotate_ip(self.angle)
-               Explosion(self.pos+w,
-                          minsparks = 0,
-                          maxsparks = 1,
-                          minangle = self.angle+180-5, 
-                          maxangle = self.angle+180+5, 
-                          maxlifetime = 0.3,
-                          minspeed = 100,
-                          maxspeed = 200,
-                          blue=0, blue_delta=0,
-                          green = 214, green_delta=20,
-                          red = 255, red_delta = 20
-                          )
+        #       w=pygame.math.Vector2(p[0],p[1])
+        #       w.rotate_ip(self.angle)
+        #       Explosion(self.pos+w,
+        #                  minsparks = 0,
+        #                  maxsparks = 1,
+        #                  minangle = self.angle+180-5, 
+        #                  maxangle = self.angle+180+5, 
+        #                  maxlifetime = 0.3,
+        #                  minspeed = 100,
+        #                  maxspeed = 200,
+        #                  blue=0, blue_delta=0,
+        #                  green = 214, green_delta=20,
+        #                  red = 255, red_delta = 20
+        #                  )
+            p = pygame.math.Vector2(32,0)
+            p.rotate_ip(self.angle+180)
+            Engine_glow(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle)
     def move_backward(self, speed=1):
         v = pygame.math.Vector2(speed,0)
         v.rotate_ip(self.angle)
@@ -591,7 +610,8 @@ class Explosion():
     def __init__(self, posvector, minangle=0, maxangle=360, maxlifetime=3,
                  minspeed=5, maxspeed=150, red=255, red_delta=0, 
                  green=225, green_delta=25, blue=0, blue_delta=0,
-                 minsparks=5, maxsparks=20):
+                 minsparks=5, maxsparks=20, gravity = None):
+        self.gravity = gravity
         for s in range(random.randint(minsparks,maxsparks)):
             v = pygame.math.Vector2(1,0) # vector aiming right (0°)
             a = random.randint(minangle,maxangle)
@@ -603,7 +623,7 @@ class Explosion():
             blue  = randomize_color(blue, blue_delta)
             Spark(pos=pygame.math.Vector2(posvector.x, posvector.y),
                   angle= a, move=v*speed, max_age = duration, 
-                  color=(red,green,blue), kill_on_edge = True)
+                  color=(red,green,blue), kill_on_edge = True, gravity = self.gravity)
 
 class Rocket(VectorSprite):
 
@@ -652,8 +672,22 @@ class Muzzle_flash(VectorSprite):
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
-
+        
+class Engine_glow(VectorSprite):
     
+    def create_image(self):
+        self.image = PygView.images["engine_glow"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+    
+class Planet(VectorSprite):
+    
+    def create_image(self):
+        self.image = PygView.images["planet"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
 
 
 class PygView(object):
@@ -711,29 +745,44 @@ class PygView(object):
         
     
     def load_sprites(self):
-        try:
-            PygView.images["player1"]= pygame.image.load(
-                 os.path.join("data", "player1.png"))
-            PygView.images["player2"]=pygame.image.load(
-                 os.path.join("data", "player2.png"))
-            PygView.images["bullet"]= pygame.image.load(
-                 os.path.join("data", "bullet.png"))
-            PygView.images["muzzle_flash"]=pygame.image.load(
-                 os.path.join("data", "muzzle_flash.png"))
-            # --- scalieren ---
-            for name in PygView.images:
-                if "player" in name:
-                     img = PygView.images[name]
-                     img = pygame.transform.scale(img, (50,50))
-                     PygView.images[name] = img
-                if "muzzle_flash" in name:
-                     img = PygView.images[name]
-                     img = pygame.transform.scale(img, (50,30))
-                     PygView.images[name] = img
-                
-        except:
-            print("problem loading player1.png or player2.png from folder data")
+        #try:
+        PygView.images["player1"]= pygame.image.load(
+             os.path.join("data", "player1.png"))
+        PygView.images["player2"]=pygame.image.load(
+             os.path.join("data", "player2.png"))
+        PygView.images["bullet"]= pygame.image.load(
+             os.path.join("data", "bullet.png"))
+        PygView.images["muzzle_flash"]=pygame.image.load(
+             os.path.join("data", "muzzle_flash.png"))
+        PygView.images["engine_glow"]=pygame.image.load(
+             os.path.join("data", "engine_glow.png"))
+        PygView.images["planet"]=pygame.image.load(
+             os.path.join("data", "planet.png"))
+        PygView.images["planet2"]=pygame.image.load(
+             os.path.join("data", "planet.png"))
+        #except:
+        #    print("problem loading player1.png or player2.png from folder data")
             
+        # --- scalieren ---
+        for name in PygView.images:
+            if "player" in name:
+                 img = PygView.images[name]
+                 img = pygame.transform.scale(img, (50,50))
+                 PygView.images[name] = img
+            if "muzzle_flash" in name:
+                 img = PygView.images[name]
+                 img = pygame.transform.scale(img, (50,30))
+                 PygView.images[name] = img
+            if "engine_glow" in name:
+                 img = PygView.images[name]
+                 img = pygame.transform.scale(img, (50,30))
+                 PygView.images[name] = img
+            if "planet" in name:
+                 img = PygView.images[name]
+                 img = pygame.transform.scale(img, (300,300))
+                 PygView.images[name] = img
+            
+      
      
     def paint(self):
         """painting on the surface and create sprites"""
@@ -745,6 +794,9 @@ class PygView(object):
         self.tailgroup = pygame.sprite.Group()
         self.playergroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
+        self.planetgroup = pygame.sprite.Group()
+        self.gravitygroup = pygame.sprite.Group()
+        self.sparkgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
@@ -754,17 +806,20 @@ class PygView(object):
         Flytext.groups = self.allgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Muzzle_flash.groups= self.allgroup
-        
+        Engine_glow.groups= self.allgroup
+        Planet.groups = self.allgroup, self.planetgroup, self.gravitygroup
+        Spark.groups = self.allgroup, self.sparkgroup
         
 
         self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
         self.player2 =  Spaceship(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
-   
+        self.planet = Planet(imagename="planet", pos= (300, -300))
+        self.planet2 = Planet(imagename="planet2", pos= (900, -300))
    
     def run(self):
         """The mainloop"""
         running = True
-        pygame.mouse.set_visible(False)
+        #pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
         gameOver = False
@@ -806,7 +861,9 @@ class PygView(object):
                     
                     # ------- fire player 1 -----
                     if event.key == pygame.K_TAB:
-                        self.player1.fire()
+                        if self.player1.reloadtime<= 0:
+                            self.player1.fire()
+                            self.player1.reloadtime+= 0.3
                     # ------- fire player 2 ------
                     if event.key == pygame.K_SPACE:
                         self.player2.fire()
@@ -835,20 +892,38 @@ class PygView(object):
             if pressed_keys[pygame.K_s]:
                 self.player1.move_backward()
             # ------- movement keys for player 2 ---------
-            if pressed_keys[pygame.K_j]:
-                 self.player2.turn_left()
-            if pressed_keys[pygame.K_l]:
-                 self.player2.turn_right()
-            if pressed_keys[pygame.K_i]:
-                 self.player2.move_forward()
-            if pressed_keys[pygame.K_k]:
-                 self.player2.move_backward()  
+            #if pressed_keys[pygame.K_j]:
+            #     self.player2.turn_left()
+            #if pressed_keys[pygame.K_l]:
+            #     self.player2.turn_right()
+            #if pressed_keys[pygame.K_i]:
+            #     self.player2.move_forward()
+            #if pressed_keys[pygame.K_k]:
+            #     self.player2.move_backward()  
+            vm = pygame.math.Vector2(pygame.mouse.get_pos()[0], 
+                                     -pygame.mouse.get_pos()[1])
+            v1 = pygame.math.Vector2(100,0)
+            diff = vm - self.player2.pos 
+            angle = diff.angle_to(v1)
+            self.player2.set_angle(-angle)
+            print(vm, v1,  self.player2.pos, self.player2.angle)
+            #pygame.draw.line(self.screen,(200, 0, 0),(0,0), pygame.mouse.get_pos())
+            #pygame.draw.line(self.screen,(200, 0, 0),(0,0), (self.player2.pos.x,-self.player2.pos.y))
+            
+            
             
             # ------ mouse handler ------
             left,middle,right = pygame.mouse.get_pressed()
             oldleft, oldmiddle, oldright = left, middle, right
-
-           
+            self.player2.move_forward()
+            if middle:
+                if self.player2.reloadtime <= 0:
+                    self.player2.fire()
+                    self.player2.reloadtime = 0.5
+            if left:
+                self.player2.strafe_left()
+            if right:
+                self.player2.strafe_right()
             # ------ joystick handler -------
             for number, j in enumerate(self.joysticks):
                 if number == 0:
@@ -906,6 +981,32 @@ class PygView(object):
                         #Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, p2)
                         #r.kill()
+            
+            
+            # -------------- collision detection between planet and rocket------ #
+            for p in self.planetgroup:
+                crashgroup = pygame.sprite.spritecollide(p, self.rocketgroup,
+                             False, pygame.sprite.collide_mask)
+                for r in crashgroup:
+                #    if p.number != p2.number:
+                #        #p.hitpoints -= random.randint(4,9)
+                        Explosion(pygame.math.Vector2(r.pos.x, r.pos.y), gravity = [self.planet, self.planet2])
+                        #elastic_collision(p, r)
+                        r.kill()
+            # -------------- collision detection between planet and spark------ #
+            for p in self.planetgroup:
+                crashgroup = pygame.sprite.spritecollide(p, self.sparkgroup,
+                             False, pygame.sprite.collide_mask)
+                for s in crashgroup:
+                #    if p.number != p2.number:
+                #        #p.hitpoints -= random.randint(4,9)
+                        #Explosion(pygame.math.Vector2(r.pos.x, r.pos.y), gravity = self.planet)
+                        #elastic_collision(p, r)
+                        s.kill()
+            
+            for r in self.rocketgroup:
+                r.gravity=[self.planet, self.planet2]
+            
             
             # -------------- UPDATE all sprites -------             
             self.allgroup.update(seconds)
