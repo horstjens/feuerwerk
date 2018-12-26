@@ -415,6 +415,23 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
+class Enemy1(VectorSprite):
+    
+   def _overwrite_parameters(self):
+        self.pos = pygame.math.Vector2(random.randint(
+                   0, PygView.width) , -1)
+        self.kill_on_edge = True
+        self.move = pygame.math.Vector2(0,-random.randint(75,250))
+        self._layer = 4
+        self.angle = 270
+   
+   def create_image(self):
+        self.image = PygView.images["player2"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+
+    
 
 class Star(VectorSprite):
     
@@ -788,6 +805,7 @@ class PygView(object):
         self.tailgroup = pygame.sprite.Group()
         self.playergroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
+        self.enemygroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
@@ -868,6 +886,10 @@ class PygView(object):
             # ---- pretty moving background stars -----
             if random.random() < 0.3:
                 Star()
+                
+            # ----- enemy1 ----
+            if random.random() < 0.1:
+                Enemy1()
             
             # ------ move indicator for player 1 -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
