@@ -232,6 +232,7 @@ class VectorSprite(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, self.groups) #call parent class. NEVER FORGET !
         self.number = VectorSprite.number # unique number for each sprite
         VectorSprite.number += 1
+        VectorSprite.numbers[self.number] = self
         if "color" not in kwargs:
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         self.create_image()
@@ -366,6 +367,7 @@ class VectorSprite(pygame.sprite.Sprite):
             if self.sticky_with_boss:
                 boss = VectorSprite.numbers[self.bossnumber]
                 self.pos = pygame.math.Vector2(boss.pos.x, boss.pos.y)
+                self.set_angle(boss.angle)
         self.pos += self.move * seconds
         self.move *= self.friction 
         self.distance_traveled += self.move.length() * seconds
@@ -413,6 +415,29 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
+
+class Star(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.pos = pygame.math.Vector2(random.randint(
+                   0, PygView.width) , -1)
+        self.kill_on_edge = True
+        self.move = pygame.math.Vector2(0,-random.randint(75,250))
+        self._layer = 1
+    
+    def create_image(self):
+        self.image = pygame.Surface((6,6))
+        color = random.randint(200,255)
+        radius = random.choice((0,0,0,0,0,1,1,1,1,2,2,3))
+        pygame.draw.circle(self.image, (color, color, color),
+                           (3,3), radius)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+    
+    
+
 class Ufo(VectorSprite):
     
     def create_image(self):
@@ -457,13 +482,13 @@ class Spaceship(VectorSprite):
     
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        if random.random() < 0.8:
-            for x,y  in [(-30,-8), (-30,8)]:
-                 v = pygame.math.Vector2(x,y)
-                 v.rotate_ip(self.angle)
-                 c = randomize_color(160, 25)
-                 Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
-                       self.pos.x, self.pos.y), color=(c,c,c))
+        #if random.random() < 0.8:
+        #    for x,y  in [(-30,-8), (-30,8)]:
+        #         v = pygame.math.Vector2(x,y)
+        #         v.rotate_ip(self.angle)
+                 #c = randomize_color(160, 25)
+                 #Smoke(max_age=2.5, pos=v+pygame.math.Vector2(
+                 #      self.pos.x, self.pos.y), color=(c,c,c))
             
     def strafe_left(self):
         v = pygame.math.Vector2(50, 0)
@@ -473,8 +498,8 @@ class Spaceship(VectorSprite):
                   minangle = self.angle - 90 -35,
                   maxangle = self.angle - 90 +35,
                   maxlifetime = 0.75,
-                  minsparks = 100,
-                  maxsparks = 150,
+                  minsparks = 1,
+                  maxsparks = 10,
                   minspeed = 50,
                   red = 0, red_delta=0,
                   green= 0, green_delta=0,
@@ -492,8 +517,8 @@ class Spaceship(VectorSprite):
                   minangle = self.angle + 90 -35,
                   maxangle = self.angle + 90 +35,
                   maxlifetime = 0.75,
-                  minsparks = 100,
-                  maxsparks = 150,
+                  minsparks = 1,
+                  maxsparks = 10,
                   minspeed = 50,
                   red = 0, red_delta=0,
                   green= 0, green_delta=0,
@@ -508,21 +533,28 @@ class Spaceship(VectorSprite):
         v = pygame.math.Vector2(speed,0)
         v.rotate_ip(self.angle)
         self.move += v
-        for p in [(-30,8), (-30,-8)]:
-               w=pygame.math.Vector2(p[0],p[1])
-               w.rotate_ip(self.angle)
-               Explosion(self.pos+w,
-                          minsparks = 0,
-                          maxsparks = 1,
-                          minangle = self.angle+180-5, 
-                          maxangle = self.angle+180+5, 
-                          maxlifetime = 0.3,
-                          minspeed = 100,
-                          maxspeed = 200,
-                          blue=0, blue_delta=0,
-                          green = 214, green_delta=20,
-                          red = 255, red_delta = 20
-                          )
+        # --- engine glow ----
+        #p = pygame.math.Vector2(-30,0)
+        #p.rotate_ip(self.angle)
+        #Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle+180)
+        
+        
+        
+        #for p in [(-30,8), (-30,-8)]:
+        #       w=pygame.math.Vector2(p[0],p[1])
+        #       w.rotate_ip(self.angle)
+        #       Explosion(self.pos+w,
+        #                  minsparks = 0,
+        #                  maxsparks = 1,
+        #                  minangle = self.angle+180-5, 
+        #                  maxangle = self.angle+180+5, 
+        #                  maxlifetime = 0.3,
+        #                  minspeed = 100,
+        #                  maxspeed = 200,
+        #                  blue=0, blue_delta=0,
+        #                  green = 214, green_delta=20,
+        #                  red = 255, red_delta = 20
+        #                  )
     def move_backward(self, speed=1):
         v = pygame.math.Vector2(speed,0)
         v.rotate_ip(self.angle)
@@ -645,6 +677,15 @@ class Rocket(VectorSprite):
         #self.rect = self.image.get_rect()
 
 
+class Engine_glow(VectorSprite):
+    
+    def create_image(self):
+        self.image = PygView.images["engine_glow"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+    
+
 class Muzzle_flash(VectorSprite):
     
     def create_image(self):
@@ -693,7 +734,7 @@ class PygView(object):
         self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         for j in self.joysticks:
             j.init()
-        self.paint()
+        self.prepare_sprites()
         self.loadbackground()
 
     def loadbackground(self):
@@ -720,6 +761,8 @@ class PygView(object):
                  os.path.join("data", "bullet.png"))
             PygView.images["muzzle_flash"]=pygame.image.load(
                  os.path.join("data", "muzzle_flash.png"))
+            PygView.images["engine_glow"]=pygame.image.load(
+                 os.path.join("data", "engine_glow.png"))
             # --- scalieren ---
             for name in PygView.images:
                 if "player" in name:
@@ -735,7 +778,7 @@ class PygView(object):
         #    print("problem loading player1.png or player2.png from folder data")
             
      
-    def paint(self):
+    def prepare_sprites(self):
         """painting on the surface and create sprites"""
         self.load_sprites()
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
@@ -760,6 +803,12 @@ class PygView(object):
         self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
         self.player2 =  Spaceship(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
    
+        # --- engine glow ----
+        #p = pygame.math.Vector2(-30,0)
+        #p.rotate_ip(self.player1.angle)
+        #Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle+180)
+        Engine_glow(bossnumber = self.player1.number, sticky_with_boss=True, angle = self.player1.angle+180)
+        
    
     def run(self):
         """The mainloop"""
@@ -815,6 +864,10 @@ class PygView(object):
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
+            
+            # ---- pretty moving background stars -----
+            if random.random() < 0.3:
+                Star()
             
             # ------ move indicator for player 1 -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
