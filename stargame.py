@@ -417,20 +417,43 @@ class VectorSprite(pygame.sprite.Sprite):
 
 class Enemy1(VectorSprite):
     
-   def _overwrite_parameters(self):
+    def _overwrite_parameters(self):
         self.pos = pygame.math.Vector2(random.randint(
                    0, PygView.width) , -1)
         self.kill_on_edge = True
-        self.move = pygame.math.Vector2(0,-random.randint(75,250))
+        self.move = pygame.math.Vector2(0,-random.randint(50,175))
         self._layer = 4
         self.angle = 270
-   
-   def create_image(self):
-        self.image = PygView.images["player2"]
+        self.hitpoints = 40
+        
+    
+    def create_image(self):
+        self.image = PygView.images["enemy1"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
 
+    def update(self,seconds):
+        VectorSprite.update(self,seconds)
+        self.ai()
+        self.fire()
+    def ai(self):
+        if random.random() < 0.2:
+            self.move += pygame.math.Vector2(random.choice((-7,-5,-2,-1,1,2,5,7)),random.choice((-3,-2,-1,1,2,3)))
+    
+    def fire(self):
+        if random.random() < 0.03:
+            a = random.randint(130,220)
+            v = pygame.math.Vector2(0,250)
+            v.rotate_ip(a)
+            Evilrocket(pos=pygame.math.Vector2(self.pos.x,
+                                   self.pos.y), angle=a+90,
+                                   move=v+self.move, max_age=10,
+                                   kill_on_edge=True, color=self.color)
+            # --- mzzleflash 25, 0  vor raumschiff
+            #p = pygame.math.Vector2(25,0)
+            #p.rotate_ip(self.angle)
+            #Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle)
     
 
 class Star(VectorSprite):
@@ -482,7 +505,7 @@ class Spaceship(VectorSprite):
         self.mass = 3000
     
     def fire(self):
-        v = pygame.math.Vector2(188,0)
+        v = pygame.math.Vector2(400,0)
         v.rotate_ip(self.angle)
         Rocket(pos=pygame.math.Vector2(self.pos.x,
                                self.pos.y), angle=self.angle,
@@ -694,6 +717,46 @@ class Rocket(VectorSprite):
         #self.rect = self.image.get_rect()
 
 
+class Evilrocket(VectorSprite):
+
+    def _overwrite_parameters(self):
+        self._layer = 1  
+        self.radius = 5 
+        self.mass = 80
+
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        #if random.random() < 0.5:
+        #    Explosion(self.pos,
+        #              minangle = self.angle+180-15,
+        #              maxangle = self.angle+180+15,
+        #              minsparks = 1,
+        #              maxsparks = 5,
+        #              maxlifetime = 0.5,
+        #              red = 200, red_delta = 50,
+        #              green= 0, green_delta=0,
+        #              blue = 0, blue_delta=0,
+        #              )
+        # ---- Smoke ---
+        #if random.random() < 0.35:
+         #   Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
+         #         color=(100,100,100),
+         #         max_age=2.5)
+
+    def create_image(self):
+        self.image = PygView.images["red_bullet"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+
+        #self.image = pygame.Surface((20,10))
+        #pygame.draw.polygon(self.image, self.color, [(0,0),(5,0), (20,5), (5,10), (0,10), (5,5)])
+        #self.image.set_colorkey((0,0,0))
+        #self.image.convert_alpha()
+        #self.image0 = self.image.copy()
+        #self.rect = self.image.get_rect()
+
+
 class Engine_glow(VectorSprite):
     
     def create_image(self):
@@ -772,6 +835,10 @@ class PygView(object):
         #try:
             PygView.images["player1"]= pygame.image.load(
                  os.path.join("data", "player1.png"))
+            PygView.images["red_bullet"]= pygame.image.load(
+                 os.path.join("data", "red_bullet.png"))
+            PygView.images["enemy1"]=pygame.image.load(
+                 os.path.join("data", "enemy1.png"))
             PygView.images["player2"]=pygame.image.load(
                  os.path.join("data", "player2.png"))
             PygView.images["bullet"]= pygame.image.load(
@@ -783,6 +850,10 @@ class PygView(object):
             # --- scalieren ---
             for name in PygView.images:
                 if "player" in name:
+                     img = PygView.images[name]
+                     img = pygame.transform.scale(img, (50,50))
+                     PygView.images[name] = img
+                if "enemy" in name:
                      img = PygView.images[name]
                      img = pygame.transform.scale(img, (50,50))
                      PygView.images[name] = img
@@ -805,17 +876,19 @@ class PygView(object):
         self.tailgroup = pygame.sprite.Group()
         self.playergroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
+        self.evilrocketgroup = pygame.sprite.Group()
         self.enemygroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
         Spaceship.groups = self.allgroup, self.playergroup  # , self.tailgroup
         Rocket.groups = self.allgroup, self.rocketgroup
+        Evilrocket.groups = self.allgroup, self.evilrocketgroup
         Ufo.groups = self.allgroup
         Flytext.groups = self.allgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Muzzle_flash.groups= self.allgroup
-        
+        Enemy1.groups = self.allgroup, self.enemygroup
         
 
         self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
@@ -876,8 +949,7 @@ class PygView(object):
                         self.player1.fire()
                     # ------- fire player 2 ------
                     if event.key == pygame.K_SPACE:
-                        self.player2.fire()
-                        
+                        self.player2.fire()    
                     
    
             # delete everything on screen
@@ -886,8 +958,7 @@ class PygView(object):
             # ---- pretty moving background stars -----
             if random.random() < 0.3:
                 Star()
-                
-            # ----- enemy1 ----
+            # -------- Enemy1---------------#
             if random.random() < 0.1:
                 Enemy1()
             
@@ -970,6 +1041,35 @@ class PygView(object):
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, r)
                         r.kill()
+            
+            # ----- collision detection between player and Evilrocket -----
+            for p in self.playergroup:
+                crashgroup = pygame.sprite.spritecollide(p, self.evilrocketgroup,
+                             False, pygame.sprite.collide_mask)
+                for r in crashgroup:
+                    #if r.bossnumber != p.number:
+                        p.hitpoints -= random.randint(3,6)
+                        Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
+                        #elastic_collision(p, r)
+                        r.kill()
+            
+            # ----- collision detection between enemy and rocket -----
+            for e in self.enemygroup:
+                crashgroup = pygame.sprite.spritecollide(e, self.rocketgroup,
+                             False, pygame.sprite.collide_mask)
+                for r in crashgroup:
+                    #if r.bossnumber != p.number:
+                    e.hitpoints -= random.randint(4,9)
+                    if e.hitpoints <= 0:
+                        self.player1.hitpoints += 15
+                        self.player2.hitpoints += 15
+                    if self.player1.hitpoints > 200:
+                        self.player1.hitpoints = 200
+                    if self.player2.hitpoints > 200:
+                        self.player2.hitpoints = 200    
+                        Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
+                        #elastic_collision(p, r)
+                    r.kill()
             
             # -------------- collision detection between player and player------ #
             for p in self.playergroup:
