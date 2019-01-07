@@ -548,15 +548,38 @@ class Spaceship(VectorSprite):
         self.friction = 0.980  #1.0 = no friction
         self.radius = 8
         self.mass = 3000
+        self.speed = 1
+        self.angle= 90
+        self.rockets = 1
+        self.firearc = 90
     
     def fire(self):
-        v = pygame.math.Vector2(400,0)
-        v.rotate_ip(self.angle)
-        Rocket(pos=pygame.math.Vector2(self.pos.x,
-                               self.pos.y), angle=self.angle,
-                               move=v+self.move, max_age=10,
-                               kill_on_edge=True, color=self.color,
-                               bossnumber=self.number)
+        p = pygame.math.Vector2(self.pos.x, self.pos.y)
+        t = pygame.math.Vector2(25,0)
+        t.rotate_ip(self.angle)
+        sa = [ ]
+        d = 90 / (self.rockets + 1) # rockets fly in a 90° arc
+        start = -self.firearc / 2
+        point = start+d
+        while point < self.firearc / 2:
+            sa.append(point)
+            point += d
+        # in sa are the desired shooting angles for rockets
+        for point in sa:
+            v = pygame.math.Vector2(188,0)
+            v.rotate_ip(self.angle+point)
+            v += self.move # adding speed of spaceship to rocket
+            a = self.angle + point
+            Rocket(pos=p+t, move=v, angle=a, bossnumber=self.number,
+                   kill_on_edge = True, color= self.color, max_age=10)
+        #--alt
+        #v = pygame.math.Vector2(400,0)
+        #v.rotate_ip(self.angle)
+        #Rocket(pos=pygame.math.Vector2(self.pos.x,
+        #                       self.pos.y), angle=self.angle,
+        #                       move=v+self.move, max_age=10,
+        #                       kill_on_edge=True, color=self.color,
+        #                       bossnumber=self.number)
         # --- mzzleflash 25, 0  vor raumschiff
         p = pygame.math.Vector2(25,0)
         p.rotate_ip(self.angle)
@@ -576,48 +599,51 @@ class Spaceship(VectorSprite):
                  #      self.pos.x, self.pos.y), color=(c,c,c))
             
     def strafe_left(self):
-        v = pygame.math.Vector2(50, 0)
+        v = pygame.math.Vector2(self.speed, 0)
         v.rotate_ip(self.angle + 90)   # strafe left!!
-        self.move += v
-        Explosion(self.pos, 
-                  minangle = self.angle - 90 -35,
-                  maxangle = self.angle - 90 +35,
-                  maxlifetime = 0.75,
-                  minsparks = 1,
-                  maxsparks = 10,
-                  minspeed = 50,
-                  red = 0, red_delta=0,
-                  green= 0, green_delta=0,
-                  blue = 200, blue_delta = 50
-                  )
+        #self.move += v
+        self.pos += v
+        #Explosion(self.pos, 
+        #          minangle = self.angle - 90 -35,
+        #          maxangle = self.angle - 90 +35,
+        #          maxlifetime = 0.75,
+        #          minsparks = 1,
+        #          maxsparks = 10,
+        #          minspeed = 50,
+        #          red = 0, red_delta=0,
+         #         green= 0, green_delta=0,
+         #         blue = 200, blue_delta = 50
+         #         )
                   
                   
                   
         
     def strafe_right(self):
-        v = pygame.math.Vector2(50, 0)
+        v = pygame.math.Vector2(self.speed, 0)
         v.rotate_ip(self.angle - 90)   # strafe right!!
-        self.move += v
-        Explosion(self.pos, 
-                  minangle = self.angle + 90 -35,
-                  maxangle = self.angle + 90 +35,
-                  maxlifetime = 0.75,
-                  minsparks = 1,
-                  maxsparks = 10,
-                  minspeed = 50,
-                  red = 0, red_delta=0,
-                  green= 0, green_delta=0,
-                  blue = 200, blue_delta = 50
-                  )
+        #self.move += v
+        self.pos += v
+        #Explosion(self.pos, 
+        #          minangle = self.angle + 90 -35,
+        #          maxangle = self.angle + 90 +35,
+         #         maxlifetime = 0.75,
+         #         minsparks = 1,
+         #         maxsparks = 10,
+         #         minspeed = 50,
+         #         red = 0, red_delta=0,
+         #         green= 0, green_delta=0,
+         #         blue = 200, blue_delta = 50
+          #        )
         
         
         
         
     
     def move_forward(self, speed=1):
-        v = pygame.math.Vector2(speed,0)
+        v = pygame.math.Vector2(self.speed,0)
         v.rotate_ip(self.angle)
-        self.move += v
+        self.pos += v
+        #self.move += v
         # --- engine glow ----
         #p = pygame.math.Vector2(-30,0)
         #p.rotate_ip(self.angle)
@@ -641,9 +667,10 @@ class Spaceship(VectorSprite):
         #                  red = 255, red_delta = 20
         #                  )
     def move_backward(self, speed=1):
-        v = pygame.math.Vector2(speed,0)
+        v = pygame.math.Vector2(self.speed,0)
         v.rotate_ip(self.angle)
-        self.move += -v
+        #self.move += -v
+        self.pos += -v
         
     def turn_left(self, speed=3):
         self.rotate(speed)
@@ -664,6 +691,7 @@ class Smoke(VectorSprite):
 
     def _overwrite_parameters(self):
       self._layer = 1
+      
 
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -976,11 +1004,11 @@ class PygView(object):
                     if event.key == pygame.K_b:
                         self.loadbackground()
                     # ------- strafe left player 1 -------
-                    if event.key == pygame.K_q:
-                        self.player1.strafe_left()
+                    #if event.key == pygame.K_q:
+                    #    self.player1.strafe_left()
                     # ------- strafe right player 1 ------
-                    if event.key == pygame.K_e:
-                        self.player1.strafe_right()
+                    #if event.key == pygame.K_e:
+                     #   self.player1.strafe_right()
                     # ------- strafe left player 2 -------
                     if event.key == pygame.K_u:
                         self.player2.strafe_left()
@@ -1025,13 +1053,14 @@ class PygView(object):
             pressed_keys = pygame.key.get_pressed()
             # ------- movement keys for player1 -------
             if pressed_keys[pygame.K_a]:
-                self.player1.turn_left()
+                self.player1.strafe_left()
             if pressed_keys[pygame.K_d]:
-                self.player1.turn_right()
+                self.player1.strafe_right()
             if pressed_keys[pygame.K_w]:
                 self.player1.move_forward()
             if pressed_keys[pygame.K_s]:
                 self.player1.move_backward()
+            
             # ------- movement keys for player 2 ---------
             if pressed_keys[pygame.K_j]:
                  self.player2.turn_left()
