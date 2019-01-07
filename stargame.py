@@ -233,8 +233,8 @@ class VectorSprite(pygame.sprite.Sprite):
         self.number = VectorSprite.number # unique number for each sprite
         VectorSprite.number += 1
         VectorSprite.numbers[self.number] = self
-        if "color" not in kwargs:
-            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        #if "color" not in kwargs:
+        #    self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         self.create_image()
         self.distance_traveled = 0 # in pixel
         self.rect.center = (-300,-300) # avoid blinking image in topleft corner
@@ -314,6 +314,18 @@ class VectorSprite(pygame.sprite.Sprite):
             self.warp_on_edge = False
         if "gravity" not in kwargs:
             self.gravity = None
+        if "survive_north" not in kwargs:
+            self.survive_north = False
+        if "survive_south" not in kwargs:
+            self.survive_south = False
+        if "survive_west" not in kwargs:
+            self.survive_west = False
+        if "survive_east" not in kwargs:
+            self.survive_east = False
+        if "speed" not in kwargs:
+            self.speed = 0
+        if "color" not in kwargs:
+            self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
 
     def kill(self):
         if self.number in self.numbers:
@@ -388,7 +400,7 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.x = PygView.width 
         # -------- upper edge -----
         if self.pos.y  > 0:
-            if self.kill_on_edge:
+            if self.kill_on_edge and not self.survive_north:
                 self.kill()
             elif self.bounce_on_edge:
                 self.pos.y = 0
@@ -415,13 +427,44 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
-class Enemy1(VectorSprite):
+
+class PowerUp(VectorSprite):
     
     def _overwrite_parameters(self):
         self.pos = pygame.math.Vector2(random.randint(
                    0, PygView.width) , -1)
         self.kill_on_edge = True
-        self.move = pygame.math.Vector2(0,-random.randint(50,175))
+        self.move = pygame.math.Vector2(
+                        random.randint(-20,20),
+                       -random.randint(50,175))
+        self._layer = 4
+        self.angle = 270
+        self.hitpoints = 4
+        self.color = random.choice(((255,0,0), (0,255,0)))
+        print("co:", self.color)
+          #, (0,0,255),
+          #                          (255,0,255), ( 255,255,0), (0,255,255),
+          #                          (125,128,128),(255,255,255)))
+    
+    def create_image(self):
+        self.image = pygame.Surface((40,40))
+        
+        print("verwende:", self.color)
+        pygame.draw.circle(self.image, self.color, (20,20), 20)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+    
+
+class Enemy1(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        #self.pos = pygame.math.Vector2(random.randint(
+        #           0, PygView.width) , -1)
+        self.kill_on_edge = True
+        self.survive_north = True
+        self.move = pygame.math.Vector2(0,-random.randint(50,100))
         self._layer = 4
         self.angle = 270
         self.hitpoints = 40
@@ -429,7 +472,7 @@ class Enemy1(VectorSprite):
     
     def create_image(self):
         self.image = PygView.images["enemy1"]
-        self.image.convert_alpha()
+        #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
 
@@ -437,8 +480,10 @@ class Enemy1(VectorSprite):
         VectorSprite.update(self,seconds)
         self.ai()
         self.fire()
+    
     def ai(self):
-        if random.random() < 0.2:
+        #pass
+        if self.pos.y < 0 and random.random() < 0.2:
             self.move += pygame.math.Vector2(random.choice((-7,-5,-2,-1,1,2,5,7)),random.choice((-3,-2,-1,1,2,3)))
     
     def fire(self):
@@ -834,33 +879,31 @@ class PygView(object):
     def load_sprites(self):
         #try:
             PygView.images["player1"]= pygame.image.load(
-                 os.path.join("data", "player1.png"))
+                 os.path.join("data", "player1.png")).convert_alpha()
             PygView.images["red_bullet"]= pygame.image.load(
-                 os.path.join("data", "red_bullet.png"))
+                 os.path.join("data", "red_bullet.png")).convert_alpha()
             PygView.images["enemy1"]=pygame.image.load(
-                 os.path.join("data", "enemy1.png"))
+                 os.path.join("data", "enemy1.png")).convert_alpha()
             PygView.images["player2"]=pygame.image.load(
-                 os.path.join("data", "player2.png"))
+                 os.path.join("data", "player2.png")).convert_alpha()
             PygView.images["bullet"]= pygame.image.load(
-                 os.path.join("data", "bullet.png"))
+                 os.path.join("data", "bullet.png")).convert_alpha()
             PygView.images["muzzle_flash"]=pygame.image.load(
-                 os.path.join("data", "muzzle_flash.png"))
+                 os.path.join("data", "muzzle_flash.png")).convert_alpha()
             PygView.images["engine_glow"]=pygame.image.load(
-                 os.path.join("data", "engine_glow.png"))
+                 os.path.join("data", "engine_glow.png")).convert_alpha()
             # --- scalieren ---
             for name in PygView.images:
                 if "player" in name:
-                     img = PygView.images[name]
-                     img = pygame.transform.scale(img, (50,50))
-                     PygView.images[name] = img
+                     PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (50,50))
                 if "enemy" in name:
-                     img = PygView.images[name]
-                     img = pygame.transform.scale(img, (50,50))
-                     PygView.images[name] = img
+                     PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (50,50))
                 if "muzzle_flash" in name:
-                     img = PygView.images[name]
-                     img = pygame.transform.scale(img, (50,30))
-                     PygView.images[name] = img
+                     PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (50,30))
+                     
                 
         #except:
         #    print("problem loading player1.png or player2.png from folder data")
@@ -878,6 +921,7 @@ class PygView(object):
         self.rocketgroup = pygame.sprite.Group()
         self.evilrocketgroup = pygame.sprite.Group()
         self.enemygroup = pygame.sprite.Group()
+        self.powerupgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
@@ -889,7 +933,7 @@ class PygView(object):
         Explosion.groups= self.allgroup, self.explosiongroup
         Muzzle_flash.groups= self.allgroup
         Enemy1.groups = self.allgroup, self.enemygroup
-        
+        PowerUp.groups = self.allgroup, self.powerupgroup
 
         self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
         self.player2 =  Spaceship(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
@@ -952,15 +996,23 @@ class PygView(object):
                         self.player2.fire()    
                     
    
-            # delete everything on screen
+            # ------delete everything on screen-------
             self.screen.blit(self.background, (0, 0))
             
             # ---- pretty moving background stars -----
             if random.random() < 0.3:
                 Star()
             # -------- Enemy1---------------#
-            if random.random() < 0.1:
-                Enemy1()
+            if random.random() < 0.001:
+                Flytext(400,200, "new wave is coming")
+                for e in range(5, 9):
+                    x = random.randint(0, PygView.width)
+                    y = 300
+                    Enemy1(pos=pygame.math.Vector2(x,y))
+                
+            # --------- Powerup ------------
+            if random.random() < 0.04:
+                PowerUp()
             
             # ------ move indicator for player 1 -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
@@ -1030,6 +1082,26 @@ class PygView(object):
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
+            
+            # ----- collision detection between player and PowerUp---
+            for p in self.playergroup:
+                crashgroup=pygame.sprite.spritecollide(p,
+                           self.powerupgroup, False, 
+                           pygame.sprite.collide_mask)
+                for o in crashgroup:
+                    if o.color == (255,0,0):
+                        # red 
+                        Flytext(o.pos.x, - o.pos.y, "+50 hitpoints")
+                        p.hitpoints += 50
+                        Explosion(o.pos, red=255, green=0, blue=0)
+                        o.kill()
+                    elif o.color == (0,255,0):
+                        # green
+                        Flytext(o.pos.x, - o.pos.y, "+5 speed")
+                        p.speed += 5
+                        Explosion(o.pos, red=0, green=255, blue=0)
+                        o.kill()
+                        
             
             # ----- collision detection between player and rocket -----
             for p in self.playergroup:
