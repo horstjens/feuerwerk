@@ -767,9 +767,9 @@ class Spark(VectorSprite):
     
     def create_image(self):
         r,g,b = self.color
-        r = randomize_color(r,150)    #50
-        g = randomize_color(g,150)
-        b = randomize_color(b,150)
+        r = randomize_color(r,75)    #50
+        g = randomize_color(g,75)
+        b = randomize_color(b,75)
         self.image = pygame.Surface((10,10))
         pygame.draw.line(self.image, (r,g,b), 
                          (10,5), (5,5), 3)
@@ -835,7 +835,7 @@ class City(VectorSprite):
         
     def reload_rockets(self):
         for x in range(-90,91,20):
-            Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y+40), ready=True, angle=+90, color=self.color)
+            Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y+40), ready=True, angle=+90, color=(255,156,0))
 
 class PygView(object):
     width = 0
@@ -925,6 +925,7 @@ class PygView(object):
         self.cannongroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
+        self.detonationgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup
         
@@ -941,7 +942,7 @@ class PygView(object):
         Rocket.groups = self.allgroup, self.rocketgroup
         City.groups = self.allgroup, self.citygroup
         Evil_Tracer.groups = self.allgroup, self.enemygroup
-        
+        Detonation.groups = self.allgroup, self.detonationgroup
         
         
 
@@ -993,22 +994,11 @@ class PygView(object):
                         running = False
                     if event.key == pygame.K_e:
                         #Detonation(pos=pygame.math.Vector2(self.mouse1.x, -self.mouse1.y))
-                        Detonation(pos=pygame.math.Vector2(500, -500))
+                        Detonation(pos=pygame.math.Vector2(500, -500), max_age=3)
                        #Explosion(pos=pygame.math.Vector2(PygView.width/2, -PygView.height/2))
                     if event.key == pygame.K_r:
                         for c in self.citygroup:
                             c.reload_rockets()
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 0°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_4:
-                        self.cannon1.rotate(90)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 45°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_5:
-                        self.cannon1.rotate(-90)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 90°", color=(255,0,0), duration = 3, fontsize=20)
-                    if event.key == pygame.K_6:
-                        e= self.enemygroup.sprites()
-                        self.cannon1.target = random.choice(e)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 135°", color=(255,0,0), duration = 3, fontsize=20)
                     if event.key == pygame.K_7:
                         p = pygame.math.Vector2(self.cannon1.pos[0],self.cannon1.pos[1])
                         # länge der kanone sei angenommen 100
@@ -1019,26 +1009,6 @@ class PygView(object):
                         v = pygame.math.Vector2(150,0)
                         v.rotate_ip(self.cannon1.angle)
                         Tracer(pos=p, move=v, angle=self.cannon1.angle)
-                        
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 180°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_y:
-                    #     self.eck.set_angle(225)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 225°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_x:
-                    #    self.eck.set_angle(270)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "set_angle: 270°", color=(255,0,0), duration = 3, fontsize=20)
-                    # if event.key == pygame.K_c:
-                    #     self.eck.set_angle(315)
-                    #     Flytext(PygView.width/2, PygView.height/2,  "set_angle: 315°", color=(255,0,0), duration = 3, fontsize=20)
-                   
-                    #if event.key == pygame.K_s:
-                    #    mausvector = pygame.math.Vector2(self.mouse1.x, -self.mouse1.y)
-                    #    eckvector = pygame.math.Vector2(self.eck.pos.x, self.eck.pos.y)
-                    #    diffvector = mausvector - eckvector
-                    #    rechtsvector = pygame.math.Vector2(1,0)
-                    #    angle = rechtsvector.angle_to(diffvector)
-                        #self.eck.rotate(m)
-                    #    Flytext(PygView.width/2, PygView.height/2,  "angle = {}".format(angle), color=(255,0,0), duration = 3, fontsize=20)
                     # ---- -simple movement for self.eck -------
                     if event.key == pygame.K_RIGHT:
                         self.eck.move += pygame.math.Vector2(10,0)
@@ -1064,11 +1034,11 @@ class PygView(object):
             pygame.draw.line(self.screen, glitter, (100,100), 
                             (100 + self.eck.move.x, 100 - self.eck.move.y))
             # --- line from cannon to target ---
-            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.cannon1.pos.x, -self.cannon1.pos.y), (self.cannon1.target.pos.x, -self.cannon1.target.pos.y))
+            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.cannon1.pos.x, -self.cannon1.pos.y), (self.cannon1.target.pos.x, -self.cannon1.target.pos.y))
             # --- line from eck to mouse ---
-            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.mouse1.x, self.mouse1.y))
+            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.mouse1.x, self.mouse1.y))
             # --- line from eck to cannon -----
-            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.cannon1.pos.x, -self.cannon1.pos.y))
+            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.cannon1.pos.x, -self.cannon1.pos.y))
             # --- line from kamikazeship to target ------
             #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.kamikazeship.pos.x, -self.kamikazeship.pos.y), (self.kamikazeship.target.pos.x, -self.kamikazeship.target.pos.y))
 
@@ -1109,8 +1079,10 @@ class PygView(object):
                 if closest_enemy is not None:
                     self.cannon1.target = closest_enemy     
                    
-            # -------collision detection ----------
-            
+            # -------rocket detonation ----------
+            for r in self.rocketgroup:
+                if r.max_distance is not None and r.distance_traveled > r.max_distance:
+                    Detonation(pos=pygame.math.Vector2(r.pos.x, r.pos.y), max_age=3)
             
             # ------ mouse handler ------
             left,middle,right = pygame.mouse.get_pressed()
@@ -1147,6 +1119,12 @@ class PygView(object):
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
             self.allgroup.update(seconds)
+            # ----------collision detection between detonation and target ------
+            for d in self.detonationgroup:
+                crashgroup = pygame.sprite.spritecollide(d, self.enemygroup,
+                             False, pygame.sprite.collide_circle)
+                for e in crashgroup:
+                    e.hitpoints -= d.damage
 
             # --------- collision detection between city and enemy -----
             for c in self.citygroup:
@@ -1156,14 +1134,23 @@ class PygView(object):
                     #t.hitpoints -= e.damage
                     #if random.random() < 0.5:
                     #    Fire(pos = t.pos, max_age=3, bossnumber=t.number)
-                    co = (0,0,255)
-                    sp_max = 20
+                    co = (255,255,0)
+                    spark_max = 20
+                    g = 3.7
+                    speed_min = 20
+                    speed_max = 150
                     if e.__class__.__name__=="Bomb":
-                        co = (255,165,0) #,color=(255,165,0), sparksmax=500, gravityy=0.5, 
-                                         # minspeed=50, maxspeed=200)#, max_age=random.random()*10)
+                        co = (255,100,0)
+                        spark_max = 500
+                        g = 0.5
+                        speed_min = 50
+                        speed_max = 200
                     elif e.__class__.__name__=="Evil_Tracer":
-                        sp_max = 5
-                    Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y), color=co, sparksmax=sp_max, a1=e.angle+180-15, a2=e.angle+180+15)
+                        spark_max = 5
+                        g = 5
+                    elif e.__class__.__name__=="Evil_Rocket":
+                        co = (255,165,0)
+                    Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y), color=co, sparksmax=spark_max, gravityy=g, minspeed=speed_min, maxspeed=speed_max, a1=e.angle+180-25, a2=e.angle+180+25)
                     e.kill()
                     c.hitpoints -= e.damage
 
