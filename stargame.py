@@ -376,7 +376,7 @@ class VectorSprite(pygame.sprite.Sprite):
             if self.kill_with_boss:
                 if self.bossnumber not in VectorSprite.numbers:
                     self.kill()
-            if self.sticky_with_boss:
+            if self.sticky_with_boss and self.bossnumber in VectorSprite.numbers:
                 boss = VectorSprite.numbers[self.bossnumber]
                 self.pos = pygame.math.Vector2(boss.pos.x, boss.pos.y)
                 self.set_angle(boss.angle)
