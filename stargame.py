@@ -533,7 +533,14 @@ class Enemy2(Enemy1):
                                    move=v+self.move, max_age=10,
                                    kill_on_edge=True, color=self.color)
     
+  
+class Boss1(Enemy1):
     
+     def create_image(self):
+        self.image = PygView.images["boss1"]
+        #self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()    
 
 class Star(VectorSprite):
     
@@ -979,8 +986,13 @@ class PygView(object):
                  os.path.join("data", "engine_glow.png")).convert_alpha()
             PygView.images["enemy2"]=pygame.image.load(
                  os.path.join("data", "tank1.png")).convert_alpha()
+            PygView.images["boss1"]=pygame.image.load(
+                 os.path.join("data", "planet.png")).convert_alpha()
             # --- scalieren ---
             for name in PygView.images:
+                if name == "boss1" :
+                    PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (150,150))
                 if "player" in name:
                      PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (50,50))
@@ -1089,6 +1101,8 @@ class PygView(object):
             # ---- pretty moving background stars -----
             if random.random() < 0.3:
                 Star()
+            if random.random() < 0.0005:
+                Boss1()
             # -------- Enemy1---------------#
             if random.random() < 0.001:
                 Flytext(400,200, "new wave is coming")
