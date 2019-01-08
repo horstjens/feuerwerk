@@ -536,6 +536,44 @@ class Enemy2(Enemy1):
   
 class Boss1(Enemy1):
     
+     def _overwrite_parameters(self):
+        self.kill_on_edge = True
+        self.survive_north = True
+        self.move = pygame.math.Vector2(
+                   0,-random.randint(1,5))
+        self._layer = 4
+        self.angle = 270
+        self.hitpoints = 400
+
+     def update(self,seconds):
+        VectorSprite.update(self,seconds)
+        #self.ai()
+        self.fire()
+        
+     def fire(self):
+        """shoot a salvo towards a player"""
+        if random.random() < 0.0095:
+            targets = []
+            for player in [0,1]:
+                if player in VectorSprite.numbers:
+                   targets.append(VectorSprite.numbers[player])
+            if len(targets) == 0:
+                return
+            t = random.choice(targets)
+            rightvector = pygame.math.Vector2(10,0)
+            diffvector = t.pos - self.pos
+            a = rightvector.angle_to(diffvector)
+            #a = random.randint(260,280)
+            speeds = [100,120,140,160,180,200,220,240]
+            for speed in speeds:
+                v = pygame.math.Vector2(speed, 0)
+                v.rotate_ip(a)
+                Evilrocket(pos=pygame.math.Vector2(self.pos.x,
+                                   self.pos.y), angle=a+0,
+                                   move=v+self.move, max_age=10,
+                                   kill_on_edge=True, color=self.color)
+    
+
      def create_image(self):
         self.image = PygView.images["boss1"]
         #self.image.convert_alpha()
@@ -1101,7 +1139,7 @@ class PygView(object):
             # ---- pretty moving background stars -----
             if random.random() < 0.3:
                 Star()
-            if random.random() < 0.0005:
+            if random.random() < 0.001:
                 Boss1()
             # -------- Enemy1---------------#
             if random.random() < 0.001:
