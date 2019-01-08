@@ -522,12 +522,14 @@ class Enemy2(Enemy1):
         self.fire()
     
     def fire(self):
-        if random.random() < 0.03:
-            a = random.randint(130,220)
-            v = pygame.math.Vector2(0,250)
-            v.rotate_ip(a)
-            Evilrocket(pos=pygame.math.Vector2(self.pos.x,
-                                   self.pos.y), angle=a+90,
+        if random.random() < 0.005:
+            a = random.randint(260,280)
+            speeds = [100,150,200,250]
+            for speed in speeds:
+                v = pygame.math.Vector2(speed, 0)
+                v.rotate_ip(a)
+                Evilrocket(pos=pygame.math.Vector2(self.pos.x,
+                                   self.pos.y), angle=a+0,
                                    move=v+self.move, max_age=10,
                                    kill_on_edge=True, color=self.color)
     
