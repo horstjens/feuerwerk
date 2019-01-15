@@ -562,6 +562,9 @@ class Ufo_Rocketship(VectorSprite):
         Evil_Rocket(pos=pygame.math.Vector2(self.pos.x, self.pos.y), angle=self.angle, move=m+self.move, speed = 100, mass=500, hitpoints=10,kill_on_edge=True)     #speed=20
 
 class Ufo_Kamikazeship(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.hitpoints  = 500
 
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -603,6 +606,43 @@ class Ufo_Kamikazeship(VectorSprite):
         if self.pos.y < -PygView.height+20:
             self.kill()
             Explosion(pos=pygame.math.Vector2(self.pos.x,-PygView.height+20),color=(255,0,0), sparksmax=750,sparksmin=500, gravityy=0.5, minspeed=75, maxspeed=300)
+
+class Ufo_Mothership(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.bounce_on_edge = True
+        self.dangerhigh = PygView.height * 0.20
+    
+    def create_image(self):
+        self.image = pygame.Surface((100,100))
+        pygame.draw.polygon(self.image, self.color, ((50,0),(100,50),(50,100),(0,50)))
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        
+    def ai(self):
+        if random.random() < 0.01:
+            self.move = pygame.math.Vector2(random.randint(-50,50),random.randint(-50,50))
+        p = 1/(100-PygView.level)#+0.005
+        if random.random() < p:
+            self.fire()
+
+    def fire(self):
+        #if PygView.level < 4:
+            
+        #x = random.randint(1,4)
+        #print(x)
+        if PygView.level == 1:
+            Ufo_Bombership(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        elif PygView.level == 2:
+            Ufo_Minigunship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        elif PygView.level == 3:
+            Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        elif PygView.level == 4:
+            Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        else:
+            pass
 
 class Bomb(VectorSprite):
 
@@ -677,6 +717,10 @@ class Rocket(VectorSprite):
         #self.move += self.gravity
         
 class Evil_Tracer(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.hitpoints = 1
+
     
     def create_image(self):
         self.image = pygame.Surface((20,3))
@@ -795,7 +839,7 @@ class Cannon(VectorSprite):
         self.rect= self.image.get_rect()
         self.image.convert_alpha()
         self.image0 = self.image.copy()
-        
+
     def ai(self):
         if self.target is not None:
             #------ angle from cannon to eck --------
@@ -804,11 +848,10 @@ class Cannon(VectorSprite):
             diffvector = targetvector - cannonvector
             angle = pygame.math.Vector2(1,0).angle_to(diffvector)
             self.set_angle(angle)
-            #print(angle)
-            
+
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        if random.random() < 1.00:
+        if random.random() < 0.1 and self.target is not None and self.target.hitpoints > 0:
             p = pygame.math.Vector2(self.pos.x,self.pos.y)
             # länge der kanone 50
             p2 = pygame.math.Vector2(50,0)
@@ -818,13 +861,13 @@ class Cannon(VectorSprite):
             v = pygame.math.Vector2(150,0)
             v.rotate_ip(self.angle)
             Tracer(pos=p, move=v, angle=self.angle, kill_on_edge=True, max_distance=self.maxrange)
-       
+
 class City(VectorSprite):
-    
+
     def _overwrite_parameters(self):
         self.radius = 100
         self.hitpoints = 5000
-    
+
     def create_image(self):
         self.image = pygame.Surface((200,200))
         pygame.draw.circle(self.image, (0,0,200), (100,100),self.radius,4)
@@ -912,7 +955,16 @@ class PygView(object):
                 r.move = target - r.pos
                 r.move.normalize_ip()
                 r.move *= 200
+                winkel = pygame.math.Vector2(1,0).angle_to(r.move)
+                r.set_angle(winkel)
                 break
+                
+    def new_wave(self):
+        PygView.level += 1
+        Flytext(x=PygView.width/2,y=PygView.height/2,text="New wave of enemies! Wave: {}".format(PygView.level))
+        for x in range(PygView.level):
+            Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50))
+        
 
     def prepare_sprites(self):
         """painting on the surface and create sprites"""
@@ -928,7 +980,6 @@ class PygView(object):
         self.detonationgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup
-        
         VectorSprite.groups = self.allgroup
         Flytext.groups = self.allgroup
         Explosion.groups = self.allgroup, self.explosiongroup
@@ -938,15 +989,15 @@ class PygView(object):
         Ufo_Bombership.groups = self.allgroup, self.enemygroup
         Bomb.groups = self.allgroup, self.enemygroup
         Evil_Rocket.groups = self.allgroup, self.enemygroup
-        Tracer.groups = self.allgroup
+        Tracer.groups = self.allgroup, self.tracergroup
         Rocket.groups = self.allgroup, self.rocketgroup
         City.groups = self.allgroup, self.citygroup
         Evil_Tracer.groups = self.allgroup, self.enemygroup
         Detonation.groups = self.allgroup, self.detonationgroup
-        
+        Ufo_Kamikazeship.groups = self.allgroup, #self.enemygroup
+        Ufo_Mothership.groups = self.allgroup, self.enemygroup
         
 
-   
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
         self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
@@ -954,18 +1005,22 @@ class PygView(object):
         self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
-        self.eck =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2), color=(0,0,255))
-        self.ship2 =  Ufo_Bombership(pos=pygame.math.Vector2(50,-50), color=(255,0,0))
-        for x in range(4):
-            self.ship = Ufo_Minigunship(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50), color=(0,255,255))
-        self.ship2 =  Ufo_Rocketship(pos=pygame.math.Vector2(50,-50), color=(0,255,0))
-        self.cannon1 = Cannon(pos=pygame.math.Vector2(100,-400))
-        self.cannon1.target = self.eck
-        self.kamikazeship =  Ufo_Kamikazeship(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50), color=(0,200,0))
+        #self.eck =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2), color=(0,0,255))
+        #self.ship2 =  Ufo_Bombership(pos=pygame.math.Vector2(50,-50), color=(255,0,0))
+        #for x in range(4):
+        #    self.ship = Ufo_Minigunship(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50), color=(0,255,255))
+        #self.ship2 =  Ufo_Rocketship(pos=pygame.math.Vector2(50,-50), color=(0,255,0))
+        #self.cannon1 = Cannon(pos=pygame.math.Vector2(100,-400))
+        #self.cannon1.target = self.eck
+        #self.kamikazeship =  Ufo_Kamikazeship(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50), color=(0,200,0))
+        #self.mothership = Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,PygView.width),-50), color=(255,255,0))
         nr = PygView.width // 200
         for c in range(nr):
             x = PygView.width // nr * c
             self.city = City(pos = pygame.math.Vector2(x+100, -PygView.height-25),citynr = c)
+        for c in self.citygroup:
+            self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x+40,c.pos.y+80))
+            self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x-40,c.pos.y+80))
 
     def run(self):
         """The mainloop"""
@@ -975,6 +1030,7 @@ class PygView(object):
         self.snipertarget = None
         gameOver = False
         exittime = 0
+        PygView.level = 0
         while running:
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
@@ -1010,20 +1066,11 @@ class PygView(object):
                         v.rotate_ip(self.cannon1.angle)
                         Tracer(pos=p, move=v, angle=self.cannon1.angle)
                     # ---- -simple movement for self.eck -------
-                    if event.key == pygame.K_RIGHT:
-                        self.eck.move += pygame.math.Vector2(10,0)
-                    if event.key == pygame.K_LEFT:
-                        self.eck.move += pygame.math.Vector2(-10,0)
-                    if event.key == pygame.K_UP:
-                        self.eck.move += pygame.math.Vector2(0,10)
-                    if event.key == pygame.K_DOWN:
-                        self.eck.move += pygame.math.Vector2(0,-10)
-                    # ---- stop movement for self.eck -----
-                    if event.key == pygame.K_r:
-                        self.eck.move *= 0.1 # remove 90% of movement
+                    if event.key == pygame.K_n:
+                        self.new_wave()
                     
             # ------- ai ----------
-            self.cannon1.ai()
+            #self.cannon1.ai()
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
@@ -1031,8 +1078,8 @@ class PygView(object):
             # ------ move indicator for self.eck -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
             glitter = (0, random.randint(128, 255), 0)
-            pygame.draw.line(self.screen, glitter, (100,100), 
-                            (100 + self.eck.move.x, 100 - self.eck.move.y))
+            #pygame.draw.line(self.screen, glitter, (100,100), 
+            #                (100 + self.eck.move.x, 100 - self.eck.move.y))
             # --- line from cannon to target ---
             #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.cannon1.pos.x, -self.cannon1.pos.y), (self.cannon1.target.pos.x, -self.cannon1.target.pos.y))
             # --- line from eck to mouse ---
@@ -1069,7 +1116,7 @@ class PygView(object):
             for c in self.cannongroup:
                 #targets = []
                 closest_enemy = None
-                closest_distance = self.cannon1.maxrange   # maxrange
+                closest_distance = c.maxrange   # maxrange
                 for e in self.enemygroup:
                     dist = e.pos.distance_to(c.pos)
                     if dist < closest_distance:   
@@ -1077,7 +1124,7 @@ class PygView(object):
                         closest_enemy = e
                         closest_distance = dist
                 if closest_enemy is not None:
-                    self.cannon1.target = closest_enemy     
+                    c.target = closest_enemy     
                    
             # -------rocket detonation ----------
             for r in self.rocketgroup:
@@ -1119,6 +1166,15 @@ class PygView(object):
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
             self.allgroup.update(seconds)
+            
+            # ----------collision detection between Tracer and enemy --------
+            for e in self.enemygroup:
+                crashgroup = pygame.sprite.spritecollide(e, self.tracergroup,
+                             False, pygame.sprite.collide_mask)
+                for t in crashgroup:
+                    e.hitpoints -= t.damage
+                    #Explosion(pos=pygame.math.Vector2(t.pos.x, t.pos.y))
+                    #t.kill()
             # ----------collision detection between detonation and target ------
             for d in self.detonationgroup:
                 crashgroup = pygame.sprite.spritecollide(d, self.enemygroup,
@@ -1154,7 +1210,10 @@ class PygView(object):
                     e.kill()
                     c.hitpoints -= e.damage
 
-            
+            # ------------New wave ----------------
+            if len(self.enemygroup) == 0:
+                self.new_wave()
+
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
 
