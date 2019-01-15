@@ -80,6 +80,12 @@ def elastic_collision(sprite1, sprite2):
                 sprite1.move.x -= 2 * dirx * cdp
                 sprite1.move.y -= 2 * diry * cdp
 
+class Game():
+    spawnrate = 0.005
+    bombchance = 0.015
+    minigun_firemode_chance = 0.005
+    rocket_firemode_chance = 0.25
+
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
                  dx=0, dy=-50, duration=2, acceleration_factor = 1.0, delay = 0, fontsize=22):
@@ -504,7 +510,7 @@ class Ufo_Minigunship(VectorSprite):
         diffvector = self.target - self.pos
         angle = pygame.math.Vector2(1,0).angle_to(diffvector)
         self.set_angle(angle)
-        if not self.firemode and random.random() < 0.005:
+        if not self.firemode and random.random() < Game.minigun_firemode_chance:
             self.firemode = True
         if self.firemode == True:
             self.fire()
@@ -552,7 +558,7 @@ class Ufo_Rocketship(VectorSprite):
         elif self.angle < self.min_angle:
             self.angle = self.min_angle
             self.delta_angle *= -1
-        if random.random() < 0.25:
+        if random.random() < Game.rocket_firemode_chance:
             self.fire()
         #print(self.angle)
             
@@ -629,20 +635,19 @@ class Ufo_Mothership(VectorSprite):
             self.fire()
 
     def fire(self):
-        #if PygView.level < 4:
-            
-        #x = random.randint(1,4)
-        #print(x)
-        if PygView.level == 1:
-            Ufo_Bombership(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
-        elif PygView.level == 2:
-            Ufo_Minigunship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
-        elif PygView.level == 3:
-            Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
-        elif PygView.level == 4:
-            Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        if PygView.level <= 4:
+            x = PygView.level
         else:
-            pass
+            x = random.randint(1,4)
+        #print(x)
+        if x == 1:
+            Ufo_Bombership(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        elif x == 2:
+            Ufo_Minigunship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        elif x == 3:
+            Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+        elif x == 4:
+            Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
 
 class Bomb(VectorSprite):
 
