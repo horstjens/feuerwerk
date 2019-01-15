@@ -710,11 +710,23 @@ class Rocket(VectorSprite):
         #self.set_angle(self.angle)
         
     def update(self, seconds):
-        if self.pos.y < -PygView.height+20:
-            if self.kill_on_edge:
-                Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y))#, max_age=random.random()*10)
+        city = VectorSprite.numbers[self.bossnumber]
+        if city.busy_until > city.age:
+            # rocket not ready to fire, reloading in process
+            timediff = city.busy_until - city.age
+            self.set_angle(90-timediff * 10)
+        else:
+            if self.move.length() == 0:
+                self.set_angle(90)
+        
+        #if self.pos.y < -PygView.height+20:
+         #   if self.kill_on_edge:
+         #       Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y))#, max_age=random.random()*10)
         VectorSprite.update(self, seconds)
         #self.move += self.gravity
+        
+    def kill(self):
+        VectorSprite.kill(self)
         
 class Evil_Tracer(VectorSprite):
     
@@ -867,6 +879,11 @@ class City(VectorSprite):
     def _overwrite_parameters(self):
         self.radius = 100
         self.hitpoints = 5000
+        self.busy_until = 0
+        
+    def show(self, nr):
+        Flytext(x=self.pos.x, y=self.pos.y, text="Reloading",color=(0,200,0), duration = 5)
+        
 
     def create_image(self):
         self.image = pygame.Surface((200,200))
@@ -877,9 +894,11 @@ class City(VectorSprite):
         self.image0 = self.image.copy()
         
     def reload_rockets(self):
-        for x in range(-90,91,20):
-            Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y+40), ready=True, angle=+90, color=(255,156,0))
-
+        for x in range(-50,51,20):
+            Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y+40), ready=True, angle=+90, color=(255,156,0), bossnumber=self.number)
+        self.busy_until = self.age + 5 # seconds 
+        Flytext(x=self.pos.x, y=-self.pos.y-50, text="Reloading",color=(0,200,0), duration = 5, dy=-10)
+        
 class PygView(object):
     width = 0
     height = 0
@@ -941,7 +960,16 @@ class PygView(object):
         mindist = None
         number = None
         for r in self.rocketgroup:
-            if r.ready:
+            citynumber = r.bossnumber
+            # is city busy?
+            for c in self.citygroup:
+                if c.number == citynumber:
+                    city = c
+                    break
+            if c.busy_until > c.age:
+                continue        
+                        
+            if r.move.length() == 0:
                 dist = r.pos.distance_to(target)
                 if mindist is None or dist < mindist:
                     mindist = dist
@@ -1165,6 +1193,23 @@ class PygView(object):
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
                 self.clock.get_fps() ), x=10, y=10)
+            
+            cityrockets = {}
+            for c in self.citygroup:
+                cityrockets[c.number] = 0
+            for r in self.rocketgroup:
+                bn = r.bossnumber
+                if bn in cityrockets:
+                    cityrockets[bn] += 1
+                else:
+                    cityrockets[bn] = 1
+            for c in cityrockets:
+                if cityrockets[c] == 0:
+                    for d in self.citygroup:
+                        if d.number == c:
+                            d.reload_rockets()
+                            break
+            
             self.allgroup.update(seconds)
             
             # ----------collision detection between Tracer and enemy --------
