@@ -376,7 +376,7 @@ class VectorSprite(pygame.sprite.Sprite):
             if self.kill_with_boss:
                 if self.bossnumber not in VectorSprite.numbers:
                     self.kill()
-            if self.sticky_with_boss and self.bossnumber in VectorSprite.numbers:
+            if self.sticky_with_boss:
                 boss = VectorSprite.numbers[self.bossnumber]
                 self.pos = pygame.math.Vector2(boss.pos.x, boss.pos.y)
                 self.set_angle(boss.angle)
@@ -441,15 +441,25 @@ class PowerUp(VectorSprite):
         self.angle = 270
         self.hitpoints = 4
         self.color = random.choice(((255,0,0), (0,255,0),
-                                    (0,0,255) 
+                                    (0,0,255), (255,255,0),
+                                    (255,255,255), 
                                   ))
-          #                          (255,0,255), ( 255,255,0), (0,255,255),
-          #                          (125,128,128),(255,255,255)))
+                                  
     
     def create_image(self):
         self.image = pygame.Surface((40,40))
-        pygame.draw.circle(self.image, self.color, (20,20), 20)
-        self.image.set_colorkey((0,0,0))
+        #pygame.draw.circle(self.image, self.color, (20,20), 20)
+        #self.image.set_colorkey((0,0,0))
+        if self.color == (255,0,0):
+            self.image = PygView.images["powerup_damage"]
+        elif self.color == (0,0,255):
+            self.image = PygView.images["powerup_heal"]
+        elif self.color == (255,255,0):
+            self.image = PygView.images["powerup_fastbullets"]
+        elif self.color == (255,255,255):
+            self.image = PygView.images["powerup_shield"] 
+        elif self.color == (0,255,0):
+            self.image = PygView.images["powerup_speed"] 
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -511,7 +521,7 @@ class Enemy2(Enemy1):
         
         
     def create_image(self):
-        self.image = PygView.images["enemy2"]
+        self.image = PygView.images["miniboss1"]
         #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()        
@@ -528,7 +538,7 @@ class Enemy2(Enemy1):
             for speed in speeds:
                 v = pygame.math.Vector2(speed, 0)
                 v.rotate_ip(a)
-                Evilrocket(pos=pygame.math.Vector2(self.pos.x,
+                EVIL_rocket(pos=pygame.math.Vector2(self.pos.x,
                                    self.pos.y), angle=a+0,
                                    move=v+self.move, max_age=10,
                                    kill_on_edge=True, color=self.color)
@@ -628,12 +638,15 @@ class Spaceship(VectorSprite):
         self.radius = 8
         self.mass = 3000
         self.angle= 90
-        self.rockets = 50
+        self.rockets = 0
         self.rockets0 = 1
         self.bonusrockets = {}
-        self.speed = 1
-        self.speed0 = 1
+        self.speed = 0
+        self.speed0 = 5
         self.bonusspeed = {}
+        self.bonusfirespeed =  {}
+        self.firespeed = 188
+        self.shield = {}
         
         
         
@@ -651,8 +664,13 @@ class Spaceship(VectorSprite):
             sa.append(point)
             point += d
         # in sa are the desired shooting angles for rockets
+        fs = 0
+        fs += self.firespeed
+        for time in self.bonusfirespeed:
+            if time > self.age:
+                fs += self.bonusfirespeed[time]
         for point in sa:
-            v = pygame.math.Vector2(188,0)
+            v = pygame.math.Vector2(fs,0)
             v.rotate_ip(self.angle+point)
             v += self.move # adding speed of spaceship to rocket
             a = self.angle + point
@@ -687,6 +705,13 @@ class Spaceship(VectorSprite):
         for time in self.bonusspeed:
             if time > self.age:
                 self.speed += self.bonusspeed[time]
+        # -------- bonusshield verwaltung -------#
+        shield = False
+        for time in self.shield:
+            if time > self.age:
+                shield = True
+        if shield:
+            Shield(bossnumber = self.number)
             
         
         
@@ -788,7 +813,34 @@ class Spaceship(VectorSprite):
 
         
 
-
+class Shield(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.sticky_with_boss = True
+        self.max_age = 0.05
+        
+        
+    def create_image(self):
+        self.image = pygame.Surface((80,80))
+        color = (255,255, random.randint(200,255))
+        pygame.draw.circle(self.image,color, (40,40), 40)
+        pygame.draw.circle(self.image,(0,0,0), (40,40), 35)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 class Smoke(VectorSprite):
 
     def _overwrite_parameters(self):
@@ -931,7 +983,13 @@ class Evilrocket(VectorSprite):
         #self.image0 = self.image.copy()
         #self.rect = self.image.get_rect()
 
-
+class EVIL_rocket(Evilrocket):
+    
+    def create_image(self):
+        self.image = PygView.images["EVIL_rocket"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
 class Engine_glow(VectorSprite):
     
     def create_image(self):
@@ -1022,24 +1080,47 @@ class PygView(object):
                  os.path.join("data", "muzzle_flash.png")).convert_alpha()
             PygView.images["engine_glow"]=pygame.image.load(
                  os.path.join("data", "engine_glow.png")).convert_alpha()
-            PygView.images["enemy2"]=pygame.image.load(
-                 os.path.join("data", "tank1.png")).convert_alpha()
+            PygView.images["miniboss1"]=pygame.image.load(
+                 os.path.join("data", "miniboss1.png")).convert_alpha()
             PygView.images["boss1"]=pygame.image.load(
                  os.path.join("data", "planet.png")).convert_alpha()
+            PygView.images["EVIL_rocket"]=pygame.image.load(
+                 os.path.join("data", "evil_rocket.png")).convert_alpha()
+            PygView.images["powerup_laser"]=pygame.image.load(
+                 os.path.join("data", "powerup_laser.png")).convert_alpha()
+            PygView.images["powerup_damage"]=pygame.image.load(
+                 os.path.join("data", "powerup_damage.png")).convert_alpha()
+            PygView.images["powerup_heal"]=pygame.image.load(
+                 os.path.join("data", "powerup_heal.png")).convert_alpha()
+            PygView.images["powerup_fastbullets"]=pygame.image.load(
+                 os.path.join("data", "powerup_bullet.png")).convert_alpha()
+            PygView.images["powerup_shield"]=pygame.image.load(
+                 os.path.join("data", "powerup_shield.png")).convert_alpha()
+            PygView.images["powerup_speed"]=pygame.image.load(
+                 os.path.join("data", "powerup_speed.png")).convert_alpha()
             # --- scalieren ---
             for name in PygView.images:
                 if name == "boss1" :
                     PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (150,150))
                 if "player" in name:
-                     PygView.images[name] = pygame.transform.scale(
+                    PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (50,50))
+                if "powerup" in name:
+                    PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (75,75))
+                
+                
                 if "enemy" in name:
                      PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (50,50))
-                if "muzzle_flash" in name:
+                if name == "muzzle_flash":
                      PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (50,30))
+                if "miniboss" in name:
+                     PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (100,100))
+               
                      
                 
         #except:
@@ -1058,10 +1139,12 @@ class PygView(object):
         self.rocketgroup = pygame.sprite.Group()
         self.evilrocketgroup = pygame.sprite.Group()
         self.enemygroup = pygame.sprite.Group()
+        self.shieldgroup = pygame.sprite.Group()
         self.powerupgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
+        Shield.groups = self.allgroup, self.shieldgroup
         Spaceship.groups = self.allgroup, self.playergroup  # , self.tailgroup
         Rocket.groups = self.allgroup, self.rocketgroup
         Evilrocket.groups = self.allgroup, self.evilrocketgroup
@@ -1142,7 +1225,7 @@ class PygView(object):
             if random.random() < 0.001:
                 Boss1()
             # -------- Enemy1---------------#
-            if random.random() < 0.001:
+            if random.random() < 0.003:
                 Flytext(400,200, "new wave is coming")
                 for e in range(5, 9):
                     x = random.randint(0, PygView.width)
@@ -1234,6 +1317,8 @@ class PygView(object):
                     if o.color == (255,0,0):
                         Flytext(o.pos.x, - o.pos.y, "+50 hitpoints")
                         p.hitpoints += 50
+                        if p.hitpoints > 200:
+                            p.hitpoints = 200
                         Explosion(o.pos, red=255, green=0, blue=0)
                         o.kill()
                     elif o.color == (0,255,0):
@@ -1242,12 +1327,20 @@ class PygView(object):
                         Explosion(o.pos, red=0, green=255, blue=0)
                         o.kill()
                     elif o.color == (0,0,255):
-                        Flytext(o.pos.x, -o.pos.y, "+1 Bonusrockets for 10 seconds")
-                        p.bonusrockets[p.age+10] = 1
+                        Flytext(o.pos.x, -o.pos.y, "10 rockets for 10 seconds")
+                        p.bonusrockets[p.age+10] = 4
                         Explosion(o.pos, red=0, green=0, blue=255)
                         o.kill()
-                        
-            
+                    elif o.color == (255,255,0):
+                        Flytext(o.pos.x, -o.pos.y, "faster rockets for 30 seconds")
+                        p.bonusfirespeed[p.age+30] = 50
+                        Explosion(o.pos, red=255, green=255, blue=0)
+                        o.kill()     
+                    elif o.color == (255,255,255):
+                        Flytext(o.pos.x, -o.pos.y, "shield for 15 seconds")
+                        p.shield[p.age+15] = 1
+                        Explosion(o.pos, red=255, green=255, blue=255)
+                        o.kill()   
             # ----- collision detection between player and rocket -----
             for p in self.playergroup:
                 crashgroup = pygame.sprite.spritecollide(p, self.rocketgroup,
@@ -1258,6 +1351,13 @@ class PygView(object):
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, r)
                         r.kill()
+            
+            # ----- collision detection between Shield and Evilrocket -----
+            for s in self.shieldgroup:
+                crashgroup = pygame.sprite.spritecollide(s, self.evilrocketgroup,
+                             False, pygame.sprite.collide_mask)
+                for r in crashgroup:
+                    r.kill()
             
             # ----- collision detection between player and Evilrocket -----
             for p in self.playergroup:
