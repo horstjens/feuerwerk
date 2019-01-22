@@ -85,6 +85,17 @@ class Game():
     bombchance = 0.015
     minigun_firemode_chance = 0.005
     rocket_firemode_chance = 0.25
+    #misslespeed = 200
+    current_level = {}
+    items = ["resume", "tracer range", "tracer damage","missle speed", "city hp"]
+    level = {"tracer range" : [100,200,300,400,500],
+             "missle speed"  : [100,150,200,250,300],
+             "city hp" : [75], 
+             "tracer damage" : [10, 15, 20,25,50]}
+    cost = {"tracer range" : [100,250,400,550, 700],
+            "missle speed" : [50,100,200,300,500],
+            "city hp" : [50],
+            "tracer damage" : [100, 200, 300,400,500]}
 
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
@@ -639,15 +650,14 @@ class Ufo_Mothership(VectorSprite):
             x = PygView.level
         else:
             x = random.randint(1,4)
-        #print(x)
         if x == 1:
-            Ufo_Bombership(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+            Ufo_Bombership(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(255,0,0))
         elif x == 2:
-            Ufo_Minigunship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+            Ufo_Minigunship(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(0,255,0))
         elif x == 3:
-            Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+            Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(0,0,255))
         elif x == 4:
-            Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y))
+            Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(255,255,0))
 
 class Bomb(VectorSprite):
 
@@ -752,12 +762,15 @@ class Evil_Tracer(VectorSprite):
 
 class Tracer(VectorSprite):
     
+    def _overwrite_parameters(self):
+        self.damage = 1
+    
     def create_image(self):
-        self.image = pygame.Surface((20,3))
+        self.image = pygame.Surface((10,3))
         c1 = (233,152,3)
         c2 = (random.randint(225,255),random.randint(225,255),0)
         self.image.fill(c1)
-        pygame.draw.line(self.image, c2, (5,2), (20,2))
+        pygame.draw.line(self.image, c2, (2,2), (8,2))
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -920,6 +933,9 @@ class PygView(object):
         self.clock = pygame.time.Clock()
         self.fps = fps
         self.playtime = 0.0
+        self.menu = False
+        self.active_item = 0
+        self.money = 1000
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
         try:
@@ -945,6 +961,12 @@ class PygView(object):
             j.init()
         self.prepare_sprites()
         self.loadbackground()
+        # set current menu level
+        for k in Game.items:
+            if k != "resume":
+                Game.current_level[k] = 0
+        #print(Game.current_level)
+
 
     def loadbackground(self):
         
@@ -987,11 +1009,42 @@ class PygView(object):
                 r.max_distance = mindist
                 r.move = target - r.pos
                 r.move.normalize_ip()
-                r.move *= 200
+                #r.move *= Game.level # 
+                i = Game.current_level["missle speed"]   #Game.misslespeed
+                speed = Game.level["missle speed"][i]
+                r.move *= speed
                 winkel = pygame.math.Vector2(1,0).angle_to(r.move)
                 r.set_angle(winkel)
                 break
-                
+
+    
+    def activate_item(self):
+        t = Game.items[self.active_item]
+        Flytext(100,100,t)
+        if t == "resume":
+            self.menu = False
+            return
+        #print("game current level [t], t:", Game.current_level[t], t)
+        i = Game.current_level[t]
+        #print(type(Game.current_level[t]))
+        #print("Game.cost:", Game.cost)
+        #print("game.cost[t]:", Game.cost[t])
+        cost = Game.cost[t][i]
+        if self.money < cost:
+            Flytext(500,500, "to expensive")
+            return
+        # enough money
+        self.money -= cost
+        Game.current_level[t] += 1
+            
+    def draw_menu(self):
+        for i in range(len(Game.items)):
+            write(self.screen, Game.items[i], x=PygView.width//2, y=100+i*50)
+        #--- cursor
+        c = random.randint(100,150)
+        for i in range(len(Game.items)):
+            write(self.screen, "-->",x=PygView.width//2-100, y=100+self.active_item*50, color=(c,c,c))
+        
     def new_wave(self):
         PygView.level += 1
         Flytext(x=PygView.width/2,y=PygView.height/2,text="New wave of enemies! Wave: {}".format(PygView.level))
@@ -1101,6 +1154,17 @@ class PygView(object):
                     # ---- -simple movement for self.eck -------
                     if event.key == pygame.K_n:
                         self.new_wave()
+                    if event.key == pygame.K_m:
+                        self.menu = not self.menu 
+                    if event.key == pygame.K_UP and self.menu:
+                        self.active_item -= 1
+                        self.active_item = max(0,self.active_item)
+                    if event.key == pygame.K_DOWN and self.menu:
+                        self.active_item += 1
+                        self.active_item = min(len(Game.items)-1,self.active_item)
+                    if event.key == pygame.K_RETURN and self.menu:
+                        self.activate_item()
+                            
                     
             # ------- ai ----------
             #self.cannon1.ai()
@@ -1109,7 +1173,7 @@ class PygView(object):
             self.screen.blit(self.background, (0, 0))
             
             # ------ move indicator for self.eck -----
-            pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
+            #pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
             glitter = (0, random.randint(128, 255), 0)
             #pygame.draw.line(self.screen, glitter, (100,100), 
             #                (100 + self.eck.move.x, 100 - self.eck.move.y))
@@ -1122,6 +1186,10 @@ class PygView(object):
             # --- line from kamikazeship to target ------
             #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.kamikazeship.pos.x, -self.kamikazeship.pos.y), (self.kamikazeship.target.pos.x, -self.kamikazeship.target.pos.y))
 
+            
+            if self.menu:
+                self.draw_menu()
+                
             
             # --- line from snipership to target ---
             for s in self.snipergroup:
@@ -1196,8 +1264,8 @@ class PygView(object):
             pos3 = self.mouse3.rect.center
             
             # write text below sprites
-            write(self.screen, "FPS: {:8.3}".format(
-                self.clock.get_fps() ), x=10, y=10)
+            write(self.screen, "FPS: {:8.3}, Money: {}".format(
+                self.clock.get_fps(), self.money ), x=10, y=10)
             
             cityrockets = {}
             for c in self.citygroup:
