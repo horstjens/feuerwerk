@@ -1,4 +1,3 @@
-
 """
 author: Horst JENS
 email: horstjens@gmail.com
@@ -542,10 +541,32 @@ class Enemy3(Enemy2):
         Enemy2._overwrite_parameters(self)
         self.move = pygame.math.Vector2(
                       0.5,-random.randint(00,50))
-        self.hitpoints = 1000
+        self.hitpoints = 550
         self.speeds = [100,150,200,250,260,270,280,290]
 
 
+    def fire(self):
+        """shoot a salvo towards a player"""
+        if random.random() < 0.0095:
+            targets = []
+            for player in [0,1]:
+                if player in VectorSprite.numbers:
+                   targets.append(VectorSprite.numbers[player])
+            if len(targets) == 0:
+                return
+            t = random.choice(targets)
+            rightvector = pygame.math.Vector2(10,0)
+            diffvector = t.pos - self.pos
+            a = rightvector.angle_to(diffvector)
+            #a = random.randint(260,280)
+            speeds = [200,220,240,260,280,300,320,340]
+            for speed in speeds:
+                v = pygame.math.Vector2(speed, 0)
+                v.rotate_ip(a)
+                Evilrocket(pos=pygame.math.Vector2(self.pos.x,
+                                   self.pos.y), angle=a+0,
+                                   move=v+self.move, max_age=10,
+                                   kill_on_edge=True, color=self.color)
 
 
     def create_image(self):
@@ -637,12 +658,26 @@ class Enemy10(Enemy2):
         Enemy2._overwrite_parameters(self)
         self.move = pygame.math.Vector2(
                       -2,-random.randint(10,25))
-        self.hitpoints = 90
+        self.hitpoints = 100
 
     def create_image(self):
         self.image = PygView.images["tank7"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+        
+class Tree(VectorSprite):
+    
+    
+    def _overwrite_parameters(self):
+        
+        Enemy2._overwrite_parameters(self)
+        self.move = pygame.math.Vector2(0,-10)
+    
+    def create_image(self):
+        self.image = PygView.images["tree"]
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        self.set_angle(90)
 
 class Boss1(Enemy1):
 
@@ -739,7 +774,7 @@ class Spaceship(VectorSprite):
         self.mass = 3000
         self.angle= 90
         self.rockets = 50
-        self.rockets0 = 200
+        self.rockets0 = 300
         self.bonusrockets = {}
         self.speed = 10
         self.speed0 = 10
@@ -1151,6 +1186,8 @@ class PygView(object):
                  os.path.join("data", "Tiger-II_preview.png")).convert_alpha()
             PygView.images["tank7"]=pygame.image.load(
                  os.path.join("data", "VK.3601h_preview.png")).convert_alpha()
+            PygView.images["tree"]=pygame.image.load(
+                 os.path.join("data", "LPCsnowTrees.png")).convert_alpha()
 
 
 
@@ -1197,6 +1234,11 @@ class PygView(object):
                 if "muzzle_flash" in name:
                      PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (50,30))
+                        
+                #if "tree" in name:
+                #     PygView.images[name] = pygame.transform.scale(
+                #                    PygView.images[name], (50,30))
+
 
 
 
@@ -1217,6 +1259,7 @@ class PygView(object):
         self.evilrocketgroup = pygame.sprite.Group()
         self.enemygroup = pygame.sprite.Group()
         self.powerupgroup = pygame.sprite.Group()
+        self.treegroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
@@ -1229,6 +1272,7 @@ class PygView(object):
         Muzzle_flash.groups= self.allgroup
         Enemy1.groups = self.allgroup, self.enemygroup
         PowerUp.groups = self.allgroup, self.powerupgroup
+        Tree.groups = self.allgroup, self.treegroup
 
         self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
         self.player2 =  Spaceship(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
@@ -1297,20 +1341,20 @@ class PygView(object):
             # ---- pretty moving background stars -----
             #if random.random() < 0.3:
             #   Star()
-            if random.random() < 0.001:
-                Boss1()
+            #if random.random() < 0.001:
+            #    Boss1()
             # -------- Enemy1---------------#
-            if random.random() < 0.001:
-                Flytext(400,200, "new wave is coming")
-                for e in range(5, 9):
-                    x = random.randint(0, PygView.width)
-                    y = 300
-                    Enemy1(pos=pygame.math.Vector2(x,y))
+            #if random.random() < 0.001:
+            #    Flytext(400,200, "new wave is coming")
+            #    for e in range(5, 9):
+            #        x = random.randint(0, PygView.width)
+            #        y = 300
+            #        Enemy1(pos=pygame.math.Vector2(x,y))
             #------ Enemy2 (tank) -----
             if random.random() < 0.0005:
                 Enemy2()
             #------ Enemy3 (tank) -----
-            if random.random() < 0.002:
+            if random.random() < 0.0002:
                 Enemy3()
             # ----- Enemy4(tank)-----------
             if random.random() < 0.0002:
@@ -1336,6 +1380,9 @@ class PygView(object):
             # --------- Powerup ------------
             if random.random() < 0.04:
                 PowerUp()
+            #--------tree----------------
+            if random.random() < 0.01:
+                Tree()
 
             # ------ move indicator for player 1 -----
             pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
@@ -1440,6 +1487,17 @@ class PygView(object):
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, r)
                         r.kill()
+                        
+            # ----- collision detection between player and treegroup -----
+            for p in self.playergroup:
+                crashgroup = pygame.sprite.spritecollide(p, self.treegroup,
+                             False, pygame.sprite.collide_mask)
+                for t in crashgroup:
+                    if t.bossnumber != p.number:
+                        p.hitpoints -= 5
+                        Explosion(pygame.math.Vector2(t.pos.x, t.pos.y))
+                        #elastic_collision(p, t)
+                        t.kill()
 
             # ----- collision detection between player and Evilrocket -----
             for p in self.playergroup:
