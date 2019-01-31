@@ -1,9 +1,38 @@
+filename: enemy1.png:
+license: cc-by-sa 3.0
+user: https://opengameart.org/users/skorpio 
+download: https://opengameart.org/content/spaceship-fighter
+
+
 filename: player2.png:
 license: cc-by-sa 3.0
-user: http://opengameart.org/users/skorpio, 
-download: https://opengameart.org/content/spaceship-fighter
+user: https://opengameart.org/users/skorpio 
+download: https://opengameart.org/content/spaceship-8
+
 
 filename: player1.png:
 license: cc-by-sa 3.0
-user: http://opengameart.org/users/skorpio, 
+user: https://opengameart.org/users/skorpio, 
 download: https://opengameart.org/content/spaceship-6
+
+filename:miniboss1.png
+license:CC-BY-SA 3.0
+user:https://opengameart.org/users/skorpio
+download:https://opengameart.org/content/large-spaceship
+
+filename: red_bullet, evil_rocket
+license: cc-by-sa 3.0
+user: https://github.com/horstjens , https://github.com/BakTheBig
+download: https://github.com/horstjens/feuerwerk/data/red_bullet , https://github.com/horstjens/feuerwerk/data/evil_rocket
+
+filename: powerup_damage , powerup_heal , powerup_fastbullets , powerup_shield:
+license: CC-BY 4.0
+user:  https://opengameart.org/users/cethiel
+download: https://opengameart.org/content/pickup-items-icons
+
+filename: powerup_laser , powerup_speed
+license: CC-BY 3 , CC-BY-SA 3 , GPL 2.0
+user:  https://opengameart.org/users/eleazzaar
+download: https://opengameart.org/content/painterly-spell-icons-part-2
+
+
