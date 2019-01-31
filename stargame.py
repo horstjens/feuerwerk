@@ -449,7 +449,20 @@ class PowerUp(VectorSprite):
     
     def create_image(self):
         self.image = pygame.Surface((40,40))
-        pygame.draw.circle(self.image, self.color, (20,20), 20)
+        #pygame.draw.circle(self.image, self.color, (20,20), 20)
+        if self.color == (255,0,0):
+            self.image = PygView.images["powerup_damage"]
+        elif self.color == (0,0,255):
+            self.image = PygView.images["powerup_heal"]
+        elif self.color == (255,255,0):
+            self.image = PygView.images["powerup_fastbullets"]
+        elif self.color == (255,255,255):
+            self.image = PygView.images["powerup_shield"] 
+        elif self.color == (0,255,0):
+            self.image = PygView.images["powerup_speed"] 
+        elif self.color == (128,0,128):
+            self.image = PygView.images["powerup_laser"]
+            
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -512,7 +525,7 @@ class Enemy2(Enemy1):
         
         
     def create_image(self):
-        self.image = PygView.images["enemy2"]
+        self.image = PygView.images["miniboss1"]
         #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()        
@@ -529,7 +542,7 @@ class Enemy2(Enemy1):
             for speed in speeds:
                 v = pygame.math.Vector2(speed, 0)
                 v.rotate_ip(a)
-                Evilrocket(pos=pygame.math.Vector2(self.pos.x,
+                EVIL_rocket(pos=pygame.math.Vector2(self.pos.x,
                                    self.pos.y), angle=a+0,
                                    move=v+self.move, max_age=10,
                                    kill_on_edge=True, color=self.color)
@@ -984,6 +997,16 @@ class Evilrocket(VectorSprite):
         #self.rect = self.image.get_rect()
 
 
+class EVIL_rocket(Evilrocket):
+      
+      def create_image(self):
+        self.image = PygView.images["EVIL_rocket"]
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+
+    
+
 class Engine_glow(VectorSprite):
     
     def create_image(self):
@@ -1074,10 +1097,24 @@ class PygView(object):
                  os.path.join("data", "muzzle_flash.png")).convert_alpha()
             PygView.images["engine_glow"]=pygame.image.load(
                  os.path.join("data", "engine_glow.png")).convert_alpha()
-            PygView.images["enemy2"]=pygame.image.load(
-                 os.path.join("data", "tank1.png")).convert_alpha()
+            PygView.images["miniboss1"]=pygame.image.load(
+                 os.path.join("data", "miniboss1.png")).convert_alpha()
             PygView.images["boss1"]=pygame.image.load(
                  os.path.join("data", "planet.png")).convert_alpha()
+            PygView.images["EVIL_rocket"]=pygame.image.load(
+                 os.path.join("data", "evil_rocket.png")).convert_alpha()
+            PygView.images["powerup_laser"]=pygame.image.load(
+                 os.path.join("data", "powerup_laser.png")).convert_alpha()
+            PygView.images["powerup_damage"]=pygame.image.load(
+                 os.path.join("data", "powerup_damage.png")).convert_alpha()
+            PygView.images["powerup_heal"]=pygame.image.load(
+                 os.path.join("data", "powerup_heal.png")).convert_alpha()
+            PygView.images["powerup_fastbullets"]=pygame.image.load(
+                 os.path.join("data", "powerup_bullet.png")).convert_alpha()
+            PygView.images["powerup_shield"]=pygame.image.load(
+                 os.path.join("data", "powerup_shield.png")).convert_alpha()
+            PygView.images["powerup_speed"]=pygame.image.load(
+                 os.path.join("data", "powerup_speed.png")).convert_alpha()
             # --- scalieren ---
             for name in PygView.images:
                 if name == "boss1" :
@@ -1092,6 +1129,12 @@ class PygView(object):
                 if "muzzle_flash" in name:
                      PygView.images[name] = pygame.transform.scale(
                                     PygView.images[name], (50,30))
+                if "miniboss" in name:
+                     PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (100,100))
+                if "powerup" in name:
+                    PygView.images[name] = pygame.transform.scale(
+                                    PygView.images[name], (75,75))
                      
                 
         #except:
