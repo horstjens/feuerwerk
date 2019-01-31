@@ -1,3 +1,0 @@
-image_name       source         url
-#red_bullet       self
-#powerup          opengameart    http:/opengameart/bullet.png
