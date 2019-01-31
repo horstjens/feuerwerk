@@ -593,7 +593,12 @@ class Boss1(Enemy1):
         #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()    
-
+    
+     def kill(self):
+         Explosion(posvector = self.pos, red = 205,blue= 0,green= 0,red_delta= 50,blue_delta=0,maxsparks=200)
+         VectorSprite.kill(self)
+        
+        
 class Star(VectorSprite):
     
     def _overwrite_parameters(self):
@@ -635,7 +640,7 @@ class Spaceship(VectorSprite):
         self.bonusfirespeed = {}
         self.shield = {}
         self.laser = {}
-        
+        self.old_laser = False
         
         
         
@@ -820,11 +825,11 @@ class Laser(VectorSprite):
         
     
     def create_image(self):
-        self.image = pygame.Surface((2*PygView.height, 10))
+        self.image = pygame.Surface((2*PygView.width, 10))
         #pygame.draw.rect(self.image,(255,0,0),(0,0,10,2*PygView.height))
         #self.image.fill((0,random.randint(200,255),0))
         pygame.draw.rect(self.image, (0,random.randint(200,255),0),
-                         (PygView.height+28 , 0, 2*PygView.height, 10))
+                         (PygView.width+28 , 0, 2*PygView.width, 10))
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -1262,14 +1267,30 @@ class PygView(object):
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             # ------- movement keys for player1 -------
-            if pressed_keys[pygame.K_a]:
-                self.player1.strafe_left()
-            if pressed_keys[pygame.K_d]:
-                self.player1.strafe_right()
-            if pressed_keys[pygame.K_w]:
-                self.player1.move_forward()
-            if pressed_keys[pygame.K_s]:
-                self.player1.move_backward()
+            
+            for age in self.player1.laser:
+                if age > self.player1.age:
+                    self.player1.old_laser = True
+                    # turn statt strafe 
+                    if pressed_keys[pygame.K_a]:
+                        self.player1.turn_left()
+                    if pressed_keys[pygame.K_d]:
+                        self.player1.turn_right()
+                    break
+            else:
+                # no laser
+                if self.player1.old_laser:
+                    self.player1.old_laser = False
+                    # gerade richten 
+                    self.player1.set_angle(90)
+                if pressed_keys[pygame.K_a]:
+                    self.player1.strafe_left()
+                if pressed_keys[pygame.K_d]:
+                    self.player1.strafe_right()
+                if pressed_keys[pygame.K_w]:
+                    self.player1.move_forward()
+                if pressed_keys[pygame.K_s]:
+                   self.player1.move_backward()
             
             # ------- movement keys for player 2 ---------
             if pressed_keys[pygame.K_j]:
@@ -1392,7 +1413,7 @@ class PygView(object):
                              False, pygame.sprite.collide_mask)
                 for e in crashgroup:
                      e.hitpoints -= 10
-                    
+                     #Explosion(posvector = e.pos,red = 100,minsparks = 1,maxsparks = 2)
                     
                 
                         
