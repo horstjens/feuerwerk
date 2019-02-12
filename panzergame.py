@@ -1354,7 +1354,7 @@ class PygView(object):
             if random.random() < 0.0005:
                 Enemy2()
             #------ Enemy3 (tank) -----
-            if random.random() < 0.0002:
+            if random.random() < 0.002:
                 Enemy3()
             # ----- Enemy4(tank)-----------
             if random.random() < 0.0002:
@@ -1381,7 +1381,7 @@ class PygView(object):
             if random.random() < 0.04:
                 PowerUp()
             #--------tree----------------
-            if random.random() < 0.01:
+            if random.random() < 0.0001:
                 Tree()
 
             # ------ move indicator for player 1 -----
