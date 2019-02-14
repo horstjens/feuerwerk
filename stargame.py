@@ -1091,7 +1091,12 @@ class Viewer(object):
             self.e3 -= 1
         if self.e1 <= 0 and self.e2 <= 0 and self.e3 <= 0:
             self.new_level()
-        
+        if self.e1 < 0 :
+            self.e1 = 0
+        if self.e2 < 0:
+            self.e2= 0
+        if self.e3 < 0:
+            self.e3 = 0
     def new_level(self):
         self.level += 1
         self.e1 = self.level * 15
