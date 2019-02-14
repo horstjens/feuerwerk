@@ -451,9 +451,9 @@ class PowerUp(VectorSprite):
         self.image = pygame.Surface((40,40))
         #pygame.draw.circle(self.image, self.color, (20,20), 20)
         if self.color == (255,0,0):
-            self.image = PygView.images["powerup_damage"]
-        elif self.color == (0,0,255):
             self.image = PygView.images["powerup_heal"]
+        elif self.color == (0,0,255):
+            self.image = PygView.images["powerup_damage"]
         elif self.color == (255,255,0):
             self.image = PygView.images["powerup_fastbullets"]
         elif self.color == (255,255,255):
@@ -497,7 +497,14 @@ class Enemy1(VectorSprite):
         #pass
         if self.pos.y < 0 and random.random() < 0.2:
             self.move += pygame.math.Vector2(random.choice((-7,-5,-2,-1,1,2,5,7)),random.choice((-3,-2,-1,1,2,3)))
-    
+            
+    def kill(self):
+        Explosion(posvector = self.pos, red=200 )
+        VectorSprite.kill(self)
+        
+        
+        
+        
     def fire(self):
         if random.random() < 0.03:
             a = random.randint(130,220)
@@ -511,7 +518,7 @@ class Enemy1(VectorSprite):
             #p = pygame.math.Vector2(25,0)
             #p.rotate_ip(self.angle)
             #Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle)
-
+    
 class Enemy2(Enemy1):
         
     def _overwrite_parameters(self):
@@ -885,9 +892,9 @@ class Smoke(VectorSprite):
 class Spark(VectorSprite):
     
     def _overwrite_parameters(self):
-        self._layer = 2
+        self._layer = 9
         self.kill_on_edge = True
-    
+        
     def create_image(self):
         r,g,b = self.color
         r = randomize_color(r,50)
@@ -1294,9 +1301,9 @@ class PygView(object):
             
             # ------- movement keys for player 2 ---------
             if pressed_keys[pygame.K_j]:
-                 self.player2.turn_left()
+                 self.player2.strafe_left()
             if pressed_keys[pygame.K_l]:
-                 self.player2.turn_right()
+                 self.player2.strafe_right()
             if pressed_keys[pygame.K_i]:
                  self.player2.move_forward()
             if pressed_keys[pygame.K_k]:
@@ -1400,6 +1407,7 @@ class PygView(object):
                              False, pygame.sprite.collide_mask)
                 for r in crashgroup:
                     #if r.bossnumber != p.number:
+                        Explosion(posvector= r.pos,red = 250,green = 250, blue= 250,minsparks= 1,maxsparks= 2)
                         r.kill()
                         #p.hitpoints -= random.randint(3,6)
                         #Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
@@ -1413,7 +1421,7 @@ class PygView(object):
                              False, pygame.sprite.collide_mask)
                 for e in crashgroup:
                      e.hitpoints -= 10
-                     #Explosion(posvector = e.pos,red = 100,minsparks = 1,maxsparks = 2)
+                     Explosion(posvector = e.pos,red = 100,minsparks = 1,maxsparks = 2)
                     
                 
                         
@@ -1434,7 +1442,7 @@ class PygView(object):
                         self.player1.hitpoints = 200
                     if self.player2.hitpoints > 200:
                         self.player2.hitpoints = 200    
-                        Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
+                    Explosion(pygame.math.Vector2(r.pos.x, r.pos.y),red=0,green=150,blue=0)
                         #elastic_collision(p, r)
                     r.kill()
             
