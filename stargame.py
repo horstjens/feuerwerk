@@ -1264,11 +1264,6 @@ class PygView(object):
             if random.random() < 0.04:
                 PowerUp()
             
-            # ------ move indicator for player 1 -----
-            pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
-            glitter = (0, random.randint(128, 255), 0)
-            pygame.draw.line(self.screen, glitter, (100,100), 
-                            (100 + self.player1.move.x, 100 - self.player1.move.y))
              
 
             # ------------ pressed keys ------
@@ -1481,14 +1476,7 @@ class PygView(object):
             self.allgroup.draw(self.screen)
 
             
-            # --- Martins verbesserter Mousetail -----
-            for mouse in self.tailgroup:
-                if len(mouse.tail)>2:
-                    for a in range(1,len(mouse.tail)):
-                        r,g,b = mouse.color
-                        pygame.draw.line(self.screen,(max(0,r-a),g,b),
-                                     mouse.tail[a-1],
-                                     mouse.tail[a],10-a*10//10)
+           
                 
             # -------- next frame -------------
             pygame.display.flip()
