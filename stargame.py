@@ -1300,15 +1300,30 @@ class PygView(object):
                    self.player1.move_backward()
             
             # ------- movement keys for player 2 ---------
-            if pressed_keys[pygame.K_j]:
-                 self.player2.strafe_left()
-            if pressed_keys[pygame.K_l]:
-                 self.player2.strafe_right()
-            if pressed_keys[pygame.K_i]:
-                 self.player2.move_forward()
-            if pressed_keys[pygame.K_k]:
-                 self.player2.move_backward()  
-            
+             
+            for age in self.player2.laser:
+                if age > self.player2.age:
+                    self.player2.old_laser = True
+                    # turn statt strafe 
+                    if pressed_keys[pygame.K_j]:
+                        self.player2.turn_left()
+                    if pressed_keys[pygame.K_l]:
+                        self.player2.turn_right()
+                    break
+            else:
+                # no laser
+                if self.player2.old_laser:
+                    self.player2.old_laser = False
+                    # gerade richten 
+                    self.player2.set_angle(90)
+                if pressed_keys[pygame.K_j]:
+                    self.player2.strafe_left()
+                if pressed_keys[pygame.K_l]:
+                    self.player2.strafe_right()
+                if pressed_keys[pygame.K_i]:
+                    self.player2.move_forward()
+                if pressed_keys[pygame.K_k]:
+                   self.player2.move_backward()
             # ------ mouse handler ------
             left,middle,right = pygame.mouse.get_pressed()
             oldleft, oldmiddle, oldright = left, middle, right
