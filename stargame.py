@@ -203,12 +203,12 @@ class Mouse(pygame.sprite.Sprite):
             pass
         if self.x < 0:
             self.x = 0
-        elif self.x > PygView.width:
-            self.x = PygView.width
+        elif self.x > Viewer.width:
+            self.x = Viewer.width
         if self.y < 0:
             self.y = 0
-        elif self.y > PygView.height:
-            self.y = PygView.height
+        elif self.y > Viewer.height:
+            self.y = Viewer.height
         self.tail.insert(0,(self.x,self.y))
         self.tail = self.tail[:128]
         self.rect.center = self.x, self.y
@@ -259,7 +259,7 @@ class VectorSprite(pygame.sprite.Sprite):
         if "static" not in kwargs:
             self.static = False
         if "pos" not in kwargs:
-            self.pos = pygame.math.Vector2(random.randint(0, PygView.width),-50)
+            self.pos = pygame.math.Vector2(random.randint(0, Viewer.width),-50)
         if "move" not in kwargs:
             self.move = pygame.math.Vector2(0,0)
         if "friction" not in kwargs:
@@ -397,7 +397,7 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.x = 0
                 self.move.x *= -1
             elif self.warp_on_edge:
-                self.pos.x = PygView.width 
+                self.pos.x = Viewer.width 
         # -------- upper edge -----
         if self.pos.y  > 0:
             if self.kill_on_edge and not self.survive_north:
@@ -406,23 +406,23 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.y = 0
                 self.move.y *= -1
             elif self.warp_on_edge:
-                self.pos.y = -PygView.height
+                self.pos.y = -Viewer.height
         # -------- right edge -----                
-        if self.pos.x  > PygView.width:
+        if self.pos.x  > Viewer.width:
             if self.kill_on_edge:
                 self.kill()
             elif self.bounce_on_edge:
-                self.pos.x = PygView.width
+                self.pos.x = Viewer.width
                 self.move.x *= -1
             elif self.warp_on_edge:
                 self.pos.x = 0
         # --------- lower edge ------------
-        if self.pos.y   < -PygView.height:
+        if self.pos.y   < -Viewer.height:
             if self.kill_on_edge:
                 self.hitpoints = 0
                 self.kill()
             elif self.bounce_on_edge:
-                self.pos.y = -PygView.height
+                self.pos.y = -Viewer.height
                 self.move.y *= -1
             elif self.warp_on_edge:
                 self.pos.y = 0
@@ -432,7 +432,7 @@ class PowerUp(VectorSprite):
     
     def _overwrite_parameters(self):
         self.pos = pygame.math.Vector2(random.randint(
-                   0, PygView.width) , -1)
+                   0, Viewer.width) , -1)
         self.kill_on_edge = True
         self.move = pygame.math.Vector2(
                         random.randint(-20,20),
@@ -451,17 +451,17 @@ class PowerUp(VectorSprite):
         self.image = pygame.Surface((40,40))
         #pygame.draw.circle(self.image, self.color, (20,20), 20)
         if self.color == (255,0,0):
-            self.image = PygView.images["powerup_heal"]
+            self.image = Viewer.images["powerup_heal"]
         elif self.color == (0,0,255):
-            self.image = PygView.images["powerup_damage"]
+            self.image = Viewer.images["powerup_damage"]
         elif self.color == (255,255,0):
-            self.image = PygView.images["powerup_fastbullets"]
+            self.image = Viewer.images["powerup_fastbullets"]
         elif self.color == (255,255,255):
-            self.image = PygView.images["powerup_shield"] 
+            self.image = Viewer.images["powerup_shield"] 
         elif self.color == (0,255,0):
-            self.image = PygView.images["powerup_speed"] 
+            self.image = Viewer.images["powerup_speed"] 
         elif self.color == (128,0,128):
-            self.image = PygView.images["powerup_laser"]
+            self.image = Viewer.images["powerup_laser"]
             
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
@@ -470,10 +470,10 @@ class PowerUp(VectorSprite):
     
 
 class Enemy1(VectorSprite):
-    
+    """small enemy spaceship"""
     def _overwrite_parameters(self):
         #self.pos = pygame.math.Vector2(random.randint(
-        #           0, PygView.width) , -1)
+        #           0, Viewer.width) , -1)
         self.kill_on_edge = True
         self.survive_north = True
         self.move = pygame.math.Vector2(0,-random.randint(50,100))
@@ -483,7 +483,7 @@ class Enemy1(VectorSprite):
         
     
     def create_image(self):
-        self.image = PygView.images["enemy1"]
+        self.image = Viewer.images["enemy1"]
         #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -520,7 +520,7 @@ class Enemy1(VectorSprite):
             #Muzzle_flash(pos=pygame.math.Vector2(self.pos.x, self.pos.y) + p, max_age=0.1, angle = self.angle)
     
 class Enemy2(Enemy1):
-        
+    """big enemy spaceship"""
     def _overwrite_parameters(self):
         self.kill_on_edge = True
         self.survive_north = True
@@ -532,7 +532,7 @@ class Enemy2(Enemy1):
         
         
     def create_image(self):
-        self.image = PygView.images["miniboss1"]
+        self.image = Viewer.images["miniboss1"]
         #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()        
@@ -555,8 +555,8 @@ class Enemy2(Enemy1):
                                    kill_on_edge=True, color=self.color)
     
   
-class Boss1(Enemy1):
-    
+class Enemy3(Enemy1):
+     """evil Planet"""
      def _overwrite_parameters(self):
         self.kill_on_edge = True
         self.survive_north = True
@@ -596,7 +596,7 @@ class Boss1(Enemy1):
     
 
      def create_image(self):
-        self.image = PygView.images["boss1"]
+        self.image = Viewer.images["boss1"]
         #self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()    
@@ -610,7 +610,7 @@ class Star(VectorSprite):
     
     def _overwrite_parameters(self):
         self.pos = pygame.math.Vector2(random.randint(
-                   0, PygView.width) , -1)
+                   0, Viewer.width) , -1)
         self.kill_on_edge = True
         self.move = pygame.math.Vector2(0,-random.randint(75,250))
         self._layer = 1
@@ -630,7 +630,7 @@ class Star(VectorSprite):
 
     
 
-class Spaceship(VectorSprite):
+class Player(VectorSprite):
     
     def _overwrite_parameters(self):
         self.friction = 0.980  #1.0 = no friction
@@ -814,7 +814,7 @@ class Spaceship(VectorSprite):
         self.rotate(-speed)
             
     def create_image(self):
-        self.image = PygView.images[self.imagename]
+        self.image = Viewer.images[self.imagename]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -832,11 +832,11 @@ class Laser(VectorSprite):
         
     
     def create_image(self):
-        self.image = pygame.Surface((2*PygView.width, 10))
-        #pygame.draw.rect(self.image,(255,0,0),(0,0,10,2*PygView.height))
+        self.image = pygame.Surface((2*Viewer.width, 10))
+        #pygame.draw.rect(self.image,(255,0,0),(0,0,10,2*Viewer.height))
         #self.image.fill((0,random.randint(200,255),0))
         pygame.draw.rect(self.image, (0,random.randint(200,255),0),
-                         (PygView.width+28 , 0, 2*PygView.width, 10))
+                         (Viewer.width+28 , 0, 2*Viewer.width, 10))
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
         self.image0 = self.image.copy()
@@ -911,7 +911,7 @@ class Spark(VectorSprite):
         
 
 class Explosion():
-    """emits a lot of sparks, for Explosion or Spaceship engine"""
+    """emits a lot of sparks, for Explosion or Player engine"""
     def __init__(self, posvector, minangle=0, maxangle=360, maxlifetime=3,
                  minspeed=5, maxspeed=150, red=255, red_delta=0, 
                  green=225, green_delta=25, blue=0, blue_delta=0,
@@ -956,7 +956,7 @@ class Rocket(VectorSprite):
          #         max_age=2.5)
 
     def create_image(self):
-        self.image = PygView.images["bullet"]
+        self.image = Viewer.images["bullet"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -996,7 +996,7 @@ class Evilrocket(VectorSprite):
          #         max_age=2.5)
 
     def create_image(self):
-        self.image = PygView.images["red_bullet"]
+        self.image = Viewer.images["red_bullet"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -1012,7 +1012,7 @@ class Evilrocket(VectorSprite):
 class EVIL_rocket(Evilrocket):
       
       def create_image(self):
-        self.image = PygView.images["EVIL_rocket"]
+        self.image = Viewer.images["EVIL_rocket"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -1022,7 +1022,7 @@ class EVIL_rocket(Evilrocket):
 class Engine_glow(VectorSprite):
     
     def create_image(self):
-        self.image = PygView.images["engine_glow"]
+        self.image = Viewer.images["engine_glow"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -1031,7 +1031,7 @@ class Engine_glow(VectorSprite):
 class Muzzle_flash(VectorSprite):
     
     def create_image(self):
-        self.image = PygView.images["muzzle_flash"]
+        self.image = Viewer.images["muzzle_flash"]
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -1039,7 +1039,7 @@ class Muzzle_flash(VectorSprite):
     
 
 
-class PygView(object):
+class Viewer(object):
     width = 0
     height = 0
     images = {}
@@ -1048,8 +1048,8 @@ class PygView(object):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
-        PygView.width = width    # make global readable
-        PygView.height = height
+        Viewer.width = width    # make global readable
+        Viewer.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
         self.background = pygame.Surface(self.screen.get_size()).convert()
         self.background.fill((255,255,255)) # fill background white
@@ -1067,9 +1067,9 @@ class PygView(object):
         except:
             print("no folder 'data' or no jpg files in it")
 
-        PygView.bombchance = 0.015
-        PygView.rocketchance = 0.001
-        PygView.wave = 0
+        Viewer.bombchance = 0.015
+        Viewer.rocketchance = 0.001
+        Viewer.wave = 0
         self.age = 0
         # ------ joysticks ----
         pygame.joystick.init()
@@ -1078,6 +1078,31 @@ class PygView(object):
             j.init()
         self.prepare_sprites()
         self.loadbackground()
+        self.level = 0
+        self.new_level()
+    
+    def killcounter(self, victim):
+        name = victim.__class__.__name__
+        if name == "Enemy1":
+            self.e1 -= 1
+        elif name == "Enemy2":
+            self.e2 -= 1
+        elif name == "Enemy3":
+            self.e3 -= 1
+        if self.e1 <= 0 and self.e2 <= 0 and self.e3 <= 0:
+            self.new_level()
+        
+    def new_level(self):
+        self.level += 1
+        self.e1 = self.level * 15
+        self.e2 = self.level * 7
+        self.e3 = self.level * 3
+        x = Viewer.width // 2
+        y = Viewer.height // 2
+        t = "Level {}. You have to kill: {} ships, {} big ships, {} planets.".format(
+             self.level, self.e1, self.e2, self.e3)
+        Flytext(x=x, y=y, text=t, fontsize=55, duration=10, 
+                color=(0,0,255))
 
     def loadbackground(self):
         
@@ -1089,64 +1114,64 @@ class PygView(object):
         self.background.fill((0,0,0)) # fill background white
             
         self.background = pygame.transform.scale(self.background,
-                          (PygView.width,PygView.height))
+                          (Viewer.width,Viewer.height))
         self.background.convert()
         
     
     def load_sprites(self):
         #try:
-            PygView.images["player1"]= pygame.image.load(
+            Viewer.images["player1"]= pygame.image.load(
                  os.path.join("data", "player1.png")).convert_alpha()
-            PygView.images["red_bullet"]= pygame.image.load(
+            Viewer.images["red_bullet"]= pygame.image.load(
                  os.path.join("data", "red_bullet.png")).convert_alpha()
-            PygView.images["enemy1"]=pygame.image.load(
+            Viewer.images["enemy1"]=pygame.image.load(
                  os.path.join("data", "enemy1.png")).convert_alpha()
-            PygView.images["player2"]=pygame.image.load(
+            Viewer.images["player2"]=pygame.image.load(
                  os.path.join("data", "player2.png")).convert_alpha()
-            PygView.images["bullet"]= pygame.image.load(
+            Viewer.images["bullet"]= pygame.image.load(
                  os.path.join("data", "bullet.png")).convert_alpha()
-            PygView.images["muzzle_flash"]=pygame.image.load(
+            Viewer.images["muzzle_flash"]=pygame.image.load(
                  os.path.join("data", "muzzle_flash.png")).convert_alpha()
-            PygView.images["engine_glow"]=pygame.image.load(
+            Viewer.images["engine_glow"]=pygame.image.load(
                  os.path.join("data", "engine_glow.png")).convert_alpha()
-            PygView.images["miniboss1"]=pygame.image.load(
+            Viewer.images["miniboss1"]=pygame.image.load(
                  os.path.join("data", "miniboss1.png")).convert_alpha()
-            PygView.images["boss1"]=pygame.image.load(
+            Viewer.images["boss1"]=pygame.image.load(
                  os.path.join("data", "planet.png")).convert_alpha()
-            PygView.images["EVIL_rocket"]=pygame.image.load(
+            Viewer.images["EVIL_rocket"]=pygame.image.load(
                  os.path.join("data", "evil_rocket.png")).convert_alpha()
-            PygView.images["powerup_laser"]=pygame.image.load(
+            Viewer.images["powerup_laser"]=pygame.image.load(
                  os.path.join("data", "powerup_laser.png")).convert_alpha()
-            PygView.images["powerup_damage"]=pygame.image.load(
+            Viewer.images["powerup_damage"]=pygame.image.load(
                  os.path.join("data", "powerup_damage.png")).convert_alpha()
-            PygView.images["powerup_heal"]=pygame.image.load(
+            Viewer.images["powerup_heal"]=pygame.image.load(
                  os.path.join("data", "powerup_heal.png")).convert_alpha()
-            PygView.images["powerup_fastbullets"]=pygame.image.load(
+            Viewer.images["powerup_fastbullets"]=pygame.image.load(
                  os.path.join("data", "powerup_bullet.png")).convert_alpha()
-            PygView.images["powerup_shield"]=pygame.image.load(
+            Viewer.images["powerup_shield"]=pygame.image.load(
                  os.path.join("data", "powerup_shield.png")).convert_alpha()
-            PygView.images["powerup_speed"]=pygame.image.load(
+            Viewer.images["powerup_speed"]=pygame.image.load(
                  os.path.join("data", "powerup_speed.png")).convert_alpha()
             # --- scalieren ---
-            for name in PygView.images:
+            for name in Viewer.images:
                 if name == "boss1" :
-                    PygView.images[name] = pygame.transform.scale(
-                                    PygView.images[name], (150,150))
+                    Viewer.images[name] = pygame.transform.scale(
+                                    Viewer.images[name], (150,150))
                 if "player" in name:
-                     PygView.images[name] = pygame.transform.scale(
-                                    PygView.images[name], (50,50))
+                     Viewer.images[name] = pygame.transform.scale(
+                                    Viewer.images[name], (50,50))
                 if "enemy" in name:
-                     PygView.images[name] = pygame.transform.scale(
-                                    PygView.images[name], (50,50))
+                     Viewer.images[name] = pygame.transform.scale(
+                                    Viewer.images[name], (50,50))
                 if "muzzle_flash" in name:
-                     PygView.images[name] = pygame.transform.scale(
-                                    PygView.images[name], (50,30))
+                     Viewer.images[name] = pygame.transform.scale(
+                                    Viewer.images[name], (50,30))
                 if "miniboss" in name:
-                     PygView.images[name] = pygame.transform.scale(
-                                    PygView.images[name], (100,100))
+                     Viewer.images[name] = pygame.transform.scale(
+                                    Viewer.images[name], (100,100))
                 if "powerup" in name:
-                    PygView.images[name] = pygame.transform.scale(
-                                    PygView.images[name], (75,75))
+                    Viewer.images[name] = pygame.transform.scale(
+                                    Viewer.images[name], (75,75))
                      
                 
         #except:
@@ -1170,7 +1195,7 @@ class PygView(object):
 
         Mouse.groups = self.allgroup, self.mousegroup, self.tailgroup
         VectorSprite.groups = self.allgroup
-        Spaceship.groups = self.allgroup, self.playergroup  # , self.tailgroup
+        Player.groups = self.allgroup, self.playergroup  # , self.tailgroup
         Rocket.groups = self.allgroup, self.rocketgroup
         Evilrocket.groups = self.allgroup, self.evilrocketgroup
         Flytext.groups = self.allgroup
@@ -1181,8 +1206,8 @@ class PygView(object):
         Shield.groups = self.allgroup ,self.shieldgroup
         Laser.groups = self.allgroup , self.lasergroup
 
-        self.player1 =  Spaceship(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2-100,-PygView.height/2))
-        self.player2 =  Spaceship(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
+        self.player1 =  Player(imagename="player1", warp_on_edge=True, pos=pygame.math.Vector2(Viewer.width/2-100,-Viewer.height/2))
+        self.player2 =  Player(imagename="player2", angle=180,warp_on_edge=True, pos=pygame.math.Vector2(Viewer.width/2+100,-Viewer.height/2))
    
         # --- engine glow ----
         #p = pygame.math.Vector2(-30,0)
@@ -1202,6 +1227,8 @@ class PygView(object):
         while running:
             pygame.display.set_caption("player1 hp: {} player2 hp: {}".format(
                                  self.player1.hitpoints, self.player2.hitpoints))
+            
+            
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
@@ -1245,20 +1272,25 @@ class PygView(object):
             # ------delete everything on screen-------
             self.screen.blit(self.background, (0, 0))
             
+            t = "e1: {} e2: {} e3: {}".format(self.e1, self.e2, self.e3)
+            write(self.screen, t, 50, 10, color=(200,200,200))
+            
+            
             # ---- pretty moving background stars -----
             if random.random() < 0.3:
                 Star()
-            if random.random() < 0.001:
-                Boss1()
-            # -------- Enemy1---------------#
-            if random.random() < 0.001:
+            # ------ enemy3 (planet)------ 
+            if random.random() < 0.001 and self.e3 > 0:
+                Enemy3()
+            # -------- Enemy1 (small ship)---------------#
+            if random.random() < 0.005 and self.e1 > 0:
                 Flytext(400,200, "new wave is coming")
                 for e in range(5, 9):
-                    x = random.randint(0, PygView.width)
+                    x = random.randint(0, Viewer.width)
                     y = 300
                     Enemy1(pos=pygame.math.Vector2(x,y))
-            #------ Enemy2 (tank) -----
-            if random.random() < 0.005:
+            #------ Enemy2 (big ship) -----
+            if random.random() < 0.003 and self.e2 > 0:
                 Enemy2()
             # --------- Powerup ------------
             if random.random() < 0.04:
@@ -1358,7 +1390,7 @@ class PygView(object):
                        
             # write text below sprites
             write(self.screen, "FPS: {:8.3}".format(
-                self.clock.get_fps() ), x=10, y=10)
+                self.clock.get_fps() ), x=Viewer.width-200, y=10, color=(200,200,200))
             
             # ----- collision detection between player and PowerUp---
             for p in self.playergroup:
@@ -1434,7 +1466,8 @@ class PygView(object):
                 for e in crashgroup:
                      e.hitpoints -= 10
                      Explosion(posvector = e.pos,red = 100,minsparks = 1,maxsparks = 2)
-                    
+                     if e.hitpoints <= 0:
+                         self.killcounter(e)
                 
                         
                 
@@ -1450,6 +1483,7 @@ class PygView(object):
                     if e.hitpoints <= 0:
                         self.player1.hitpoints += 15
                         self.player2.hitpoints += 15
+                        self.killcounter(e)
                     if self.player1.hitpoints > 200:
                         self.player1.hitpoints = 200
                     if self.player2.hitpoints > 200:
@@ -1485,4 +1519,4 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1430,800).run() # try PygView(800,600).run()
+    Viewer(1430,800).run() # try Viewer(800,600).run()
