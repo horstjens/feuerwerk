@@ -1359,6 +1359,8 @@ class PygView(object):
                     if o.color == (255,0,0):
                         Flytext(o.pos.x, - o.pos.y, "+50 hitpoints")
                         p.hitpoints += 50
+                        if p.hitpoints > 200:
+                            p.hitpoints = 200 
                         Explosion(o.pos, red=255, green=0, blue=0)
                         o.kill()
                     elif o.color == (0,255,0):
