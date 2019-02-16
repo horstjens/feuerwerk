@@ -92,7 +92,7 @@ class Game():
              ["Regenerate hitpoints of", "your cities.", "! Not working yet !"]]                         #city hp
     current_level = {}
     items = ["resume", "cannon range", "tracer damage","missle speed", "city hp"]
-    level = {"cannon range" : [200,300,400,500,600],
+    level = {"cannon range" : [100,200,300,500,600],
              "missle speed"  : [100,150,200,250,300],
              "city hp" : [75,80,85,90,100], 
              "tracer damage" : [1, 3, 5,20,50]}
@@ -669,6 +669,7 @@ class Bomb(VectorSprite):
         VectorSprite.__init__(self, **kwargs)
         if "gravity" not in kwargs:
             self.gravity = pygame.math.Vector2(0, -0.7)
+        self.damage = 100
 
    def create_image(self):
         self.image = pygame.Surface((20,20))
@@ -869,6 +870,10 @@ class Cannon(VectorSprite):
     
     def _overwrite_parameters(self):
         self.maxrange = 200
+        self.kill_with_boss = True
+        #self.sticky_with_boss = True
+        boss = VectorSprite.numbers[self.bossnumber]
+        self.pos = boss.pos + pygame.math.Vector2(0,100)
     
     def create_image(self):
         self.image = pygame.Surface((100,10))
@@ -888,6 +893,8 @@ class Cannon(VectorSprite):
             self.set_angle(angle)
 
     def update(self, seconds):
+        boss = VectorSprite.numbers[self.bossnumber]
+        self.pos = boss.pos + pygame.math.Vector2(0,100)
         VectorSprite.update(self, seconds)
         if random.random() < 0.1 and self.target is not None and self.target.hitpoints > 0:
             p = pygame.math.Vector2(self.pos.x,self.pos.y)
@@ -899,12 +906,27 @@ class Cannon(VectorSprite):
             v = pygame.math.Vector2(150,0)
             v.rotate_ip(self.angle)
             Tracer(pos=p, move=v, angle=self.angle, kill_on_edge=True, max_distance=self.maxrange)
+            
+class Turret(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        pass
+        #print("ich bin ein turm meine nummer ist", self.number)
+        #Cannon(bossnumber=self.number)
+    
+    def create_image(self):
+        self.image = pygame.Surface((20,200))
+        self.image.fill((190,190,190))
+        self.image.set_colorkey((0,0,0))
+        self.rect = self.image.get_rect()
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
 
 class City(VectorSprite):
 
     def _overwrite_parameters(self):
         self.radius = 100
-        self.hitpoints = 5000
+        self.hitpoints = 5000    #too much hitpoints (city shouldn't die)
         self.busy_until = 0
         
     def show(self, nr):
@@ -924,6 +946,32 @@ class City(VectorSprite):
             Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y+40), ready=True, angle=+90, color=(255,156,0), bossnumber=self.number)
         self.busy_until = self.age + 5 # seconds 
         Flytext(x=self.pos.x, y=-self.pos.y-50, text="Reloading",color=(0,200,0), duration = 5, dy=-10)
+
+
+class House(VectorSprite):
+    
+
+    def create_image(self):
+        self.image = pygame.Surface((8,80))
+        c = random.randint(50,200)
+        self.image.fill((c,c,c))
+        self.image.set_colorkey((0,0,0))
+        self.rect= self.image.get_rect()
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+    
+    
+class Window(VectorSprite):
+    
+    
+    def create_image(self):
+        self.image = pygame.Surface((4,4))
+        c = random.randint(200,255)
+        self.image.fill((c,c,0))
+        self.image.set_colorkey((0,0,0))
+        self.rect= self.image.get_rect()
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
         
 class Viewer(object):
     width = 0
@@ -1069,6 +1117,9 @@ class Viewer(object):
         self.citygroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
         self.detonationgroup = pygame.sprite.Group()
+        self.turretgroup = pygame.sprite.Group()
+        self.housegroup = pygame.sprite.Group()
+        self.windowgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup
         VectorSprite.groups = self.allgroup
@@ -1087,7 +1138,9 @@ class Viewer(object):
         Detonation.groups = self.allgroup, self.detonationgroup
         Ufo_Kamikazeship.groups = self.allgroup, #self.enemygroup
         Ufo_Mothership.groups = self.allgroup, self.enemygroup
-        
+        Turret.groups = self.allgroup, self.turretgroup
+        House.groups = self.allgroup, self.housegroup
+        Window.groups = self.allgroup, self.windowgroup
 
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
@@ -1105,12 +1158,24 @@ class Viewer(object):
         #self.kamikazeship =  Ufo_Kamikazeship(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(0,200,0))
         #self.mothership = Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(255,255,0))
         nr = Viewer.width // 200
+        for t in range(nr):
+            x = Viewer.width // nr * t
+            u= Turret(pos = pygame.math.Vector2(x, -Viewer.height+100))
+            #for t in self.turretgroup:
+            Cannon(pos=pygame.math.Vector2(u.pos.x,u.pos.y+100), bossnumber=u.number)
         for c in range(nr):
             x = Viewer.width // nr * c
             self.city = City(pos = pygame.math.Vector2(x+100, -Viewer.height-25),citynr = c)
-        for c in self.citygroup:
-            self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x+40,c.pos.y+80))
-            self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x-40,c.pos.y+80))
+            for cityx in range(-80,80,8):
+                dy = random.randint(0,10)
+                a = abs(cityx) // 2
+                dy -= a
+                h = House(bossnumber=self.city.number, pos=self.city.pos + pygame.math.Vector2(cityx,+40+dy))
+                for winy in range(-40,40,8):
+                    Window(bossnumber = h.number, pos = h.pos + pygame.math.Vector2(0, winy))
+        #for c in self.citygroup:
+        #    self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x+40,c.pos.y+80))
+        #    self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x-40,c.pos.y+80))
 
     def menu_run(self):
         """Not The mainloop"""
@@ -1196,6 +1261,16 @@ class Viewer(object):
                 if self.playtime > exittime:
                     break
             #Game over?
+            #for h in self.housegroup:
+            #    if h.hitpoints > 0:
+            #        break
+            #    else:
+            if len(self.housegroup) == 0:
+                if not gameOver:
+                    print("Game over! You lose!")
+                    gameOver = True
+                    exittime = self.playtime + 4.0
+                    Flytext(Viewer.width/2, Viewer.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
             #if not gameOver:
             # -------- events ------
             for event in pygame.event.get():
@@ -1368,6 +1443,14 @@ class Viewer(object):
             
             self.allgroup.update(seconds)
             
+            # ---------- kill destroyed houses -----------------
+            for h in self.housegroup:
+                if h.pos.y+40 < -Viewer.height:
+                    print("kill house")
+                    for w in self.windowgroup:
+                        if w.pos.x == h.pos.x:
+                            w.kill()
+                    h.kill()
             # ----------collision detection between Tracer and enemy --------
             for e in self.enemygroup:
                 crashgroup = pygame.sprite.spritecollide(e, self.tracergroup,
@@ -1384,11 +1467,39 @@ class Viewer(object):
                              False, pygame.sprite.collide_circle)
                 for e in crashgroup:
                     e.hitpoints -= d.damage
+            
+            # --------- collision detection between turret and enemy -----
+            for t in self.turretgroup:
+                crashgroup = pygame.sprite.spritecollide(t, self.enemygroup,
+                             False, pygame.sprite.collide_mask)
+                for e in crashgroup:
+                    Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y))
+                    t.pos.y -= 10
+                    e.kill()
+                    
+            # --------- collision detection between house and enemy -----
+            for h in self.housegroup:
+                crashgroup = pygame.sprite.spritecollide(h, self.enemygroup,
+                             False, pygame.sprite.collide_mask)
+                for e in crashgroup:
+                    Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y))
+                    d = random.random()
+                    for w in self.windowgroup:
+                        if w.pos.x == h.pos.x:
+                            if d < 0.9:
+                                w.pos.y -= 30
+                            else:
+                                w.kill()
+                    if d < 0.9:
+                        h.pos.y -= 30
+                    else:
+                        h.kill()
+                    e.kill()
 
             # --------- collision detection between city and enemy -----
             for c in self.citygroup:
                 crashgroup = pygame.sprite.spritecollide(c, self.enemygroup,
-                             False, pygame.sprite.collide_circle)
+                             False, pygame.sprite.collide_mask)
                 for e in crashgroup:
                     #t.hitpoints -= e.damage
                     #if random.random() < 0.5:
@@ -1410,8 +1521,10 @@ class Viewer(object):
                     elif e.__class__.__name__=="Evil_Rocket":
                         co = (255,165,0)
                     Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y), color=co, sparksmax=spark_max, gravityy=g, minspeed=speed_min, maxspeed=speed_max, a1=e.angle+180-25, a2=e.angle+180+25)
+                    c.pos.y -= 100    #10
                     e.kill()
                     c.hitpoints -= e.damage
+                    print(c.hitpoints)
 
             # ------------New wave ----------------
             if len(self.enemygroup) == 0:
