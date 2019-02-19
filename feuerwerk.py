@@ -89,16 +89,16 @@ class Game():
              ["Increase the range of", "your defensive cannons."],                #cannon speed
              ["Increase the damage of", "your tracers against", "your enemies."], #tracer damage
              ["Increase the speed of ", "your missles."],                         #missle speed
-             ["Regenerate hitpoints of", "your cities.", "! Not working yet !"]]                         #city hp
+             ["Regenerate hitpoints of", "your cities.", "! Not working yet !"]]                         #Energyshield hp
     current_level = {}
-    items = ["resume", "cannon range", "tracer damage","missle speed", "city hp"]
+    items = ["resume", "cannon range", "tracer damage","missle speed", "Energyshield hp"]
     level = {"cannon range" : [100,200,300,500,600],
              "missle speed"  : [100,150,200,250,300],
-             "city hp" : [75,80,85,90,100], 
+             "Energyshield hp" : [75,80,85,90,100], 
              "tracer damage" : [1, 3, 5,20,50]}
     cost = {"cannon range" : [100,250,400,550, 700],
             "missle speed" : [50,100,200,300,500],
-            "city hp" : [50,50,50,50,50],
+            "Energyshield hp" : [50,50,50,50,50],
             "tracer damage" : [100, 200, 300,400,500]}
 
 class Flytext(pygame.sprite.Sprite):
@@ -681,6 +681,10 @@ class Bomb(VectorSprite):
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+        
+   def kill(self):
+	   self.hitpoints = 0
+	   VectorSprite.kill(self)
 
    def update(self, seconds):
         if self.pos.y < -Viewer.height+20:
@@ -730,10 +734,10 @@ class Rocket(VectorSprite):
         #self.set_angle(self.angle)
         
     def update(self, seconds):
-        city = VectorSprite.numbers[self.bossnumber]
-        if city.busy_until > city.age:
+        Energyshield = VectorSprite.numbers[self.bossnumber]
+        if Energyshield.busy_until > Energyshield.age:
             # rocket not ready to fire, reloading in process
-            timediff = city.busy_until - city.age
+            timediff = Energyshield.busy_until - Energyshield.age
             self.set_angle(90-timediff * 10)
         else:
             if self.move.length() == 0:
@@ -922,20 +926,32 @@ class Turret(VectorSprite):
         self.image.convert_alpha()
         self.image0 = self.image.copy()
 
-class City(VectorSprite):
+class Energyshield(VectorSprite):
 
     def _overwrite_parameters(self):
-        self.radius = 100
-        self.hitpoints = 5000    #too much hitpoints (city shouldn't die)
+        self.radius = 120
+        self.hitpoints = 255    #too much hitpoints (Energyshield shouldn't die)
         self.busy_until = 0
-        
-    def show(self, nr):
-        Flytext(x=self.pos.x, y=self.pos.y, text="Reloading",color=(0,200,0), duration = 5)
         
 
     def create_image(self):
-        self.image = pygame.Surface((200,200))
-        pygame.draw.circle(self.image, (0,0,200), (100,100),self.radius,4)
+        self.image = pygame.Surface((self.radius*2,self.radius*2))
+        pygame.draw.circle(self.image, (0,0,self.hitpoints), (self.radius,self.radius),self.radius,5)
+        self.image.set_colorkey((0,0,0))
+        self.rect= self.image.get_rect()
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        
+
+class City(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.hitpoints = 500
+        self.busy_until = 0
+    
+    def create_image(self):
+        self.image = pygame.Surface((180,10))
+        self.image.fill((200,200,200))
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
         self.image.convert_alpha()
@@ -943,13 +959,15 @@ class City(VectorSprite):
         
     def reload_rockets(self):
         for x in range(-50,51,20):
-            Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y+40), ready=True, angle=+90, color=(255,156,0), bossnumber=self.number)
+            Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y-10), ready=True, angle=+90, color=(255,156,0), bossnumber=self.number)
         self.busy_until = self.age + 5 # seconds 
         Flytext(x=self.pos.x, y=-self.pos.y-50, text="Reloading",color=(0,200,0), duration = 5, dy=-10)
+        
+    def show(self, nr):
+        Flytext(x=self.pos.x, y=self.pos.y, text="Reloading",color=(0,200,0), duration = 5)
 
 
 class House(VectorSprite):
-    
 
     def create_image(self):
         self.image = pygame.Surface((8,80))
@@ -962,7 +980,6 @@ class House(VectorSprite):
     
     
 class Window(VectorSprite):
-    
     
     def create_image(self):
         self.image = pygame.Surface((4,4))
@@ -1044,7 +1061,7 @@ class Viewer(object):
         number = None
         for r in self.rocketgroup:
             citynumber = r.bossnumber
-            # is city busy?
+            # is City busy?
             for c in self.citygroup:
                 if c.number == citynumber:
                     city = c
@@ -1114,12 +1131,13 @@ class Viewer(object):
         self.snipergroup = pygame.sprite.Group()
         self.enemygroup = pygame.sprite.Group()
         self.cannongroup = pygame.sprite.Group()
-        self.citygroup = pygame.sprite.Group()
+        self.energyshieldgroup = pygame.sprite.Group()
         self.rocketgroup = pygame.sprite.Group()
         self.detonationgroup = pygame.sprite.Group()
         self.turretgroup = pygame.sprite.Group()
         self.housegroup = pygame.sprite.Group()
         self.windowgroup = pygame.sprite.Group()
+        self.citygroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup
         VectorSprite.groups = self.allgroup
@@ -1132,15 +1150,16 @@ class Viewer(object):
         Bomb.groups = self.allgroup, self.enemygroup
         Evil_Rocket.groups = self.allgroup, self.enemygroup
         Tracer.groups = self.allgroup, self.tracergroup
-        Rocket.groups = self.allgroup, self.rocketgroup
-        City.groups = self.allgroup, self.citygroup
+        Rocket.groups = self.rocketgroup #self.allgroup
+        Energyshield.groups = self.allgroup, self.energyshieldgroup
         Evil_Tracer.groups = self.allgroup, self.enemygroup
         Detonation.groups = self.allgroup, self.detonationgroup
-        Ufo_Kamikazeship.groups = self.allgroup, #self.enemygroup
+        Ufo_Kamikazeship.groups = self.allgroup, self.enemygroup
         Ufo_Mothership.groups = self.allgroup, self.enemygroup
-        Turret.groups = self.allgroup, self.turretgroup
+        Turret.groups = self.turretgroup, self.allgroup
         House.groups = self.allgroup, self.housegroup
         Window.groups = self.allgroup, self.windowgroup
+        City.groups = self.allgroup, self.citygroup
 
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
@@ -1158,22 +1177,38 @@ class Viewer(object):
         #self.kamikazeship =  Ufo_Kamikazeship(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(0,200,0))
         #self.mothership = Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(255,255,0))
         nr = Viewer.width // 200
+        #----- create turrets ----------
         for t in range(nr):
             x = Viewer.width // nr * t
             u= Turret(pos = pygame.math.Vector2(x, -Viewer.height+100))
             #for t in self.turretgroup:
             Cannon(pos=pygame.math.Vector2(u.pos.x,u.pos.y+100), bossnumber=u.number)
-        for c in range(nr):
-            x = Viewer.width // nr * c
-            self.city = City(pos = pygame.math.Vector2(x+100, -Viewer.height-25),citynr = c)
-            for cityx in range(-80,80,8):
+        #-------- create cities --------
+        for cn in range(nr):
+            x = Viewer.width // nr * cn
+            c = City(pos = pygame.math.Vector2(x+100, -Viewer.height+25))
+            #-------- create energyshield -------
+            Energyshield(pos = pygame.math.Vector2(x+100, -Viewer.height), bossnumber = c.number)
+            #-------- create houses ----------
+            for cx in range(-80,80,8):
                 dy = random.randint(0,10)
-                a = abs(cityx) // 2
+                a = abs(cx) // 2
                 dy -= a
-                h = House(bossnumber=self.city.number, pos=self.city.pos + pygame.math.Vector2(cityx,+40+dy))
+                h = House(bossnumber=c.number, pos=c.pos + pygame.math.Vector2(cx,+40+dy))
+                #-------create windows --------
                 for winy in range(-40,40,8):
                     Window(bossnumber = h.number, pos = h.pos + pygame.math.Vector2(0, winy))
-        #for c in self.citygroup:
+        pygame.draw.rect(self.screen,(1,1,1),(0,Viewer.height-25,Viewer.width,50),0)
+            
+            #self.Energyshield = Energyshield(pos = pygame.math.Vector2(x+100, -Viewer.height-25),Energyshieldnr = c)
+            #for Energyshieldx in range(-80,80,8):
+            #    dy = random.randint(0,10)
+            #    a = abs(Energyshieldx) // 2
+            #    dy -= a
+            #    h = House(bossnumber=self.Energyshield.number, pos=self.Energyshield.pos + pygame.math.Vector2(Energyshieldx,+40+dy))
+            #    for winy in range(-40,40,8):
+            #        Window(bossnumber = h.number, pos = h.pos + pygame.math.Vector2(0, winy))
+        #for c in self.Energyshieldgroup:
         #    self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x+40,c.pos.y+80))
         #    self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x-40,c.pos.y+80))
 
@@ -1210,6 +1245,7 @@ class Viewer(object):
             
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
+            
             
             pygame.draw.rect(self.screen,(170,170,170),(200,90,350,350))
             pygame.draw.rect(self.screen,(200,200,200),(600,90,350,350))
@@ -1265,12 +1301,12 @@ class Viewer(object):
             #    if h.hitpoints > 0:
             #        break
             #    else:
-            if len(self.housegroup) == 0:
-                if not gameOver:
-                    print("Game over! You lose!")
-                    gameOver = True
-                    exittime = self.playtime + 4.0
-                    Flytext(Viewer.width/2, Viewer.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
+            #if len(self.housegroup) == 0:
+            #    if not gameOver:
+            #        print("Game over! You lose!")
+            #        gameOver = True
+            #        exittime = self.playtime + 4.0
+            #        Flytext(Viewer.width/2, Viewer.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
             #if not gameOver:
             # -------- events ------
             for event in pygame.event.get():
@@ -1442,7 +1478,8 @@ class Viewer(object):
                             break
             
             self.allgroup.update(seconds)
-            
+            self.rocketgroup.update(seconds)
+            self.turretgroup.update(seconds)
             # ---------- kill destroyed houses -----------------
             for h in self.housegroup:
                 if h.pos.y+40 < -Viewer.height:
@@ -1496,8 +1533,8 @@ class Viewer(object):
                         h.kill()
                     e.kill()
 
-            # --------- collision detection between city and enemy -----
-            for c in self.citygroup:
+            # --------- collision detection between Energyshield and enemy -----
+            for c in self.energyshieldgroup:
                 crashgroup = pygame.sprite.spritecollide(c, self.enemygroup,
                              False, pygame.sprite.collide_mask)
                 for e in crashgroup:
@@ -1521,7 +1558,9 @@ class Viewer(object):
                     elif e.__class__.__name__=="Evil_Rocket":
                         co = (255,165,0)
                     Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y), color=co, sparksmax=spark_max, gravityy=g, minspeed=speed_min, maxspeed=speed_max, a1=e.angle+180-25, a2=e.angle+180+25)
-                    c.pos.y -= 100    #10
+                    #c.pos.y -= 100    #10
+                    c.create_image()
+                    c.rect.center = ( round(c.pos.x, 0), -round(c.pos.y, 0) )
                     e.kill()
                     c.hitpoints -= e.damage
                     print(c.hitpoints)
@@ -1532,6 +1571,12 @@ class Viewer(object):
 
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
+            # ----- rocket silos ----
+            pygame.draw.rect(self.screen,(220,220,220),(0,Viewer.height-25,Viewer.width,50),0)
+            for t in self.turretgroup:
+                pygame.draw.rect(self.screen,(190,190,190),(t.pos.x-20,Viewer.height-30,40,70),0)
+            self.rocketgroup.draw(self.screen)    
+            #self.turretgroup.draw(self.screen)
 
             
             # --- Martins verbesserter Mousetail -----
