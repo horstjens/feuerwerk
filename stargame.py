@@ -1189,7 +1189,7 @@ class Viewer(object):
                 if "player" in name:
                      Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (50,50))
-                if "enemy" in name:
+                if "enemy1" in name:
                      Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (50,50))
                 if "muzzle_flash" in name:
