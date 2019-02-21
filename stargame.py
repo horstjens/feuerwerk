@@ -606,6 +606,19 @@ class Enemy3(Enemy1):
          Explosion(posvector = self.pos, red = 205,blue= 0,green= 0,red_delta= 50,blue_delta=0,maxsparks=200)
          VectorSprite.kill(self)
         
+class Boss(VectorSprite):
+    
+    def create_image(self):
+        self.image = Viewer.images["Boss1"]
+        self.convert_alpha()
+        self.image0 = self.image.copy()
+        
+        
+    def _overwrite_parameters(self):
+        self.kill_on_edge = True
+        self.survive_north = True
+        
+    
         
 class Star(VectorSprite):
     
@@ -1158,7 +1171,7 @@ class Viewer(object):
             Viewer.images["Boss2"]=pygame.image.load(
                  os.path.join("data", "boss_inverted_red.png")).convert_alpha()
             Viewer.images["Boss3"]=pygame.image.load(
-                 os.path.join("data", "boss_inverted_blue.png")).convert_alpha()     
+                 os.path.join("data", "boss_invertedblue.png")).convert_alpha()     
             # --- scalieren ---
             for name in Viewer.images:
                 if name == "enemy 3" :
@@ -1471,10 +1484,12 @@ class Viewer(object):
                 crashgroup = pygame.sprite.spritecollide(s, self.evilrocketgroup,
                              False, pygame.sprite.collide_mask)
                 for r in crashgroup:
-                        r.kill
-                        Rocket(pos=r.pos, move= r.move * -1, angle=r.angle,
-                               kill_on_edge = True, color= (0,255,0), max_age=10)
-            
+                    m = r.move *-1
+                    m.rotate_ip(random.random()*20-10)
+                    m *= 0.4
+                    a = pygame.math.Vector2(1,0).angle_to(m)
+                    Rocket(pos = pygame.math.Vector2(r.pos.x, r.pos.y), move=m, angle=a, color=(200,200,200))
+                    r.kill()
             
             # ------- collision detection between Laser and Enemy-------
             for l in self.lasergroup:
