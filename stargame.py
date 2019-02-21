@@ -807,10 +807,10 @@ class Player(VectorSprite):
         #self.move += -v
         self.pos += -v
         
-    def turn_left(self, speed=3):
+    def turn_left(self, speed=7):
         self.rotate(speed)
         
-    def turn_right(self, speed=3):
+    def turn_right(self, speed=7):
         self.rotate(-speed)
             
     def create_image(self):
@@ -859,7 +859,7 @@ class Shield(VectorSprite):
         self.image = pygame.Surface((80,80))
         color = (255,255,random.randint(200,255))
         pygame.draw.circle(self.image, color, (40,40), 40)
-        pygame.draw.circle(self.image, (0,0,0), (40,40), 35)
+        pygame.draw.circle(self.image, (0,0,0), (40,40), 25)
         
         self.image.set_colorkey((0,0,0))
         self.image.convert_alpha()
@@ -1091,7 +1091,12 @@ class Viewer(object):
             self.e3 -= 1
         if self.e1 <= 0 and self.e2 <= 0 and self.e3 <= 0:
             self.new_level()
-        
+        if self.e1 < 0 :
+            self.e1 = 0
+        if self.e2 < 0:
+            self.e2= 0
+        if self.e3 < 0:
+            self.e3 = 0
     def new_level(self):
         self.level += 1
         self.e1 = self.level * 15
@@ -1280,17 +1285,22 @@ class Viewer(object):
             if random.random() < 0.3:
                 Star()
             # ------ enemy3 (planet)------ 
+            p3 = 0.001
+            if self.e2 <= 0:
+                p3 *= 3
             if random.random() < 0.001 and self.e3 > 0:
                 Enemy3()
             # -------- Enemy1 (small ship)---------------#
-            if random.random() < 0.005 and self.e1 > 0:
-                Flytext(400,200, "new wave is coming")
-                for e in range(5, 9):
+            if random.random() < 0.004 and self.e1 > 0:
+                for e in range(min(10,self.e1)):
                     x = random.randint(0, Viewer.width)
                     y = 300
                     Enemy1(pos=pygame.math.Vector2(x,y))
             #------ Enemy2 (big ship) -----
-            if random.random() < 0.003 and self.e2 > 0:
+            p2 = 0.003
+            if self.e1 <=0:
+                p2 *= 3
+            if random.random() < p2 and self.e2 > 0:
                 Enemy2()
             # --------- Powerup ------------
             if random.random() < 0.04:
@@ -1451,12 +1461,16 @@ class Viewer(object):
                              False, pygame.sprite.collide_mask)
                 for r in crashgroup:
                     #if r.bossnumber != p.number:
-                        Explosion(posvector= r.pos,red = 250,green = 250, blue= 250,minsparks= 1,maxsparks= 2)
-                        r.kill()
-                        #p.hitpoints -= random.randint(3,6)
-                        #Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
-                        #elastic_collision(p, r)
-                        
+                    #r.pos -= r.move * 3
+                    #r.move *= -1
+                    m = r.move *-1
+                    m.rotate_ip(random.random()*20-10)
+                    m *= 0.4
+                    a = pygame.math.Vector2(1,0).angle_to(m)
+                    Rocket(pos = pygame.math.Vector2(r.pos.x, r.pos.y), move=m, angle=a, color=(200,200,200))
+                    r.kill()
+                    #Flytext(400,400, "reflect")    
+                    
             
             
             # ------- collision detection between Laser and Enemy-------
@@ -1470,6 +1484,9 @@ class Viewer(object):
                          self.killcounter(e)
                 
                         
+            for l in self.lasergroup:
+                crashgroup = pygame.sprite.spritecollide(l, self.evilrocketgroup,
+                             True, pygame.sprite.collide_mask)
                 
             
             
