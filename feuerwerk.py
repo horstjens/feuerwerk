@@ -261,7 +261,8 @@ class VectorSprite(pygame.sprite.Sprite):
         VectorSprite.numbers[self.number] = self
         self.create_image()
         self.distance_traveled = 0 # in pixel
-        self.rect.center = (-300,-300) # avoid blinking image in topleft corner
+        self.rect.center = (int(self.pos.x), -int(self.pos.y))
+        #self.rect.center = (-300,-300) # avoid blinking image in topleft corner
         if self.angle != 0:
             self.set_angle(self.angle)
         self.start()
@@ -670,6 +671,7 @@ class Bomb(VectorSprite):
         if "gravity" not in kwargs:
             self.gravity = pygame.math.Vector2(0, -0.7)
         self.damage = 100
+        self.hitpoints = 3
 
    def create_image(self):
         self.image = pygame.Surface((20,20))
@@ -683,8 +685,8 @@ class Bomb(VectorSprite):
         self.rect = self.image.get_rect()
         
    def kill(self):
-	   self.hitpoints = 0
-	   VectorSprite.kill(self)
+       self.hitpoints = 0
+       VectorSprite.kill(self)
 
    def update(self, seconds):
         if self.pos.y < -Viewer.height+20:
@@ -880,8 +882,9 @@ class Cannon(VectorSprite):
         self.pos = boss.pos + pygame.math.Vector2(0,100)
     
     def create_image(self):
-        self.image = pygame.Surface((100,10))
-        pygame.draw.rect(self.image, (255,0,0), (50,0,50,10))
+        self.image = pygame.Surface((80,15))
+        pygame.draw.rect(self.image, (255,0,0), (40,0,40,5))
+        pygame.draw.rect(self.image, (255,0,0), (40,10,40,5))
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
         self.image.convert_alpha()
@@ -902,8 +905,18 @@ class Cannon(VectorSprite):
         VectorSprite.update(self, seconds)
         if random.random() < 0.1 and self.target is not None and self.target.hitpoints > 0:
             p = pygame.math.Vector2(self.pos.x,self.pos.y)
-            # länge der kanone 50
-            p2 = pygame.math.Vector2(50,0)
+            # länge der kanone 40
+            p2 = pygame.math.Vector2(40,7.5)
+            p2.rotate_ip(self.angle)  # + random.randint(-10,10))   für Streuung
+            p += p2
+            # ---- geschw. sei 150 ----
+            v = pygame.math.Vector2(150,0)
+            v.rotate_ip(self.angle)
+            Tracer(pos=p, move=v, angle=self.angle, kill_on_edge=True, max_distance=self.maxrange)
+            # ---------- Shot 2 ----------
+            p = pygame.math.Vector2(self.pos.x,self.pos.y)
+            # länge der kanone 40
+            p2 = pygame.math.Vector2(40,-7.5)
             p2.rotate_ip(self.angle)  # + random.randint(-10,10))   für Streuung
             p += p2
             # ---- geschw. sei 150 ----
@@ -932,15 +945,28 @@ class Energyshield(VectorSprite):
         self.radius = 120
         self.hitpoints = 255    #too much hitpoints (Energyshield shouldn't die)
         self.busy_until = 0
-        
+        self.last_blink = 0
+        #self.blinking = False
 
     def create_image(self):
         self.image = pygame.Surface((self.radius*2,self.radius*2))
-        pygame.draw.circle(self.image, (0,0,self.hitpoints), (self.radius,self.radius),self.radius,5)
+        if self.age < self.last_blink:
+            c = (0,0,random.randint(100,255))
+            t = random.randint(3,7)
+        else:
+            c = (0,0,self.hitpoints)
+            t = 5
+        pygame.draw.circle(self.image, c, (self.radius,self.radius),self.radius,t)
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
         self.image.convert_alpha()
         self.image0 = self.image.copy()
+        
+    def update(self, seconds):
+        VectorSprite.update(self, seconds)
+        if self.age < self.last_blink:
+            self.create_image()
+            self.rect.center  = (int(self.pos.x), -int(self.pos.y))
         
 
 class City(VectorSprite):
@@ -1297,17 +1323,16 @@ class Viewer(object):
                 if self.playtime > exittime:
                     break
             #Game over?
-            #for h in self.housegroup:
-            #    if h.hitpoints > 0:
-            #        break
-            #    else:
-            #if len(self.housegroup) == 0:
-            #    if not gameOver:
-            #        print("Game over! You lose!")
-            #        gameOver = True
-            #        exittime = self.playtime + 4.0
-            #        Flytext(Viewer.width/2, Viewer.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
-            #if not gameOver:
+            for h in self.housegroup:
+                if h.hitpoints > 0:
+                    break
+                else:
+                    if len(self.housegroup) == 0:
+                        if not gameOver:
+                            print("Game over! You lose!")
+                            gameOver = True
+                            exittime = self.playtime + 4.0
+                            Flytext(Viewer.width/2, Viewer.height/2,  "Game over!", color=(255,0,0), duration = 5, fontsize=200)
             # -------- events ------
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -1494,9 +1519,13 @@ class Viewer(object):
                              False, pygame.sprite.collide_mask)
                 for t in crashgroup:
                     e.hitpoints -= t.damage
-                    print("Tracer damage: {}".format(t.damage))
+                    #print("Tracer damage: {}".format(t.damage))
+                    Explosion(pos=pygame.math.Vector2(t.pos.x, t.pos.y), color=(50,255,50),sparksmin=1,sparksmax=5,minspeed=5,maxspeed=20,gravityy=0.5)
+                    print("seltsame explo")
+                    print("t:", t.__class__.__name__,t.pos)
+                    print("e:", e.__class__.__name__,e.pos,e.hitpoints)
+                    
                     t.kill()
-                    #Explosion(pos=pygame.math.Vector2(t.pos.x, t.pos.y))
                     #t.kill()
             # ----------collision detection between detonation and target ------
             for d in self.detonationgroup:
@@ -1548,10 +1577,10 @@ class Viewer(object):
                     speed_max = 150
                     if e.__class__.__name__=="Bomb":
                         co = (255,100,0)
-                        spark_max = 500
-                        g = 1
+                        spark_max = 300
+                        g = 2
                         speed_min = 50
-                        speed_max = 150
+                        speed_max = 100
                     elif e.__class__.__name__=="Evil_Tracer":
                         spark_max = 5
                         g = 5
@@ -1563,6 +1592,7 @@ class Viewer(object):
                     c.rect.center = ( round(c.pos.x, 0), -round(c.pos.y, 0) )
                     e.kill()
                     c.hitpoints -= e.damage
+                    c.last_blink = c.age + 2
                     print(c.hitpoints)
 
             # ------------New wave ----------------
