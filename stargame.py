@@ -608,6 +608,10 @@ class Boss1(VectorSprite):
         
     def update(self,seconds):
         VectorSprite.update(self,seconds)
+        if self.pos.y > 0:
+            self.image = Viewer.images["Boss_immortal"]
+        else:
+            self.image = Viewer.images["Boss1"]
         # the boss move
         if self.pos.y > -200:
             self.move = pygame.math.Vector2(0,-7.5)
@@ -618,7 +622,7 @@ class Boss1(VectorSprite):
             if x < 200:
                 x = 7
             if x > Viewer.width - 200:
-                x=7
+                x= -7
             self.move = pygame.math.Vector2(x,0)
             
         self.fire()
@@ -627,6 +631,8 @@ class Boss1(VectorSprite):
     def fire(self):
         """shoot a salvo towards a player"""
         if random.random() < 0.005:
+            cannons = [pygame.math.Vector2(-190,0),
+                       pygame.math.Vector2(190,0)]
             targets = []
             for player in [0,1]:
                 if player in VectorSprite.numbers:
@@ -635,14 +641,15 @@ class Boss1(VectorSprite):
                 return
             t = random.choice(targets)
             rightvector = pygame.math.Vector2(10,0)
-            diffvector = t.pos - self.pos
-            a = rightvector.angle_to(diffvector)
-            speeds = [100,120,140,160,180,200,220,240]
-            for speed in speeds:
-                v = pygame.math.Vector2(speed, 0)
-                v.rotate_ip(a)
-                Bossrocket(pos=pygame.math.Vector2(self.pos.x,
-                                   self.pos.y), angle=a+0,
+            for d in cannons:   
+                diffvector = t.pos  - (self.pos + d)
+                a = rightvector.angle_to(diffvector)
+                speeds = [100,120,140,160,180,200,220,240]
+                for speed in speeds:
+                    v = pygame.math.Vector2(speed, 0)
+                    v.rotate_ip(a)
+                    Bossrocket(pos=pygame.math.Vector2(self.pos.x,
+                                   self.pos.y) +d, angle=a+0,
                                    move=v+self.move, max_age=10,
                                    kill_on_edge=False,survive_north = True, color=self.color)
     
@@ -1047,8 +1054,8 @@ class Viewer(object):
         elif name == "Enemy3":
             self.e3 -= 1
         elif name == "Boss1":
-            self.b1 -= 2
-        if self.level == 1 and self.e1 <= 0 and self.e2 <= 0 and self.e3 <= 0 and self.b1 <= 0:
+            self.b1 -= 3
+        if self.level == 1 and self.e1 <= 0 and self.e2 <= 0 and self.e3 <= 0 and self.b1 == 0:
             self.b1 += 1
         if self.e1 <= 0 and self.e2 <= 0 and self.e3 <= 0 and self.b1 <= 0:
             self.new_level()
@@ -1111,6 +1118,8 @@ class Viewer(object):
                  os.path.join("data", "powerup_speed.png")).convert_alpha()
             Viewer.images["Boss1"]=pygame.image.load(
                  os.path.join("data", "boss_inverted.png")).convert_alpha()
+            Viewer.images["Boss_immortal"]=pygame.image.load(
+                 os.path.join("data", "boss_shiny.png")).convert_alpha()
             Viewer.images["Boss2"]=pygame.image.load(
                  os.path.join("data", "boss_inverted_red.png")).convert_alpha()
             Viewer.images["Boss3"]=pygame.image.load(
@@ -1125,15 +1134,9 @@ class Viewer(object):
                 if name == "enemy3" :
                     Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (150,150))
-                if name == "Boss1" :
+                if "Boss" in name :
                     Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (400,400))
-                if name == "Boss2" :
-                    Viewer.images[name] = pygame.transform.scale(
-                                    Viewer.images[name], (300,300))
-                if name == "Boss3" :
-                    Viewer.images[name] = pygame.transform.scale(
-                                    Viewer.images[name], (350,350))
                 if "player" in name:
                      Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (50,50))
@@ -1198,8 +1201,8 @@ class Viewer(object):
         gameOver = False
         exittime = 0
         while running:
-            pygame.display.set_caption("player1 hp: {} player2 hp: {}".format(
-                                 self.player1.hitpoints, self.player2.hitpoints))
+            pygame.display.set_caption("player1 hp: {} player2 hp: {} b1: {}".format(
+                                 self.player1.hitpoints, self.player2.hitpoints, self.b1))
             
             
             milliseconds = self.clock.tick(self.fps) #
@@ -1455,10 +1458,12 @@ class Viewer(object):
                 crashgroup = pygame.sprite.spritecollide(l, self.bossgroup,
                              False, pygame.sprite.collide_mask)
                 for b in crashgroup:
-                     b.hitpoints -= 30
-                     Explosion(posvector = e.pos,red = 100,minsparks = 1,maxsparks = 2)
-                     if b.hitpoints <= 0:
-                         self.killcounter(b)
+                    if b.pos.y > 0:
+                        break
+                    b.hitpoints -= 5
+                    Explosion(posvector = e.pos,red = 100,minsparks = 1,maxsparks = 2)
+                    if b.hitpoints <= 0:
+                        self.killcounter(b)
                           
             # ------- collision detection between Laser and Evilrocket-------#
             for l in self.lasergroup:
@@ -1488,13 +1493,15 @@ class Viewer(object):
                 crashgroup = pygame.sprite.spritecollide(b, self.rocketgroup,
                              False, pygame.sprite.collide_mask)
                 for r in crashgroup:
-                    e.hitpoints -= random.randint(10,20)
-                    Explosion(pygame.math.Vector2(r.pos.x, r.pos.y),red=0,green=150,blue=0)
-                    if b.hitpoints <= 0:
-                        Explosion(pygame.math.Vector2(b.pos.x, b.pos.y),minsparks = 100, maxsparks = 1000,red=0,green=150,blue=0)
-                        self.player1.hitpoints += 300
-                        self.player2.hitpoints += 300
-                        self.killcounter(b)
+                    if b.pos.y > 0:
+                        break
+                        b.hitpoints -= random.randint(10,20)
+                        Explosion(pygame.math.Vector2(r.pos.x, r.pos.y),red=0,green=150,blue=0)
+                        if b.hitpoints <= 0:
+                            Explosion(pygame.math.Vector2(b.pos.x, b.pos.y),minsparks = 100, maxsparks = 1000,red=0,green=150,blue=0)
+                            self.player1.hitpoints += 300
+                            self.player2.hitpoints += 300
+                            self.killcounter(b)
                     r.kill()
                         
             # -------------- UPDATE all sprites -------             
