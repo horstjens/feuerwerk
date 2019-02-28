@@ -593,19 +593,36 @@ class Enemy3(Enemy1):
         
 class Boss1(VectorSprite):
     
+    def _overwrite_parameters(self):
+        self.kill_on_edge = False
+        self.survive_north = True
+        self.hitpoints = 1000
+        
+        
     def create_image(self):
         self.image = Viewer.images["Boss1"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
-    def _overwrite_parameters(self):
-        self.kill_on_edge = False
-        self.survive_north = True
-        self.hitpoints = 10000
-        
+
+    
         
     def update(self,seconds):
         VectorSprite.update(self,seconds)
+        # the boss move
+        if self.pos.y > -200:
+            self.move = pygame.math.Vector2(0,-7.5)
+        else:
+            x = 0
+            if random.random() < 0.01:
+                x = random.choice((-7,-3,0,3,7))
+            if x < 200:
+                x = 7
+            if x > Viewer.width - 200:
+                x=7
+            self.move = pygame.math.Vector2(x,0)
+            
         self.fire()
+        
     
     def fire(self):
         """shoot a salvo towards a player"""
@@ -1110,7 +1127,7 @@ class Viewer(object):
                                     Viewer.images[name], (150,150))
                 if name == "Boss1" :
                     Viewer.images[name] = pygame.transform.scale(
-                                    Viewer.images[name], (800,800))
+                                    Viewer.images[name], (400,400))
                 if name == "Boss2" :
                     Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (300,300))
@@ -1248,7 +1265,7 @@ class Viewer(object):
                 Enemy2()
             # ---------- boss 1 -------------------#
             if self.b1 == 1:
-                Boss1(pos = pygame.math.Vector2(Viewer.width // 2, - 200))
+                Boss1(pos = pygame.math.Vector2(Viewer.width // 2, 250))
                 self.b1 += 1
             
             # --------- Powerup ------------
@@ -1265,9 +1282,13 @@ class Viewer(object):
                 if age > self.player1.age:
                     self.player1.old_laser = True
                     if pressed_keys[pygame.K_a]:
-                        self.player1.turn_left()
+                        self.player1.strafe_left()
                     if pressed_keys[pygame.K_d]:
-                        self.player1.turn_right()
+                        self.player1.strafe_right()
+                    if pressed_keys[pygame.K_s]:
+                        self.player1.move_backward()
+                    if pressed_keys[pygame.K_w]:
+                        self.player1.move_forward()
                     break
             else:
                 # no laser
