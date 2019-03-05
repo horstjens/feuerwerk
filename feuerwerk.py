@@ -81,10 +81,11 @@ def elastic_collision(sprite1, sprite2):
                 sprite1.move.y -= 2 * diry * cdp
 
 class Game():
-    spawnrate = 0.001
-    bombchance = 0.01
-    minigun_firemode_chance = 0.005
-    rocket_firemode_chance = 0.25
+    spawnrate = 0.00001
+    bombchance = 0.005
+    minigun_firemode_chance = 0.0005
+    rocket_firemode_chance = 0.025
+    max_index = 3
     descr = [["Resume to the", "game"],                                           #resume
              ["Increase the range of", "your defensive cannons."],                #cannon speed
              ["Increase the damage of", "your tracers against", "your enemies."], #tracer damage
@@ -172,7 +173,6 @@ class Mouse(pygame.sprite.Sprite):
                          (35*w,0+y),(50*w,15*h+y),2)
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (50*w,15*h+y),(65*w,0+y),2)
-    
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
                          (35*w,100*h-y),(50*w,85*h-y),2)
             pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
@@ -928,7 +928,6 @@ class Turret(VectorSprite):
     
     def _overwrite_parameters(self):
         pass
-        #print("ich bin ein turm meine nummer ist", self.number)
         #Cannon(bossnumber=self.number)
     
     def create_image(self):
@@ -1129,16 +1128,20 @@ class Viewer(object):
         #print("game.cost[t]:", Game.cost[t])
         cost = Game.cost[t][i]
         if self.money < cost:
+            Flytext(x=Viewer.width//2-120, y=100+self.active_item*50, text="You have not enough money!", fontsize=24)
             return
-        # enough money
+        if Game.current_level[t] == Game.max_index:
+            Flytext(x=Viewer.width//2-120, y=100+self.active_item*50, text="This item is already completely upgraded!", fontsize=24)
+            return
+        # enough money ?
         self.money -= cost
         Game.current_level[t] += 1
+        Flytext(x=Viewer.width//2, y = Viewer.height//1.2, text="Your {} has been upgraded!".format(t), duration=4, fontsize=50)
+
             
     def draw_menu(self):
         pass
-            
-        
-        
+
     def new_wave(self):
         Viewer.level += 1
         Game.spawnrate *= 1.5
@@ -1146,7 +1149,6 @@ class Viewer(object):
         Flytext(x=Viewer.width/2,y=Viewer.height/2,text="New wave of enemies! Wave: {}".format(Viewer.level))
         for x in range(Viewer.level):
             Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50))
-        
 
     def prepare_sprites(self):
         """painting on the surface and create sprites"""
@@ -1164,10 +1166,11 @@ class Viewer(object):
         self.housegroup = pygame.sprite.Group()
         self.windowgroup = pygame.sprite.Group()
         self.citygroup = pygame.sprite.Group()
+        self.flytextgroup = pygame.sprite.Group()
 
         Mouse.groups = self.allgroup, self.mousegroup
         VectorSprite.groups = self.allgroup
-        Flytext.groups = self.allgroup
+        Flytext.groups = self.allgroup, self.flytextgroup
         Explosion.groups = self.allgroup, self.explosiongroup
         Ufo_Minigunship.groups = self.allgroup, self.snipergroup, self.enemygroup
         Ufo_Rocketship.groups = self.allgroup, self.enemygroup
@@ -1269,12 +1272,21 @@ class Viewer(object):
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
             
+            
+            self.flytextgroup.update(seconds)
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
+             # ----- rocket silos ----
+            pygame.draw.rect(self.screen,(220,220,220),(0,Viewer.height-25,Viewer.width,50),0)
+            for t in self.turretgroup:
+                pygame.draw.rect(self.screen,(190,190,190),(t.pos.x-20,Viewer.height-30,40,70),0)
+            self.rocketgroup.draw(self.screen)
             
             
             pygame.draw.rect(self.screen,(170,170,170),(200,90,350,350))
             pygame.draw.rect(self.screen,(200,200,200),(600,90,350,350))
+            
+            self.flytextgroup.draw(self.screen)
 
             #if self.menu:      #def draw_menu:
             for i in range(len(Game.items)):
@@ -1521,18 +1533,23 @@ class Viewer(object):
                     e.hitpoints -= t.damage
                     #print("Tracer damage: {}".format(t.damage))
                     Explosion(pos=pygame.math.Vector2(t.pos.x, t.pos.y), color=(50,255,50),sparksmin=1,sparksmax=5,minspeed=5,maxspeed=20,gravityy=0.5)
-                    print("seltsame explo")
-                    print("t:", t.__class__.__name__,t.pos)
-                    print("e:", e.__class__.__name__,e.pos,e.hitpoints)
-                    
                     t.kill()
-                    #t.kill()
             # ----------collision detection between detonation and target ------
             for d in self.detonationgroup:
                 crashgroup = pygame.sprite.spritecollide(d, self.enemygroup,
                              False, pygame.sprite.collide_circle)
                 for e in crashgroup:
                     e.hitpoints -= d.damage
+                    if e.hitpoints <= 0:
+                        name = e.__class__.__name__
+                        if name == "Ufo_Mothership":
+                            self.money += 50
+                        elif name == "Ufo_Bombership":
+                            self.money += 10
+                        elif name == "Ufo_Kamikazeship":
+                            self.money += 20
+                        elif name == "Bomb":
+                            self.money += 1
             
             # --------- collision detection between turret and enemy -----
             for t in self.turretgroup:
@@ -1579,7 +1596,7 @@ class Viewer(object):
                         co = (255,100,0)
                         spark_max = 300
                         g = 2
-                        speed_min = 50
+                        speed_min = 0
                         speed_max = 100
                     elif e.__class__.__name__=="Evil_Tracer":
                         spark_max = 5
@@ -1593,7 +1610,7 @@ class Viewer(object):
                     e.kill()
                     c.hitpoints -= e.damage
                     c.last_blink = c.age + 2
-                    print(c.hitpoints)
+                    #print(c.hitpoints)
 
             # ------------New wave ----------------
             if len(self.enemygroup) == 0:
