@@ -486,6 +486,7 @@ class Enemy1(VectorSprite):
 
     def fire(self):
         if random.random() < 0.03:
+            Viewer.panzersound.play()
             a = random.randint(130,220)
             v = pygame.math.Vector2(0,250)
             v.rotate_ip(a)
@@ -522,8 +523,13 @@ class Enemy2(Enemy1):
         #self.ai()
         self.fire()
 
+    def firesound(self):
+        Viewer.panzersound2.play()
+    
+    
     def fire(self):
         if random.random() < 0.005:
+            self.firesound
             a = random.randint(260,280)
             #sspeeds = [100,150,200,250]
             for speed in self.speeds:
@@ -548,6 +554,7 @@ class Enemy3(Enemy2):
     def fire(self):
         """shoot a salvo towards a player"""
         if random.random() < 0.0095:
+            Viewer.panzersound.play()
             targets = []
             for player in [0,1]:
                 if player in VectorSprite.numbers:
@@ -586,6 +593,9 @@ class Enemy4(Enemy2):
         self.image = Viewer.images["tank2"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+    
+    def firesound(self):
+        Viewer.panzersound3.play()
 
 class Enemy5(Enemy2):
 
@@ -599,6 +609,8 @@ class Enemy5(Enemy2):
         self.image = Viewer.images["tank2"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+    def firesound(self):
+        Viewer.panzersound4.play()
 
 class Enemy6(Enemy2):
 
@@ -612,6 +624,8 @@ class Enemy6(Enemy2):
         self.image = Viewer.images["tank3"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+    def firesound(self):
+        Viewer.panzersound5.play()
 
 class Enemy7(Enemy2):
 
@@ -625,6 +639,9 @@ class Enemy7(Enemy2):
         self.image = Viewer.images["tank4"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+    def firesound(self):
+        Viewer.panzersound6.play()
+        
 
 class Enemy8(Enemy2):
 
@@ -638,6 +655,8 @@ class Enemy8(Enemy2):
         self.image = Viewer.images["tank5"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+    def firesound(self):
+        Viewer.panzersound7.play()
 
 class Enemy9(Enemy2):
 
@@ -651,6 +670,8 @@ class Enemy9(Enemy2):
         self.image = Viewer.images["tank6"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+    def firesound(self):
+        Viewer.panzersound2.play()
 
 class Enemy10(Enemy2):
 
@@ -664,15 +685,17 @@ class Enemy10(Enemy2):
         self.image = Viewer.images["tank7"]
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
-        
+    def firesound(self):
+        Viewer.panzersound2.play()
+
 class Tree(VectorSprite):
-    
-    
+
+
     def _overwrite_parameters(self):
-        
+
         Enemy2._overwrite_parameters(self)
         self.move = pygame.math.Vector2(0,-10)
-    
+
     def create_image(self):
         self.image = Viewer.images["tree"]
         self.image0 = self.image.copy()
@@ -747,21 +770,6 @@ class Star(VectorSprite):
 
 
 
-class Ufo(VectorSprite):
-
-    def create_image(self):
-        self.image = pygame.Surface((24,24))
-        pygame.draw.polygon(self.image, self.color, (
-               (1,2), (2,1), (4,1), (5,2),
-               (5,4), (4,5), (2,5), (1,4)))
-        pygame.draw.rect(self.image,  (200,200,0),
-               (2,2,2,2))
-
-
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
-        self.image0 = self.image.copy()
-        self.rect = self.image.get_rect()
 
 
 
@@ -779,6 +787,7 @@ class Spaceship(VectorSprite):
         self.speed = 10
         self.speed0 = 10
         self.bonusspeed = {}
+        self.bulletproof = False
 
 
 
@@ -1106,6 +1115,7 @@ class Viewer(object):
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
            default arguments """
+        pygame.mixer.pre_init(44100, -16, 2, 2048) # setup mixer to avoid sound lag
         pygame.init()
         Viewer.width = width    # make global readable
         Viewer.height = height
@@ -1154,6 +1164,30 @@ class Viewer(object):
 
     def load_sprites(self):
         #try:
+             #load sounds
+
+            Viewer.panzersound = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer.wav"))
+            Viewer.panzersound2 = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer2.wav"))
+            Viewer.panzersound3 = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer3.wav"))
+            Viewer.panzersound4 = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer4.wav"))
+            Viewer.panzersound5 = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer5.wav"))
+            Viewer.panzersound6 = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer6.wav"))
+            Viewer.panzersound7 = pygame.mixer.Sound(
+                  os.path.join("data", "panzerlazer7.wav"))
+
+
+
+
+
+
+
+
             Viewer.images["player1"]= pygame.image.load(
                  os.path.join("data", "jeeprequestef9.png")).convert_alpha()
             Viewer.images["red_bullet"]= pygame.image.load(
@@ -1234,7 +1268,7 @@ class Viewer(object):
                 if "muzzle_flash" in name:
                      Viewer.images[name] = pygame.transform.scale(
                                     Viewer.images[name], (50,30))
-                        
+
                 #if "tree" in name:
                 #     Viewer.images[name] = pygame.transform.scale(
                 #                    Viewer.images[name], (50,30))
@@ -1267,7 +1301,7 @@ class Viewer(object):
         Spaceship.groups = self.allgroup, self.playergroup  # , self.tailgroup
         Rocket.groups = self.allgroup, self.rocketgroup
         Evilrocket.groups = self.allgroup, self.evilrocketgroup
-        Ufo.groups = self.allgroup
+        #Ufo.groups = self.allgroup
         Flytext.groups = self.allgroup, self.flytextgroup
         Explosion.groups= self.allgroup, self.explosiongroup
         Muzzle_flash.groups= self.allgroup
@@ -1288,6 +1322,7 @@ class Viewer(object):
     def menurun(self):
         running = True
         self.cursor = 150
+        code =""
         while running:
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
@@ -1301,11 +1336,11 @@ class Viewer(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    if event.key == pygame.K_DOWN:
+                    elif event.key == pygame.K_DOWN:
                         self.cursor += 100
-                    if event.key == pygame.K_UP:
+                    elif event.key == pygame.K_UP:
                         self.cursor -= 100
-                    if event.key == pygame.K_RETURN:
+                    elif event.key == pygame.K_RETURN:
                         #--menüauswertung----
                         if self.cursor == 150 and self.coins > 50:
                             Flytext(200,100, "Doublegun!")
@@ -1327,17 +1362,26 @@ class Viewer(object):
                                 self.player1.bonusspeed[self.player1.age+3600] = 10
                             else:
                                 self.player1.bonusspeed[age] = 10
-                                
+
                         if self.cursor == 450 and self.coins > 50:
-                            Flytext(200,100, "unlimited hp")
-                            self.coins -= 50
-                        
+                            Flytext(200,100, "cheatcode eingeben")
+                            #self.coins -= 50
+                    else:
+                        #es war eine andere taste!
+                        c = pygame.key.name(event.key)
+                        Flytext(400,400, "?")
+                        code+= c
+                        if code == "super":
+                            #if self.coins >50:
+                                Flytext(400,400, "cheat activated: unlimited hp")
+                                self.player1.bulletproof = True
+
             if self.cursor < 150:
                 self.cursor = 150
             if self.cursor > 450:
                 self.cursor = 450
-            
-                        
+
+
             # ------delete everything on screen-------
             self.screen.blit(self.background, (0, 0))
             #---------write menu----------------------
@@ -1346,20 +1390,20 @@ class Viewer(object):
             write(self.screen, "buy doublegun for 50 coins", x =500, y = 150)
             write(self.screen, "buy 100 extra hp for 60 coins", x =500, y = 250)
             write(self.screen, "buy 10 extra speed for 75 coins", x =500, y = 350)
-            write(self.screen, "unlimited hp for 3$", x =500, y = 450)
+            write(self.screen, "unlimited hp for cheatcode. please press c.", x =500, y = 450)
             write(self.screen, "-->", x = 400, y = self.cursor,color = (255,0,0))
-            
-            
+
+
             # -------------- UPDATE all sprites -------
             self.flytextgroup.update(seconds)
 
             # ----------- clear, draw , update, flip -----------------
             self.flytextgroup.draw(self.screen)
-            
+
             # -------- next frame -------------
             pygame.display.flip()
-    
-    
+
+
     def run(self):
         """The mainloop"""
         self.coins = 7500
@@ -1569,7 +1613,7 @@ class Viewer(object):
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         elastic_collision(p, r)
                         r.kill()
-                        
+
             # ----- collision detection between tree and rocket -----
             for t in self.treegroup:
                 crashgroup = pygame.sprite.spritecollide(t, self.rocketgroup,
@@ -1578,14 +1622,15 @@ class Viewer(object):
                         t.hitpoints -= random.randint(4,9)
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         r.kill()
-                        
+
             # ----- collision detection between player and treegroup -----
             for p in self.playergroup:
                 crashgroup = pygame.sprite.spritecollide(p, self.treegroup,
                              False, pygame.sprite.collide_mask)
                 for t in crashgroup:
                     if t.bossnumber != p.number:
-                        p.hitpoints -= 5
+                        if not p.bulletproof:
+                            p.hitpoints -= 5
                         Explosion(pygame.math.Vector2(t.pos.x, t.pos.y))
                         #elastic_collision(p, t)
                         t.kill()
@@ -1596,7 +1641,8 @@ class Viewer(object):
                              False, pygame.sprite.collide_mask)
                 for r in crashgroup:
                     #if r.bossnumber != p.number:
-                        p.hitpoints -= random.randint(3,6)
+                        if not p.bulletproof:
+                            p.hitpoints -= random.randint(3,6)
                         Explosion(pygame.math.Vector2(r.pos.x, r.pos.y))
                         #elastic_collision(p, r)
                         r.kill()
