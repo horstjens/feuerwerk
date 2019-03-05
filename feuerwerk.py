@@ -663,6 +663,40 @@ class Ufo_Mothership(VectorSprite):
             Ufo_Rocketship(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(0,0,255))
         elif x == 4:
             Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(255,255,0))
+        
+    def kill(self):
+        for p in range(50):
+            m = pygame.math.Vector2(random.randint(50,100),0)
+            m.rotate_ip(random.randint(0,360))
+            Wreck(pos=pygame.math.Vector2(self.pos.x, self.pos.y),
+                  move = m, max_age = random.random()*3+1)
+        VectorSprite.kill(self)
+
+class Wreck(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        move = pygame.math.Vector2(1,0)
+        move.rotate_ip(random.randint(0,360))
+        self.gravity = pygame.math.Vector2(0,-2)
+        self.rot = random.random() * 360 *random.choice((-1,1))
+        
+    def create_image(self):
+        self.image = pygame.Surface((50,50))
+        c = ( random.randint(1,255),random.randint(1,255), random.randint(1,255) ) # blue
+        pointlist = []
+        for p in range(random.randint(5, 11)):
+            pointlist.append((random.randint(0,50),random.randint(0,50)))
+        pygame.draw.polygon(self.image, c, pointlist)
+        self.image.set_colorkey((0,0,0))
+        self.image.convert_alpha()
+        self.image0 = self.image.copy()
+        self.rect = self.image.get_rect()
+        
+    def update(self,seconds):
+        self.move += self.gravity #* seconds
+        self.set_angle(self.angle+self.rot*seconds)
+        Smoke(pos=pygame.math.Vector2(self.pos.x, self.pos.y),max_age=0.1+random.random()*2)
+        VectorSprite.update(self, seconds)
 
 class Bomb(VectorSprite):
 
@@ -792,6 +826,9 @@ class Tracer(VectorSprite):
         VectorSprite.update(self, seconds)
         
 class Smoke(VectorSprite):
+    
+    def _overwrite_parameters(self):
+        self.gravity = None
 
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -803,11 +840,11 @@ class Smoke(VectorSprite):
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        if self.gravity is not None:
-            self.move += self.gravity * seconds
+        #if self.gravity is not None:
+        #    self.move += self.gravity * seconds
         self.create_image()
         self.rect=self.image.get_rect()
-        self.rect.center=(self.pos.x, self.pos.y)
+        self.rect.center=(self.pos.x, -self.pos.y)
         c = int(self.age * 100)
         c = min(255,c)
         self.color=(c,c,c)
@@ -1189,6 +1226,7 @@ class Viewer(object):
         House.groups = self.allgroup, self.housegroup
         Window.groups = self.allgroup, self.windowgroup
         City.groups = self.allgroup, self.citygroup
+        Smoke.groups = self.allgroup
 
         # ------ player1,2,3: mouse, keyboard, joystick ---
         self.mouse1 = Mouse(control="mouse", color=(255,0,0))
