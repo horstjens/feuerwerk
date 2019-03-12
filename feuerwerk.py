@@ -300,7 +300,7 @@ class VectorSprite(pygame.sprite.Sprite):
             #self.color = None
             self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         if "hitpoints" not in kwargs:
-            self.hitpoints = 100
+            self.hitpoints = 1
         self.hitpointsfull = self.hitpoints # makes a copy
         if "mass" not in kwargs:
             self.mass = 10
@@ -964,8 +964,10 @@ class Cannon(VectorSprite):
 class Turret(VectorSprite):
     
     def _overwrite_parameters(self):
-        pass
-        #Cannon(bossnumber=self.number)
+        self.y_full = -Viewer.height+100
+        self.repair = 2
+        self.peace = 0
+        self.peacepenalty = 5
     
     def create_image(self):
         self.image = pygame.Surface((20,200))
@@ -979,18 +981,21 @@ class Energyshield(VectorSprite):
 
     def _overwrite_parameters(self):
         self.radius = 120
-        self.hitpoints = 255    #too much hitpoints (Energyshield shouldn't die)
+        #self.hitpoints = 510    #255*2
+        self.hitpoints_full = 510
         self.busy_until = 0
         self.last_blink = 0
-        #self.blinking = False
+        self.peace = 0
+        self.peacepenalty = 5 #seconds
+        self.repair = 2.5     # hp / sec
 
     def create_image(self):
         self.image = pygame.Surface((self.radius*2,self.radius*2))
         if self.age < self.last_blink:
-            c = (0,0,random.randint(100,255))
+            c = (100,0,random.randint(100,255))
             t = random.randint(3,7)
         else:
-            c = (0,0,self.hitpoints)
+            c = (0,0,self.hitpoints*0.5)
             t = 5
         pygame.draw.circle(self.image, c, (self.radius,self.radius),self.radius,t)
         self.image.set_colorkey((0,0,0))
@@ -1000,31 +1005,37 @@ class Energyshield(VectorSprite):
         
     def update(self, seconds):
         VectorSprite.update(self, seconds)
-        if self.age < self.last_blink:
+        if self.age <= self.last_blink+0.1:
             self.create_image()
             self.rect.center  = (int(self.pos.x), -int(self.pos.y))
-        
+        # ---- repair -----
+        if self.hitpoints < self.hitpoints_full:
+            if self.age < self.peace:
+                self.hitpoints += self.repair*seconds
+                self.hitpoints = min(self.hitpoints,self.hitpoints_full)
 
 class City(VectorSprite):
-    
+
     def _overwrite_parameters(self):
         self.hitpoints = 500
         self.busy_until = 0
-    
+        self.peace = 0
+        self.peacepenalty = 15
+
     def create_image(self):
         self.image = pygame.Surface((180,10))
-        self.image.fill((200,200,200))
+        self.image.fill((255,0,255)) #200,200,200
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
         self.image.convert_alpha()
         self.image0 = self.image.copy()
-        
+
     def reload_rockets(self):
         for x in range(-50,51,20):
             Rocket(pos=pygame.math.Vector2(self.pos.x+x,self.pos.y-10), ready=True, angle=+90, color=(255,156,0), bossnumber=self.number)
         self.busy_until = self.age + 5 # seconds 
         Flytext(x=self.pos.x, y=-self.pos.y-50, text="Reloading",color=(0,200,0), duration = 5, dy=-10)
-        
+
     def show(self, nr):
         Flytext(x=self.pos.x, y=self.pos.y, text="Reloading",color=(0,200,0), duration = 5)
 
@@ -1243,19 +1254,19 @@ class Viewer(object):
         #self.cannon1.target = self.eck
         #self.kamikazeship =  Ufo_Kamikazeship(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(0,200,0))
         #self.mothership = Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(255,255,0))
-        nr = Viewer.width // 200
+        self.nr = Viewer.width // 200
         #----- create turrets ----------
-        for t in range(nr):
-            x = Viewer.width // nr * t
+        for t in range(self.nr):
+            x = Viewer.width // self.nr * t
             u= Turret(pos = pygame.math.Vector2(x, -Viewer.height+100))
             #for t in self.turretgroup:
             Cannon(pos=pygame.math.Vector2(u.pos.x,u.pos.y+100), bossnumber=u.number)
         #-------- create cities --------
-        for cn in range(nr):
-            x = Viewer.width // nr * cn
+        for cn in range(self.nr):
+            x = Viewer.width // self.nr * cn
             c = City(pos = pygame.math.Vector2(x+100, -Viewer.height+25))
             #-------- create energyshield -------
-            Energyshield(pos = pygame.math.Vector2(x+100, -Viewer.height), bossnumber = c.number)
+            Energyshield(pos = pygame.math.Vector2(x+100, -Viewer.height), bossnumber = c.number, hitpoints = 510)
             #-------- create houses ----------
             for cx in range(-80,80,8):
                 dy = random.randint(0,10)
@@ -1456,21 +1467,6 @@ class Viewer(object):
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             
-
-            # if pressed_keys[pygame.K_LSHIFT]:
-                # paint range circles for cannons
-            if pressed_keys[pygame.K_a]:
-                self.eck.rotate(3)
-            if pressed_keys[pygame.K_d]:
-                self.eck.rotate(-3)
-            if pressed_keys[pygame.K_w]:
-                v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.eck.angle)
-                self.eck.move += v
-            if pressed_keys[pygame.K_s]:
-                v = pygame.math.Vector2(1,0)
-                v.rotate_ip(self.eck.angle)
-                self.eck.move += -v
             if pressed_keys[pygame.K_LSHIFT]:
                 # paint range circles for cannons
                 c1 = self.playtime*100 % 255
@@ -1595,7 +1591,8 @@ class Viewer(object):
                              False, pygame.sprite.collide_mask)
                 for e in crashgroup:
                     Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y))
-                    t.pos.y -= 10
+                    t.pos.y -= 25
+                    t.peace = t.age + t.peacepenalty
                     e.kill()
                     
             # --------- collision detection between house and enemy -----
@@ -1603,6 +1600,8 @@ class Viewer(object):
                 crashgroup = pygame.sprite.spritecollide(h, self.enemygroup,
                              False, pygame.sprite.collide_mask)
                 for e in crashgroup:
+                    c = VectorSprite.numbers[h.bossnumber]
+                    c.peace = c.age + c.peacepenalty
                     Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y))
                     d = random.random()
                     for w in self.windowgroup:
@@ -1618,8 +1617,8 @@ class Viewer(object):
                     e.kill()
 
             # --------- collision detection between Energyshield and enemy -----
-            for c in self.energyshieldgroup:
-                crashgroup = pygame.sprite.spritecollide(c, self.enemygroup,
+            for s in self.energyshieldgroup:
+                crashgroup = pygame.sprite.spritecollide(s, self.enemygroup,
                              False, pygame.sprite.collide_mask)
                 for e in crashgroup:
                     #t.hitpoints -= e.damage
@@ -1643,12 +1642,15 @@ class Viewer(object):
                         co = (255,165,0)
                     Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y), color=co, sparksmax=spark_max, gravityy=g, minspeed=speed_min, maxspeed=speed_max, a1=e.angle+180-25, a2=e.angle+180+25)
                     #c.pos.y -= 100    #10
-                    c.create_image()
-                    c.rect.center = ( round(c.pos.x, 0), -round(c.pos.y, 0) )
+                    s.create_image()
+                    s.rect.center = ( round(s.pos.x, 0), -round(s.pos.y, 0) )
                     e.kill()
-                    c.hitpoints -= e.damage
-                    c.last_blink = c.age + 2
-                    #print(c.hitpoints)
+                    s.hitpoints -= e.damage
+                    s.peace = s.age + s.peacepenalty
+                    s.last_blink = s.age + 2
+                    # ----- peacepenalty for city ----
+                    c = VectorSprite.numbers[s.bossnumber]
+                    c.peace = c.age + c.peacepenalty
 
             # ------------New wave ----------------
             if len(self.enemygroup) == 0:
@@ -1662,6 +1664,31 @@ class Viewer(object):
                 pygame.draw.rect(self.screen,(190,190,190),(t.pos.x-20,Viewer.height-30,40,70),0)
             self.rocketgroup.draw(self.screen)    
             #self.turretgroup.draw(self.screen)
+            # ----------- repairing ---------
+            # ------- repairing Energyshields -------
+            for s in self.energyshieldgroup:
+                if s.hitpoints < s.hitpoints_full and s.age > s.peace:
+                    c = VectorSprite.numbers[s.bossnumber]
+                    g = random.randint(170,250)
+                    pygame.draw.circle(self.screen, (0,g,0), (int(c.pos.x-115), int(-c.pos.y-10)), 5)
+                    pygame.draw.circle(self.screen, (0,g,0), (int(c.pos.x+115), int(-c.pos.y-10)), 5)
+            # --------revival Energyshield ------
+            for c in self.citygroup:
+                for s in self.energyshieldgroup:
+                    if s.bossnumber == c.number:
+                        break
+                else:
+                    # no shield found for this city
+                    if c.age > c.peace:
+                        Energyshield(pos = pygame.math.Vector2(c.pos.x, -Viewer.height), bossnumber = c.number, hitpoints = 1)
+                    else:
+                        g = random.randint(150,200)
+                        pygame.draw.circle(self.screen, (0,g,0), (int(c.pos.x-115), int(-c.pos.y-10)), 5)
+                        pygame.draw.circle(self.screen, (0,g,0), (int(c.pos.x+115), int(-c.pos.y-10)), 5)
+            # ------- repairing turrets -----
+            for t in self.turretgroup:
+                if t.pos.y < t.y_full and t.age > t.peace:
+                    t.pos.y += t.repair*seconds
 
             
             # --- Martins verbesserter Mousetail -----
