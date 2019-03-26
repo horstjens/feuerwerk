@@ -19,6 +19,10 @@ import math
 #import subprocess
 
 """Best game: ?"""
+"""Sounds: from https://jfxr.frozenfractal.com/
+   Save as .wav in the data ordner
+   Music: from https://opengameart.org/content/rpg-title-screen-music-pack
+   Download, open in audacity, export as .ogg to data"""
 
 def randomize_color(color, delta=50):
     d=random.randint(-delta, delta)
@@ -665,6 +669,7 @@ class Ufo_Mothership(VectorSprite):
             Ufo_Kamikazeship(pos=pygame.math.Vector2(self.pos.x, self.pos.y), color=(255,255,0))
         
     def kill(self):
+        Viewer.explosion1.play()
         for p in range(50):
             m = pygame.math.Vector2(random.randint(50,100),0)
             m.rotate_ip(random.randint(0,360))
@@ -987,7 +992,7 @@ class Energyshield(VectorSprite):
         self.last_blink = 0
         self.peace = 0
         self.peacepenalty = 5 #seconds
-        self.repair = 2.5     # hp / sec
+        self.repair = 3     # hp / sec
 
     def create_image(self):
         self.image = pygame.Surface((self.radius*2,self.radius*2))
@@ -1024,7 +1029,7 @@ class City(VectorSprite):
 
     def create_image(self):
         self.image = pygame.Surface((180,10))
-        self.image.fill((255,0,255)) #200,200,200
+        self.image.fill((200,200,200))
         self.image.set_colorkey((0,0,0))
         self.rect= self.image.get_rect()
         self.image.convert_alpha()
@@ -1066,10 +1071,12 @@ class Window(VectorSprite):
 class Viewer(object):
     width = 0
     height = 0
+    images={}
 
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
            default arguments """
+        pygame.mixer.pre_init(44100,-16,2,2048)
         pygame.init()
         Viewer.width = width    # make global readable
         Viewer.height = height
@@ -1082,6 +1089,8 @@ class Viewer(object):
         self.menu = False
         self.active_item = 0
         self.money = 1000
+        self.playlist = ["music1.ogg", "music2.ogg", "music3.ogg",]
+        self.songnumber = -1
         # ------ background images ------
         self.backgroundfilenames = [] # every .jpg file in folder 'data'
         try:
@@ -1107,12 +1116,32 @@ class Viewer(object):
             j.init()
         self.prepare_sprites()
         self.loadbackground()
+        self.loadsounds()
+        self.loadgraphics()
+        #backgroundmusic = pygame.mixer.music.load(os.path.join("data", self.playlist[self.songnumber]))
+        #pygame.mixer.music.play(-1)
         # set current menu level
         for k in Game.items:
             if k != "resume":
                 Game.current_level[k] = 0
         #print(Game.current_level)
+        
+    def nextsong(self):
+        self.songnumber += 1
+        if self.songnumber > len(self.playlist)-1:
+            self.songnumber = 0
+        backgroundmusic = pygame.mixer.music.load(os.path.join("data", self.playlist[self.songnumber]))
+        pygame.mixer.music.play(-1)
 
+
+    def loadsounds(self):
+        
+        Viewer.explosion1 = pygame.mixer.Sound(os.path.join("data", "explosion1.wav"))
+        
+    def loadgraphics(self):
+        Viewer.images["cannon range"] = pygame.image.load(os.path.join("data", "cannon range.png")).convert_alpha()
+        #Viewer.images["missle speed"] = pygame.image.load(os.path.join("data", "missle speed.png")).convert_alpha()
+        #Viewer.images["tracer damage"] = pygame.image.load(os.path.join("data", "tracer damage.png")).convert_alpha()
 
     def loadbackground(self):
         
@@ -1191,6 +1220,7 @@ class Viewer(object):
         pass
 
     def new_wave(self):
+        self.nextsong()
         Viewer.level += 1
         Game.spawnrate *= 1.5
         Game.bombchance *= 1.5
@@ -1245,6 +1275,9 @@ class Viewer(object):
         self.mouse3 = Mouse(control="keyboard2", color=(255,0,255))
         self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
         self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
+        self.mouse6 = Mouse(control="joystick3", color=(255,128,255))
+        self.mouse7 = Mouse(control="joystick4", color=(128,0,128))
+
 
         #self.ship2 =  Ufo_Bombership(pos=pygame.math.Vector2(50,-50), color=(255,0,0))
         #for x in range(4):
@@ -1334,10 +1367,10 @@ class Viewer(object):
             
             pygame.draw.rect(self.screen,(170,170,170),(200,90,350,350))
             pygame.draw.rect(self.screen,(200,200,200),(600,90,350,350))
+            pygame.draw.rect(self.screen,(230,230,230),(1000,90,350,350))
             
             self.flytextgroup.draw(self.screen)
 
-            #if self.menu:      #def draw_menu:
             for i in range(len(Game.items)):
                 write(self.screen, Game.items[i], x=Viewer.width//2, y=100+i*50)
             #--- cursor
@@ -1350,6 +1383,13 @@ class Viewer(object):
             
 
             t = Game.items[self.active_item]
+            
+            
+            # --- helper picture ---
+            print(t, Viewer.images)
+            if t in Viewer.images.keys():
+                self.screen.blit(Viewer.images[t], (1100,100))
+            
             if t != "resume":
                 i = Game.current_level[t]
                 cost = Game.cost[t][i]
@@ -1372,6 +1412,8 @@ class Viewer(object):
         running = True
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
+        button={0:False, 1:False, 2:False, 3:False}
+        oldbutton= {0:False, 1:False, 2:False, 3:False}
         self.snipertarget = None
         gameOver = False
         exittime = 0
@@ -1506,9 +1548,10 @@ class Viewer(object):
             oldleft, oldmiddle, oldright = left, middle, right
 
             # ------ joystick handler -------
-            mouses = [self.mouse4, self.mouse5]
+            mouses = [self.mouse4, self.mouse5, self.mouse6, self.mouse7]
             for number, j in enumerate(self.joysticks):
-                if number == 0:
+                button[number] = False
+                if number == 0 or number == 1:
                    x = j.get_axis(0)
                    y = j.get_axis(1)
                    mouses[number].x += x * 20 # *2 
@@ -1516,14 +1559,21 @@ class Viewer(object):
                    buttons = j.get_numbuttons()
                    for b in range(buttons):
                        pushed = j.get_button( b )
-                       #if b == 0 and pushed:
-                       #        self.launchRocket((mouses[number].x, mouses[number].y))
+                       if b == 0:
+                           if pushed:
+                               button[number] = True
+                           else:
+                               button[number] = False
+                           if oldbutton[number] and not button[number]:
+                               self.launchRocket((mouses[number].x, mouses[number].y))
+                           oldbutton[number] = button[number] 
                        #elif b == 1 and pushed:
                        #    if not self.mouse4.pushed: 
                        #        self.launchRocket((mouses[number].x, mouses[number].y))
                        #        mouses[number] = True
                        #elif b == 1 and not pushed:
                        #    mouses[number] = False
+                        
             pos1 = pygame.math.Vector2(pygame.mouse.get_pos())
             pos2 = self.mouse2.rect.center
             pos3 = self.mouse3.rect.center
@@ -1531,7 +1581,6 @@ class Viewer(object):
             # write text below sprites
             write(self.screen, "FPS: {:8.3}, Money: {}".format(
                 self.clock.get_fps(), self.money ), x=10, y=10)
-            
             cityrockets = {}
             for c in self.citygroup:
                 cityrockets[c.number] = 0
@@ -1562,7 +1611,7 @@ class Viewer(object):
             # ----------collision detection between Tracer and enemy --------
             for e in self.enemygroup:
                 crashgroup = pygame.sprite.spritecollide(e, self.tracergroup,
-                             False, pygame.sprite.collide_mask)
+                             False, pygame.sprite.collide_rect)
                 for t in crashgroup:
                     e.hitpoints -= t.damage
                     #print("Tracer damage: {}".format(t.damage))
@@ -1588,7 +1637,7 @@ class Viewer(object):
             # --------- collision detection between turret and enemy -----
             for t in self.turretgroup:
                 crashgroup = pygame.sprite.spritecollide(t, self.enemygroup,
-                             False, pygame.sprite.collide_mask)
+                             False, pygame.sprite.collide_rect)
                 for e in crashgroup:
                     Explosion(pos=pygame.math.Vector2(e.pos.x, e.pos.y))
                     t.pos.y -= 25
@@ -1598,7 +1647,7 @@ class Viewer(object):
             # --------- collision detection between house and enemy -----
             for h in self.housegroup:
                 crashgroup = pygame.sprite.spritecollide(h, self.enemygroup,
-                             False, pygame.sprite.collide_mask)
+                             False, pygame.sprite.collide_rect)
                 for e in crashgroup:
                     c = VectorSprite.numbers[h.bossnumber]
                     c.peace = c.age + c.peacepenalty
@@ -1619,7 +1668,7 @@ class Viewer(object):
             # --------- collision detection between Energyshield and enemy -----
             for s in self.energyshieldgroup:
                 crashgroup = pygame.sprite.spritecollide(s, self.enemygroup,
-                             False, pygame.sprite.collide_mask)
+                             False, pygame.sprite.collide_circle)
                 for e in crashgroup:
                     #t.hitpoints -= e.damage
                     #if random.random() < 0.5:
@@ -1650,7 +1699,7 @@ class Viewer(object):
                     s.last_blink = s.age + 2
                     # ----- peacepenalty for city ----
                     c = VectorSprite.numbers[s.bossnumber]
-                    c.peace = c.age + c.peacepenalty
+                    c.peace = 0+c.age + c.peacepenalty
 
             # ------------New wave ----------------
             if len(self.enemygroup) == 0:
@@ -1679,8 +1728,10 @@ class Viewer(object):
                         break
                 else:
                     # no shield found for this city
+                    #print(c.age, c.peace)
                     if c.age > c.peace:
-                        Energyshield(pos = pygame.math.Vector2(c.pos.x, -Viewer.height), bossnumber = c.number, hitpoints = 1)
+                        print("Energyshield generated")
+                        Energyshield(pos = pygame.math.Vector2(c.pos.x, -Viewer.height), bossnumber = c.number, hitpoints = 10)
                     else:
                         g = random.randint(150,200)
                         pygame.draw.circle(self.screen, (0,g,0), (int(c.pos.x-115), int(-c.pos.y-10)), 5)
