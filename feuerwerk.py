@@ -1072,6 +1072,26 @@ class Viewer(object):
     width = 0
     height = 0
     images={}
+    
+    menu =  {"main":   ["Resume", "Shop", "Help", "Credits" ],
+            "Shop":    ["back", "Cannon range", "Tracer damage", "Missle speed", "Energyshield hp"],
+            "Help":    ["back",],
+            "Credits": ["back", "Martin", "Horst Jens"],
+            }
+    descr = {"Resume" :           ["Resume to the", "game"],                                           #resume
+             "Cannon range" :     ["Increase the range of", "your defensive cannons."],                #cannon speed
+             "Tracer damage" :    ["Increase the damage of", "your tracers against", "your enemies."], #tracer damage
+             "Missle speed" :     ["Increase the speed of ", "your missles."],                         #missle speed
+             "Energy shield hp" : ["Regenerate hitpoints of", "your cities.", "! Not working yet !"]}
+    menu_images = {"Cannon range" : "cannon range",
+                   "Missle speed" : "missle speed",
+                   }
+    
+    #Viewer.menu["resolution"] = pygame.display.list_modes()
+    history = ["main"]
+    cursor = 0
+    name = "main"
+    fullscreen = False
 
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
@@ -1139,8 +1159,10 @@ class Viewer(object):
         Viewer.explosion1 = pygame.mixer.Sound(os.path.join("data", "explosion1.wav"))
         
     def loadgraphics(self):
-        Viewer.images["cannon range"] = pygame.image.load(os.path.join("data", "cannon range.png")).convert_alpha()
-        #Viewer.images["missle speed"] = pygame.image.load(os.path.join("data", "missle speed.png")).convert_alpha()
+        Viewer.images["cannon range"] = pygame.image.load(os.path.join("data", "cannonrange.png")).convert_alpha()
+        Viewer.images["cannon range"] = pygame.transform.scale(Viewer.images["cannon range"], (190, 300))
+        Viewer.images["missle speed"] = pygame.image.load(os.path.join("data", "misslespeed.png")).convert_alpha()
+        Viewer.images["missle speed"] = pygame.transform.scale(Viewer.images["missle speed"], (190, 300))
         #Viewer.images["tracer damage"] = pygame.image.load(os.path.join("data", "tracer damage.png")).convert_alpha()
 
     def loadbackground(self):
@@ -1326,38 +1348,85 @@ class Viewer(object):
     def menu_run(self):
         """Not The mainloop"""
         running = True
-        exittime = 0
+        pygame.mouse.set_visible(False)
         self.menu = True
         while running:
+            #pygame.mixer.music.pause()
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
-            self.playtime += seconds
+            text = Viewer.menu[Viewer.name][Viewer.cursor]
             # -------- events ------
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    return -1 # running = False
                 # ------- pressed and released key ------
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        self.menu = False
-                    if event.key == pygame.K_m:
-                        self.menu = False
-                    if event.key == pygame.K_UP and self.menu:
-                        self.active_item -= 1
-                        self.active_item = max(0,self.active_item)
-                    if event.key == pygame.K_DOWN and self.menu:
-                        self.active_item += 1
-                        self.active_item = min(len(Game.items)-1,self.active_item)
-                    if event.key == pygame.K_RETURN and self.menu:
-                        self.activate_item()
-                          
-            # delete everything on screen
+                        return -1 # running = False
+                    if event.key == pygame.K_UP:
+                        Viewer.cursor -= 1
+                        Viewer.cursor = max(0, Viewer.cursor) # not < 0
+                        #Viewer.menusound.play()
+                    if event.key == pygame.K_DOWN:
+                        Viewer.cursor += 1
+                        Viewer.cursor = min(len(Viewer.menu[Viewer.name])-1,Viewer.cursor) # not > menu entries
+                        #Viewer.menusound.play()
+                    if event.key == pygame.K_RETURN:
+                        #text = Viewer.menu[Viewer.name][Viewer.cursor]
+                        if text == "quit":
+                            return -1
+                            Viewer.menucommandsound.play()
+                        elif text in Viewer.menu:
+                            # changing to another menu
+                            Viewer.history.append(text) 
+                            Viewer.name = text
+                            Viewer.cursor = 0
+                            #Viewer.menuselectsound.play()
+                        elif text == "Resume":
+                            return
+                            #Viewer.menucommandsound.play()
+                            #pygame.mixer.music.unpause()
+                        elif text == "back":
+                            Viewer.history = Viewer.history[:-1] # remove last entry
+                            Viewer.cursor = 0
+                            Viewer.name = Viewer.history[-1] # get last entry
+                            #Viewer.menucommandsound.play()
+                            # direct action
+                        elif text == "credits":
+                            Flytext(x=700, y=400, text="by Bigm0 and BakTheBig", fontsize = 100)  
+
+                        if Viewer.name == "resolution":
+                            # text is something like 800x600
+                            t = text.find("x")
+                            if t != -1:
+                                x = int(text[:t])
+                                y = int(text[t+1:])
+                                Viewer.width = x
+                                Viewer.height = y
+                                self.set_resolution()
+                                #Viewer.menucommandsound.play()
+                                    
+                        if Viewer.name == "fullscreen":
+                            if text == "true":
+                                #Viewer.menucommandsound.play()
+                                Viewer.fullscreen = True
+                                self.set_resolution()
+                            elif text == "false":
+                                #Viewer.menucommandsound.play()
+                                Viewer.fullscreen = False
+                                self.set_resolution()
+                        
+            # ------delete everything on screen-------
             self.screen.blit(self.background, (0, 0))
             
             
+         
+            # -------------- UPDATE all sprites -------             
             self.flytextgroup.update(seconds)
+
             # ----------- clear, draw , update, flip -----------------
             self.allgroup.draw(self.screen)
+            
              # ----- rocket silos ----
             pygame.draw.rect(self.screen,(220,220,220),(0,Viewer.height-25,Viewer.width,50),0)
             for t in self.turretgroup:
@@ -1371,41 +1440,72 @@ class Viewer(object):
             
             self.flytextgroup.draw(self.screen)
 
-            for i in range(len(Game.items)):
-                write(self.screen, Game.items[i], x=Viewer.width//2, y=100+i*50)
-            #--- cursor
-            c = random.randint(100,150)
+            # --- paint menu ----
+            # ---- name of active menu and history ---
+            write(self.screen, text="you are here:", x=200, y=50, color=(0,255,255), fontsize=15)
+            
+            t = "main"
+            for nr, i in enumerate(Viewer.history[1:]):
+                #if nr > 0:
+                t+=(" > ")
+                t+=(i)
+            write(self.screen, text=t, x=200,y=70,color=(0,255,255), fontsize=15)
+            # --- menu items ---
+            menu = Viewer.menu[Viewer.name]
+            for y, item in enumerate(menu):
+                write(self.screen, text=item, x=Viewer.width//2-500, y=100+y*50, color=(255,255,255), fontsize=30)
+            # --- cursor ---
+            write(self.screen, text="-->", x=Viewer.width//2-600, y=100+ Viewer.cursor * 50, color=(255,255,255), fontsize=30)
+            # ---- descr ------
+            if text in Viewer.descr:
+                lines = Viewer.descr[text]
+                for y, line in enumerate(lines):
+                    write(self.screen, text=line, x=Viewer.width//2-100, y=100+y*30, color=(255,0,255), fontsize=20)
+            # ---- menu_images -----
+            if text in Viewer.menu_images:
+                self.screen.blit(Viewer.images[Viewer.menu_images[text]], (1100,100))
+                
+            # -------- next frame -------------
+            pygame.display.flip()
+        #----------------------------------------------------- 
+        
+        
+
             #for i in range(len(Game.items)):
-            write(self.screen, "-->",x=Viewer.width//2-100, y=100+self.active_item*50, color=(c,c,c))
-            #----- help text --------
-            for line_number, line in enumerate(Game.descr[self.active_item]):
-                write(self.screen,line,x=Viewer.width//2-500, y=300+line_number*50, color=(255,0,255))
+            #    write(self.screen, Game.items[i], x=Viewer.width//2, y=100+i*50)
+            ##--- cursor
+            #c = random.randint(100,150)
+            ##for i in range(len(Game.items)):
+            #write(self.screen, "-->",x=Viewer.width//2-100, y=100+self.active_item*50, color=(c,c,c))
+            ##----- help text --------
+            #for line_number, line in enumerate(Game.descr[self.active_item]):
+            #    write(self.screen,line,x=Viewer.width//2-500, y=300+line_number*50, color=(255,0,255))
             
 
-            t = Game.items[self.active_item]
+            #t = Game.items[self.active_item]
             
             
             # --- helper picture ---
-            print(t, Viewer.images)
-            if t in Viewer.images.keys():
-                self.screen.blit(Viewer.images[t], (1100,100))
-            
-            if t != "resume":
-                i = Game.current_level[t]
-                cost = Game.cost[t][i]
-                write(self.screen, "Your Money: {}".format(self.money), x=Viewer.width//2-500, y=100)
-                write(self.screen, "Current value: {}".format(Game.level[t][i]), x=Viewer.width//2-500,y=150)
-                write(self.screen, "Improved value: {}".format(Game.level[t][i+1]), x=Viewer.width//2-500, y=200)
-                write(self.screen, "Cost: {}".format(cost), x=Viewer.width//2-500, y=250) 
+            #print(t, Viewer.images)
+            #if t in Viewer.images.keys():
+            #    self.screen.blit(Viewer.images[t], (1100,100))
+           # 
+           # if t != "resume":
+           #     i = Game.current_level[t]
+           #     cost = Game.cost[t][i]
+           #     write(self.screen, "Your Money: {}".format(self.money), x=Viewer.width//2-500, y=100)
+           #     write(self.screen, "Current value: {}".format(Game.level[t][i]), x=Viewer.width//2-500,y=150)
+           #     write(self.screen, "Improved value: {}".format(Game.level[t][i+1]), x=Viewer.width//2-500, y=200)
+           #     write(self.screen, "Cost: {}".format(cost), x=Viewer.width//2-500, y=250) 
 
             # -------- next frame -------------
-            pygame.display.flip()
+            #pygame.display.flip()
             
-            if self.menu == False:
-                return
+            #if self.menu == False:
+            #    return
         #-----------------------------------------------------
-        pygame.mouse.set_visible(True)    
-        pygame.quit()
+        #pygame.mouse.set_visible(True)    
+        #pygame.quit()
 
     def run(self):
         """The mainloop"""
