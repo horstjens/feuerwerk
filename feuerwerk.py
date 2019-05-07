@@ -90,21 +90,6 @@ class Game():
     minigun_firemode_chance = 0.0005
     rocket_firemode_chance = 0.025
     max_index = 3
-    descr = [["Resume to the", "game"],                                           #resume
-             ["Increase the range of", "your defensive cannons."],                #cannon speed
-             ["Increase the damage of", "your tracers against", "your enemies."], #tracer damage
-             ["Increase the speed of ", "your missles."],                         #missle speed
-             ["Regenerate hitpoints of", "your cities.", "! Not working yet !"]]                         #Energyshield hp
-    current_level = {}
-    items = ["resume", "cannon range", "tracer damage","missle speed", "Energyshield hp"]
-    level = {"cannon range" : [100,200,300,500,600],
-             "missle speed"  : [100,150,200,250,300],
-             "Energyshield hp" : [75,80,85,90,100], 
-             "tracer damage" : [1, 3, 5,20,50]}
-    cost = {"cannon range" : [100,250,400,550, 700],
-            "missle speed" : [50,100,200,300,500],
-            "Energyshield hp" : [50,50,50,50,50],
-            "tracer damage" : [100, 200, 300,400,500]}
 
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
@@ -783,12 +768,7 @@ class Rocket(VectorSprite):
         else:
             if self.move.length() == 0:
                 self.set_angle(90)
-        
-        #if self.pos.y < -Viewer.height+20:
-         #   if self.kill_on_edge:
-         #       Explosion(pos=pygame.math.Vector2(self.pos.x, self.pos.y))#, max_age=random.random()*10)
         VectorSprite.update(self, seconds)
-        #self.move += self.gravity
         
     def kill(self):
         VectorSprite.kill(self)
@@ -813,8 +793,8 @@ class Evil_Tracer(VectorSprite):
 class Tracer(VectorSprite):
     
     def _overwrite_parameters(self):
-        i = Game.current_level["tracer damage"]
-        self.damage = Game.level["tracer damage"][i]
+        i = Viewer.current_level["Tracer damage"]
+        self.damage = Viewer.item_level["Tracer damage"][i]
     
     def create_image(self):
         self.image = pygame.Surface((10,3))
@@ -1086,7 +1066,16 @@ class Viewer(object):
     menu_images = {"Cannon range" : "cannon range",
                    "Missle speed" : "missle speed",
                    }
-    
+    current_level = {}
+    item_level = {"Cannon range" : [100,200,300,500,600],
+                  "Missle speed"  : [100,150,200,250,300],
+                  "Energyshield hp" : [75,80,85,90,100], 
+                  "Tracer damage" : [1, 3, 5,20,50]}
+    item_cost = {"Cannon range" : [100,250,400,550, 700],
+                 "Missle speed" : [50,100,200,300,500],
+                 "Energyshield hp" : [50,50,50,50,50],
+                 "Tracer damage" : [100, 200, 300,400,500]}
+    items = ["resume", "Cannon range", "Tracer damage","Missle speed", "Energyshield hp"]
     #Viewer.menu["resolution"] = pygame.display.list_modes()
     history = ["main"]
     cursor = 0
@@ -1141,9 +1130,9 @@ class Viewer(object):
         #backgroundmusic = pygame.mixer.music.load(os.path.join("data", self.playlist[self.songnumber]))
         #pygame.mixer.music.play(-1)
         # set current menu level
-        for k in Game.items:
+        for k in Viewer.items:
             if k != "resume":
-                Game.current_level[k] = 0
+                Viewer.current_level[k] = 0
         #print(Game.current_level)
         
     def nextsong(self):
@@ -1207,39 +1196,12 @@ class Viewer(object):
                 r.move = target - r.pos
                 r.move.normalize_ip()
                 #r.move *= Game.level # 
-                i = Game.current_level["missle speed"]   #Game.misslespeed
-                speed = Game.level["missle speed"][i]
+                i = Viewer.current_level["Missle speed"]   #Game.misslespeed
+                speed = Viewer.item_level["Missle speed"][i]
                 r.move *= speed
                 winkel = pygame.math.Vector2(1,0).angle_to(r.move)
                 r.set_angle(winkel)
                 break
-
-    
-    def activate_item(self):
-        t = Game.items[self.active_item]
-        if t == "resume":
-            self.menu = False
-            return
-        #print("game current level [t], t:", Game.current_level[t], t)
-        i = Game.current_level[t]
-        #print(type(Game.current_level[t]))
-        #print("Game.cost:", Game.cost)
-        #print("game.cost[t]:", Game.cost[t])
-        cost = Game.cost[t][i]
-        if self.money < cost:
-            Flytext(x=Viewer.width//2-120, y=100+self.active_item*50, text="You have not enough money!", fontsize=24)
-            return
-        if Game.current_level[t] == Game.max_index:
-            Flytext(x=Viewer.width//2-120, y=100+self.active_item*50, text="This item is already completely upgraded!", fontsize=24)
-            return
-        # enough money ?
-        self.money -= cost
-        Game.current_level[t] += 1
-        Flytext(x=Viewer.width//2, y = Viewer.height//1.2, text="Your {} has been upgraded!".format(t), duration=4, fontsize=50)
-
-            
-    def draw_menu(self):
-        pass
 
     def new_wave(self):
         self.nextsong()
@@ -1300,15 +1262,6 @@ class Viewer(object):
         self.mouse6 = Mouse(control="joystick3", color=(255,128,255))
         self.mouse7 = Mouse(control="joystick4", color=(128,0,128))
 
-
-        #self.ship2 =  Ufo_Bombership(pos=pygame.math.Vector2(50,-50), color=(255,0,0))
-        #for x in range(4):
-        #    self.ship = Ufo_Minigunship(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(0,255,255))
-        #self.ship2 =  Ufo_Rocketship(pos=pygame.math.Vector2(50,-50), color=(0,255,0))
-        #self.cannon1 = Cannon(pos=pygame.math.Vector2(100,-400))
-        #self.cannon1.target = self.eck
-        #self.kamikazeship =  Ufo_Kamikazeship(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(0,200,0))
-        #self.mothership = Ufo_Mothership(pos=pygame.math.Vector2(random.randint(0,Viewer.width),-50), color=(255,255,0))
         self.nr = Viewer.width // 200
         #----- create turrets ----------
         for t in range(self.nr):
@@ -1333,18 +1286,6 @@ class Viewer(object):
                     Window(bossnumber = h.number, pos = h.pos + pygame.math.Vector2(0, winy))
         pygame.draw.rect(self.screen,(1,1,1),(0,Viewer.height-25,Viewer.width,50),0)
             
-            #self.Energyshield = Energyshield(pos = pygame.math.Vector2(x+100, -Viewer.height-25),Energyshieldnr = c)
-            #for Energyshieldx in range(-80,80,8):
-            #    dy = random.randint(0,10)
-            #    a = abs(Energyshieldx) // 2
-            #    dy -= a
-            #    h = House(bossnumber=self.Energyshield.number, pos=self.Energyshield.pos + pygame.math.Vector2(Energyshieldx,+40+dy))
-            #    for winy in range(-40,40,8):
-            #        Window(bossnumber = h.number, pos = h.pos + pygame.math.Vector2(0, winy))
-        #for c in self.Energyshieldgroup:
-        #    self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x+40,c.pos.y+80))
-        #    self.cannon = Cannon(pos=pygame.math.Vector2(c.pos.x-40,c.pos.y+80))
-
     def menu_run(self):
         """Not The mainloop"""
         running = True
@@ -1392,9 +1333,16 @@ class Viewer(object):
                             Viewer.name = Viewer.history[-1] # get last entry
                             #Viewer.menucommandsound.play()
                             # direct action
-                        elif text == "credits":
-                            Flytext(x=700, y=400, text="by Bigm0 and BakTheBig", fontsize = 100)  
-
+                        elif text in Viewer.items:
+                            print(text, i, Viewer.current_level)
+                            i = Viewer.current_level[text]
+                            if self.money < Viewer.item_cost[text][i+1]:
+                                Flytext(x=Viewer.width//2-120, y=100, text="You have not enough money!", fontsize=24)
+                            else:
+                                Flytext(x=Viewer.width//2-120, y=100, text="You upgraded {}!".format(text), fontsize=24)
+                                self.money -= Viewer.item_cost[text][i+1]
+                                Viewer.current_level[text] += 1
+                        
                         if Viewer.name == "resolution":
                             # text is something like 800x600
                             t = text.find("x")
@@ -1461,51 +1409,20 @@ class Viewer(object):
                 lines = Viewer.descr[text]
                 for y, line in enumerate(lines):
                     write(self.screen, text=line, x=Viewer.width//2-100, y=100+y*30, color=(255,0,255), fontsize=20)
+            # ---- level ------
+            #print(text, Viewer.level.keys())
+            if text in Viewer.item_level:
+                i = Viewer.current_level[text]
+                write(self.screen, "Your Money: {}".format(self.money), x=Viewer.width//2-100, y=200)
+                write(self.screen, "Current value: {}".format(Viewer.item_level[text][i]), x=Viewer.width//2-100,y=250)
+                write(self.screen, "Improved value: {}".format(Viewer.item_level[text][i+1]), x=Viewer.width//2-100, y=300)
+                write(self.screen, "Cost: {}".format(Viewer.item_cost[text][i+1]), x=Viewer.width//2-100, y=350) 
             # ---- menu_images -----
             if text in Viewer.menu_images:
                 self.screen.blit(Viewer.images[Viewer.menu_images[text]], (1100,100))
                 
             # -------- next frame -------------
             pygame.display.flip()
-        #----------------------------------------------------- 
-        
-        
-
-            #for i in range(len(Game.items)):
-            #    write(self.screen, Game.items[i], x=Viewer.width//2, y=100+i*50)
-            ##--- cursor
-            #c = random.randint(100,150)
-            ##for i in range(len(Game.items)):
-            #write(self.screen, "-->",x=Viewer.width//2-100, y=100+self.active_item*50, color=(c,c,c))
-            ##----- help text --------
-            #for line_number, line in enumerate(Game.descr[self.active_item]):
-            #    write(self.screen,line,x=Viewer.width//2-500, y=300+line_number*50, color=(255,0,255))
-            
-
-            #t = Game.items[self.active_item]
-            
-            
-            # --- helper picture ---
-            #print(t, Viewer.images)
-            #if t in Viewer.images.keys():
-            #    self.screen.blit(Viewer.images[t], (1100,100))
-           # 
-           # if t != "resume":
-           #     i = Game.current_level[t]
-           #     cost = Game.cost[t][i]
-           #     write(self.screen, "Your Money: {}".format(self.money), x=Viewer.width//2-500, y=100)
-           #     write(self.screen, "Current value: {}".format(Game.level[t][i]), x=Viewer.width//2-500,y=150)
-           #     write(self.screen, "Improved value: {}".format(Game.level[t][i+1]), x=Viewer.width//2-500, y=200)
-           #     write(self.screen, "Cost: {}".format(cost), x=Viewer.width//2-500, y=250) 
-
-            # -------- next frame -------------
-            #pygame.display.flip()
-            
-            #if self.menu == False:
-            #    return
-        #-----------------------------------------------------
-        #pygame.mouse.set_visible(True)    
-        #pygame.quit()
 
     def run(self):
         """The mainloop"""
@@ -1518,6 +1435,7 @@ class Viewer(object):
         gameOver = False
         exittime = 0
         Viewer.level = 0
+        self.menu_run()
         while running:
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
@@ -1575,34 +1493,12 @@ class Viewer(object):
                     if event.key == pygame.K_DOWN and self.menu:
                         self.active_item += 1
                         self.active_item = min(len(Game.items)-1,self.active_item)
-                    if event.key == pygame.K_RETURN and self.menu:
-                        self.activate_item()
-                            
-            # ------- ai ----------
-            #self.cannon1.ai()
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
             
-            # ------ move indicator for self.eck -----
-            #pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
             glitter = (0, random.randint(128, 255), 0)
-            #pygame.draw.line(self.screen, glitter, (100,100), 
-            #                (100 + self.eck.move.x, 100 - self.eck.move.y))
-            # --- line from cannon to target ---
-            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.cannon1.pos.x, -self.cannon1.pos.y), (self.cannon1.target.pos.x, -self.cannon1.target.pos.y))
-            # --- line from eck to mouse ---
-            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.mouse1.x, self.mouse1.y))
-            # --- line from eck to cannon -----
-            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.eck.pos.x, -self.eck.pos.y), (self.cannon1.pos.x, -self.cannon1.pos.y))
-            # --- line from kamikazeship to target ------
-            #pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.kamikazeship.pos.x, -self.kamikazeship.pos.y), (self.kamikazeship.target.pos.x, -self.kamikazeship.target.pos.y))
-
-            
-            if self.menu:
-                self.draw_menu()
                 
-            
             # --- line from snipership to target ---
             for s in self.snipergroup:
                 pygame.draw.line(self.screen, (random.randint(200,250),0,0), (s.pos.x, -s.pos.y), (s.target.x, -s.target.y))
@@ -1620,8 +1516,8 @@ class Viewer(object):
             # ---------auto aim for cannons -------
             for c in self.cannongroup:
                 #maxrange
-                i = Game.current_level["cannon range"]
-                c.maxrange = Game.level["cannon range"][i]
+                i = Viewer.current_level["Cannon range"]
+                c.maxrange = Viewer.item_level["Cannon range"][i]
                 #targets = []
                 closest_enemy = None
                 closest_distance = c.maxrange
